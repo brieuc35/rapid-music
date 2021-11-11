@@ -1,0 +1,8 @@
+{
+  "name": "RapidMusic",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "vue",
+  "id": "9677d3d8"
+}
