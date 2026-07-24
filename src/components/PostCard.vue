@@ -1,18 +1,24 @@
 <template>
   <article class="post-card">
+    <!-- Bandeau de republication (le contenu affiché ci-dessous est l'original). -->
+    <div v-if="post.repostedFrom" class="repost-banner">
+      <ion-icon :icon="repeatOutline" />
+      <span>{{ post.author.displayName }} a republié</span>
+    </div>
+
     <header class="post-header">
       <div class="who" @click="goToProfile">
-        <UserAvatar :user="post.author" :size="44" />
+        <UserAvatar :user="shown.author" :size="44" />
         <div class="author">
           <div class="name-row">
-            <span class="display-name">{{ post.author.displayName }}</span>
-            <span class="handle">@{{ post.author.handle }}</span>
+            <span class="display-name">{{ shown.author.displayName }}</span>
+            <span class="handle">@{{ shown.author.handle }}</span>
           </div>
-          <span class="meta">{{ roleLabel(post.author.role) }} · {{ timeAgo(post.createdAt) }}</span>
+          <span class="meta">{{ roleLabel(shown.author.role) }} · {{ timeAgo(shown.createdAt) }}</span>
         </div>
       </div>
       <ion-button
-        v-if="showFollow && post.author.id !== 'u-me'"
+        v-if="showFollow && shown.author.id !== 'u-me'"
         size="small"
         :fill="following ? 'outline' : 'solid'"
         class="follow-btn"
@@ -22,9 +28,9 @@
       </ion-button>
     </header>
 
-    <p class="body">{{ post.body }}</p>
+    <p v-if="shown.body" class="body">{{ shown.body }}</p>
 
-    <template v-for="media in post.media" :key="media.url">
+    <template v-for="media in shown.media" :key="media.url">
       <img
         v-if="media.type === 'image'"
         class="post-image"
@@ -43,22 +49,22 @@
       </a>
     </template>
 
-    <div v-if="post.tags.length" class="tags">
-      <span v-for="tag in post.tags" :key="tag" class="tag">#{{ tag }}</span>
+    <div v-if="shown.tags.length" class="tags">
+      <span v-for="tag in shown.tags" :key="tag" class="tag">#{{ tag }}</span>
     </div>
 
     <footer class="actions">
-      <button class="action" :class="{ active: post.likedByMe }" @click="onLike" :aria-pressed="post.likedByMe">
-        <ion-icon :icon="post.likedByMe ? heart : heartOutline" />
-        <span>{{ compactNumber(post.likeCount) }}</span>
+      <button class="action" :class="{ active: shown.likedByMe }" @click="onLike" :aria-pressed="shown.likedByMe">
+        <ion-icon :icon="shown.likedByMe ? heart : heartOutline" />
+        <span>{{ compactNumber(shown.likeCount) }}</span>
       </button>
-      <button class="action" @click="$emit('comment', post)">
+      <button class="action" @click="$emit('comment', shown)">
         <ion-icon :icon="chatbubbleOutline" />
-        <span>{{ compactNumber(post.commentCount) }}</span>
+        <span>{{ compactNumber(shown.commentCount) }}</span>
       </button>
       <button class="action" @click="onShare">
         <ion-icon :icon="arrowRedoOutline" />
-        <span>{{ compactNumber(post.shareCount) }}</span>
+        <span>{{ compactNumber(shown.shareCount) }}</span>
       </button>
     </footer>
   </article>
@@ -67,18 +73,22 @@
 <script lang="ts">
 import { computed, defineComponent, PropType } from 'vue';
 import { useRouter } from 'vue-router';
-import { IonButton, IonIcon } from '@ionic/vue';
+import { IonButton, IonIcon, toastController } from '@ionic/vue';
 import {
   arrowRedoOutline,
   chatbubbleOutline,
   heart,
   heartOutline,
   linkOutline,
+  repeatOutline,
 } from 'ionicons/icons';
 import { Post, UserRole } from '@/models';
 import { compactNumber, timeAgo } from '@/utils/format';
+import { repostPost } from '@/services/api';
 import { useInteractions } from '@/composables/useInteractions';
 import { useFollows } from '@/composables/useFollows';
+import { useFeed } from '@/composables/useFeed';
+import { useShare } from '@/composables/useShare';
 import UserAvatar from './UserAvatar.vue';
 
 const ROLE_LABELS: Record<UserRole, string> = {
@@ -102,15 +112,36 @@ export default defineComponent({
     const router = useRouter();
     const { toggleLike, share } = useInteractions();
     const { isFollowing, toggleFollow } = useFollows();
+    const { prepend } = useFeed();
+    const { openShare } = useShare();
 
-    const following = computed(() => isFollowing(props.post.author.id));
+    // Contenu réellement affiché : l'original si c'est un repost, sinon le post.
+    const shown = computed(() => props.post.repostedFrom ?? props.post);
+    const following = computed(() => isFollowing(shown.value.author.id));
+
+    async function repost() {
+      const rp = await repostPost(shown.value);
+      prepend(rp);
+      const t = await toastController.create({ message: 'Republié dans ton fil 🔁', duration: 1400 });
+      await t.present();
+    }
+
+    function onShare() {
+      openShare({
+        link: `https://rapidmusic.app/p/${shown.value.id}`,
+        title: `${shown.value.author.displayName} sur RapidMusic`,
+        onRepost: repost,
+        onShared: () => share(shown.value),
+      });
+    }
 
     return {
+      shown,
       following,
-      onLike: () => toggleLike(props.post),
-      onShare: () => share(props.post),
-      onFollow: () => toggleFollow(props.post.author),
-      goToProfile: () => router.push(`/profile/${props.post.author.handle}`),
+      onShare,
+      onLike: () => toggleLike(shown.value),
+      onFollow: () => toggleFollow(shown.value.author),
+      goToProfile: () => router.push(`/profile/${shown.value.author.handle}`),
       roleLabel: (r: UserRole) => ROLE_LABELS[r],
       compactNumber,
       timeAgo,
@@ -119,6 +150,7 @@ export default defineComponent({
       chatbubbleOutline,
       arrowRedoOutline,
       linkOutline,
+      repeatOutline,
     };
   },
 });
@@ -128,6 +160,18 @@ export default defineComponent({
 .post-card {
   padding: 16px;
   border-bottom: 8px solid var(--ion-color-light, #f4f5f8);
+}
+.repost-banner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ion-color-medium, #92949c);
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+.repost-banner ion-icon {
+  font-size: 16px;
 }
 .post-header {
   display: flex;

@@ -9,6 +9,7 @@ import {
   fetchUserPosts,
   getUserByHandle,
   markNotificationsRead,
+  repostPost,
   searchArticles,
 } from '@/services/api';
 
@@ -34,6 +35,27 @@ describe('searchArticles', () => {
   it('renvoie une liste vide quand rien ne correspond', async () => {
     const page = await searchArticles({ query: 'zzz-introuvable-zzz' });
     expect(page.items).toHaveLength(0);
+  });
+});
+
+describe('repostPost', () => {
+  it('republie un post au nom de l\'utilisateur, en référençant l\'original', async () => {
+    const feed = await fetchFeed(null);
+    const original = feed.items[0];
+    const repost = await repostPost(original);
+    expect(repost.author.id).toBe('u-me');
+    expect(repost.repostedFrom?.id).toBe(original.id);
+    expect(repost.likeCount).toBe(0);
+    expect(repost.shareCount).toBe(0);
+  });
+
+  it('aplati un repost de repost vers l\'original', async () => {
+    const feed = await fetchFeed(null);
+    const original = feed.items[0];
+    const repost1 = await repostPost(original);
+    const repost2 = await repostPost(repost1);
+    // On républie toujours la source, pas le repost intermédiaire.
+    expect(repost2.repostedFrom?.id).toBe(original.id);
   });
 });
 

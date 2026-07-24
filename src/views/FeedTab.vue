@@ -89,10 +89,10 @@ export default defineComponent({
   },
   setup() {
     const router = useRouter();
-    const { posts, loading, hasMore, refresh, loadMore, prepend } = useFeed();
+    const { posts, loading, hasMore, refresh, ensureLoaded, loadMore, prepend } = useFeed();
     const { unreadCount, refreshUnread } = useNotifications();
 
-    onMounted(refresh);
+    onMounted(ensureLoaded);
     // Rafraîchit la pastille à chaque entrée dans l'onglet (retour de la page notifs).
     onIonViewWillEnter(refreshUnread);
 

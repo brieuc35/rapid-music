@@ -80,6 +80,7 @@ import { Clip } from '@/models';
 import { compactNumber, colorFromString } from '@/utils/format';
 import { useInteractions } from '@/composables/useInteractions';
 import { useFollows } from '@/composables/useFollows';
+import { useShare } from '@/composables/useShare';
 import UserAvatar from './UserAvatar.vue';
 
 export default defineComponent({
@@ -95,6 +96,7 @@ export default defineComponent({
     const muted = ref(true);
     const { toggleLike, share } = useInteractions();
     const { isFollowing, toggleFollow } = useFollows();
+    const { openShare } = useShare();
     let observer: IntersectionObserver | null = null;
 
     const following = computed(() => isFollowing(props.clip.creator.id));
@@ -146,7 +148,11 @@ export default defineComponent({
       togglePlay,
       toggleMute,
       onLike: () => toggleLike(props.clip),
-      onShare: () => share(props.clip),
+      onShare: () => openShare({
+        link: `https://rapidmusic.app/c/${props.clip.id}`,
+        title: `@${props.clip.creator.handle} sur RapidMusic`,
+        onShared: () => share(props.clip),
+      }),
       onFollow: () => toggleFollow(props.clip.creator),
       goToProfile: () => router.push(`/profile/${props.clip.creator.handle}`),
       compactNumber,

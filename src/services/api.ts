@@ -165,6 +165,32 @@ export async function addComment(
   return comment;
 }
 
+let repostSeq = 0;
+
+/**
+ * POST /api/v1/posts/:id/repost — republie un post dans le fil de l'utilisateur.
+ * Le nouveau post référence l'original via repostedFrom (compteurs propres à zéro).
+ */
+export async function repostPost(original: Post): Promise<Post> {
+  await delay(250);
+  // On republie l'original lui-même (pas un repost de repost).
+  const source = original.repostedFrom ?? original;
+  return {
+    id: `p-repost-${Date.now()}-${repostSeq++}`,
+    author: currentUser,
+    body: '',
+    media: [],
+    tags: [],
+    visibility: 'public',
+    createdAt: new Date().toISOString(),
+    likeCount: 0,
+    commentCount: 0,
+    shareCount: 0,
+    likedByMe: false,
+    repostedFrom: source,
+  };
+}
+
 let postSeq = 0;
 
 /**
