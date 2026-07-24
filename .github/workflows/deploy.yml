@@ -1,0 +1,63 @@
+name: Déploiement GitHub Pages
+
+# Build l'app Ionic/Vue et la publie sur GitHub Pages à chaque push sur la
+# branche de développement. Prérequis (une seule fois) : dans les réglages du
+# dépôt, Settings → Pages → Source = « GitHub Actions ».
+
+on:
+  push:
+    branches:
+      - claude/music-social-network-product-ullc7e
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Une seule publication à la fois ; annule les déploiements en cours obsolètes.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      # Inutile de télécharger le binaire Cypress (tests e2e) juste pour builder.
+      CYPRESS_INSTALL_BINARY: '0'
+      # Vue CLI 4 / webpack 4 : réactive les algos OpenSSL legacy sur Node récent.
+      NODE_OPTIONS: --openssl-legacy-provider
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Installer les dépendances
+        run: npm ci
+
+      - name: Build de production
+        run: npm run build
+
+      - name: Fallback SPA pour les liens profonds
+        run: cp dist/index.html dist/404.html
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publier sur GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
