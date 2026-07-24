@@ -38,6 +38,8 @@ export interface MediaAttachment {
   title?: string;
 }
 
+export type PostVisibility = 'public' | 'followers';
+
 /** Publication du fil principal (style LinkedIn). */
 export interface Post {
   id: string;
@@ -45,12 +47,21 @@ export interface Post {
   body: string;
   media: MediaAttachment[];
   tags: string[];            // slugs de genres / hashtags
+  visibility: PostVisibility;
   createdAt: string;         // ISO 8601
   likeCount: number;
   commentCount: number;
   shareCount: number;
   likedByMe: boolean;
   repostedFrom?: Post;       // partage / repost
+}
+
+/** Charge utile de POST /api/v1/posts (§8.4). */
+export interface CreatePostInput {
+  body: string;
+  tags: string[];
+  media: MediaAttachment[];
+  visibility: PostVisibility;
 }
 
 export type VideoStatus = 'processing' | 'ready' | 'failed';

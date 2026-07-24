@@ -1,4 +1,4 @@
-import { fetchFeed, searchArticles } from '@/services/api';
+import { createPost, fetchFeed, searchArticles } from '@/services/api';
 
 describe('searchArticles', () => {
   it('filtre par mot-clé (titre/résumé/artiste/tags)', async () => {
@@ -22,6 +22,32 @@ describe('searchArticles', () => {
   it('renvoie une liste vide quand rien ne correspond', async () => {
     const page = await searchArticles({ query: 'zzz-introuvable-zzz' });
     expect(page.items).toHaveLength(0);
+  });
+});
+
+describe('createPost', () => {
+  it('crée un post au nom de l\'utilisateur courant avec des compteurs à zéro', async () => {
+    const post = await createPost({
+      body: '  Nouveau morceau en approche  ',
+      tags: ['electro'],
+      media: [],
+      visibility: 'public',
+    });
+    expect(post.body).toBe('Nouveau morceau en approche'); // trimé
+    expect(post.author.id).toBe('u-me');
+    expect(post.likeCount).toBe(0);
+    expect(post.commentCount).toBe(0);
+    expect(post.shareCount).toBe(0);
+    expect(post.likedByMe).toBe(false);
+    expect(post.tags).toEqual(['electro']);
+    expect(post.visibility).toBe('public');
+  });
+
+  it('génère des identifiants uniques', async () => {
+    const a = await createPost({ body: 'a', tags: [], media: [], visibility: 'public' });
+    const b = await createPost({ body: 'b', tags: [], media: [], visibility: 'followers' });
+    expect(a.id).not.toBe(b.id);
+    expect(b.visibility).toBe('followers');
   });
 });
 

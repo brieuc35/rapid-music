@@ -6,8 +6,8 @@
  * il suffit de remplacer le corps de ces fonctions par des appels HTTP
  * (fetch / axios) en conservant les mêmes signatures.
  */
-import { Article, ArticleFilter, Clip, Page, Post, Source } from '@/models';
-import { articles, clips, posts, sources } from './mockData';
+import { Article, ArticleFilter, Clip, CreatePostInput, Page, Post, Source } from '@/models';
+import { articles, clips, currentUser, posts, sources } from './mockData';
 
 const PAGE_SIZE = 3;
 
@@ -65,4 +65,28 @@ export async function searchArticles(
 export async function getSources(): Promise<Source[]> {
   await delay(100);
   return sources;
+}
+
+let postSeq = 0;
+
+/**
+ * POST /api/v1/posts — crée une publication au nom de l'utilisateur courant.
+ * Renvoie le post créé (compteurs à zéro, horodaté maintenant). L'UI l'ajoute
+ * en tête du fil ; le vrai back-end le persisterait et gérerait le fan-out.
+ */
+export async function createPost(input: CreatePostInput): Promise<Post> {
+  await delay(400);
+  return {
+    id: `p-new-${Date.now()}-${postSeq++}`,
+    author: currentUser,
+    body: input.body.trim(),
+    media: input.media,
+    tags: input.tags,
+    visibility: input.visibility,
+    createdAt: new Date().toISOString(),
+    likeCount: 0,
+    commentCount: 0,
+    shareCount: 0,
+    likedByMe: false,
+  };
 }

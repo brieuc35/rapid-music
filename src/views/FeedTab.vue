@@ -20,6 +20,13 @@
       </ion-infinite-scroll>
 
       <div v-if="!hasMore && posts.length" class="state end">Vous êtes à jour ✨</div>
+
+      <!-- Bouton flottant : créer un post -->
+      <ion-fab slot="fixed" vertical="bottom" horizontal="end">
+        <ion-fab-button aria-label="Créer un post" @click="openComposer">
+          <ion-icon :icon="createOutline" />
+        </ion-fab-button>
+      </ion-fab>
     </ion-content>
   </ion-page>
 </template>
@@ -28,7 +35,10 @@
 import { defineComponent, onMounted } from 'vue';
 import {
   IonContent,
+  IonFab,
+  IonFabButton,
   IonHeader,
+  IonIcon,
   IonInfiniteScroll,
   IonInfiniteScrollContent,
   IonPage,
@@ -36,18 +46,24 @@ import {
   IonRefresherContent,
   IonTitle,
   IonToolbar,
+  modalController,
   toastController,
 } from '@ionic/vue';
+import { createOutline } from 'ionicons/icons';
 import { Post } from '@/models';
 import { useFeed } from '@/composables/useFeed';
 import PostCard from '@/components/PostCard.vue';
+import PostComposer from '@/components/PostComposer.vue';
 
 export default defineComponent({
   name: 'FeedTab',
   components: {
     PostCard,
     IonContent,
+    IonFab,
+    IonFabButton,
     IonHeader,
+    IonIcon,
     IonInfiniteScroll,
     IonInfiniteScrollContent,
     IonPage,
@@ -57,7 +73,7 @@ export default defineComponent({
     IonToolbar,
   },
   setup() {
-    const { posts, loading, hasMore, refresh, loadMore } = useFeed();
+    const { posts, loading, hasMore, refresh, loadMore, prepend } = useFeed();
 
     onMounted(refresh);
 
@@ -71,6 +87,13 @@ export default defineComponent({
       (event.target as HTMLIonInfiniteScrollElement).complete();
     }
 
+    async function openComposer() {
+      const modal = await modalController.create({ component: PostComposer });
+      await modal.present();
+      const { data } = await modal.onWillDismiss();
+      if (data) prepend(data as Post);
+    }
+
     async function openComments(post: Post) {
       const toast = await toastController.create({
         message: `Commentaires de « ${post.author.displayName} » — à venir`,
@@ -79,7 +102,7 @@ export default defineComponent({
       await toast.present();
     }
 
-    return { posts, loading, hasMore, onRefresh, onInfinite, openComments };
+    return { posts, loading, hasMore, onRefresh, onInfinite, openComposer, openComments, createOutline };
   },
 });
 </script>

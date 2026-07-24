@@ -32,5 +32,10 @@ export function useFeed() {
     hasMore.value = page.nextCursor !== null;
   }
 
-  return { posts, loading, hasMore, refresh, loadMore };
+  /** Ajoute un post fraîchement créé en tête du fil (cf. PostComposer). */
+  function prepend(post: Post): void {
+    posts.value = [post, ...posts.value];
+  }
+
+  return { posts, loading, hasMore, refresh, loadMore, prepend };
 }
