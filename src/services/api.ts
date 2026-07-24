@@ -16,8 +16,9 @@ import {
   Page,
   Post,
   Source,
+  User,
 } from '@/models';
-import { articles, clips, currentUser, posts, seedComments, sources } from './mockData';
+import { articles, clips, currentUser, posts, seedComments, sources, users } from './mockData';
 
 const PAGE_SIZE = 3;
 
@@ -75,6 +76,24 @@ export async function searchArticles(
 export async function getSources(): Promise<Source[]> {
   await delay(100);
   return sources;
+}
+
+/** GET /api/v1/users/:handle — profil public par identifiant. */
+export async function getUserByHandle(handle: string): Promise<User | null> {
+  await delay(150);
+  return [currentUser, ...users].find((u) => u.handle === handle) ?? null;
+}
+
+/** GET /api/v1/creators/:id/clips — clips publiés par un créateur. */
+export async function fetchCreatorClips(creatorId: string): Promise<Clip[]> {
+  await delay(200);
+  return clips.filter((c) => c.creator.id === creatorId);
+}
+
+/** GET /api/v1/users/:id/posts — publications d'un utilisateur. */
+export async function fetchUserPosts(userId: string): Promise<Post[]> {
+  await delay(200);
+  return posts.filter((p) => p.author.id === userId);
 }
 
 // Magasin de commentaires en mémoire (copie des données seed pour rester

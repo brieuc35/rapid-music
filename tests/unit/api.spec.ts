@@ -1,4 +1,13 @@
-import { addComment, createPost, fetchComments, fetchFeed, searchArticles } from '@/services/api';
+import {
+  addComment,
+  createPost,
+  fetchComments,
+  fetchCreatorClips,
+  fetchFeed,
+  fetchUserPosts,
+  getUserByHandle,
+  searchArticles,
+} from '@/services/api';
 
 describe('searchArticles', () => {
   it('filtre par mot-clé (titre/résumé/artiste/tags)', async () => {
@@ -80,6 +89,33 @@ describe('commentaires', () => {
     const after = await fetchComments('clip', 'c-3');
     expect(after.length).toBe(before + 1);
     expect(after[after.length - 1].id).toBe(comment.id);
+  });
+});
+
+describe('profil créateur', () => {
+  it('retrouve un utilisateur par son handle', async () => {
+    const user = await getUserByHandle('lyor');
+    expect(user).not.toBeNull();
+    expect(user?.displayName).toBe('LYOR');
+  });
+
+  it('renvoie null pour un handle inconnu', async () => {
+    expect(await getUserByHandle('inconnu-xyz')).toBeNull();
+  });
+
+  it('ne renvoie que les clips du créateur', async () => {
+    const user = await getUserByHandle('lyor');
+    if (!user) throw new Error('utilisateur attendu');
+    const list = await fetchCreatorClips(user.id);
+    expect(list.length).toBeGreaterThan(0);
+    expect(list.every((c) => c.creator.id === user.id)).toBe(true);
+  });
+
+  it('ne renvoie que les posts de l\'auteur', async () => {
+    const user = await getUserByHandle('lyor');
+    if (!user) throw new Error('utilisateur attendu');
+    const list = await fetchUserPosts(user.id);
+    expect(list.every((p) => p.author.id === user.id)).toBe(true);
   });
 });
 

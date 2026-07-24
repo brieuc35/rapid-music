@@ -40,8 +40,10 @@
     <!-- Infos créateur + légende -->
     <div class="overlay">
       <div class="creator-row">
-        <UserAvatar :user="clip.creator" :size="40" />
-        <span class="creator-name">@{{ clip.creator.handle }}</span>
+        <div class="who" @click="goToProfile">
+          <UserAvatar :user="clip.creator" :size="40" />
+          <span class="creator-name">@{{ clip.creator.handle }}</span>
+        </div>
         <ion-button
           size="small"
           :fill="following ? 'outline' : 'solid'"
@@ -63,6 +65,7 @@
 
 <script lang="ts">
 import { computed, defineComponent, onBeforeUnmount, onMounted, PropType, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import { IonButton, IonIcon } from '@ionic/vue';
 import {
   arrowRedoOutline,
@@ -87,6 +90,7 @@ export default defineComponent({
   },
   emits: ['comment'],
   setup(props) {
+    const router = useRouter();
     const videoEl = ref<HTMLVideoElement | null>(null);
     const muted = ref(true);
     const { toggleLike, share } = useInteractions();
@@ -144,6 +148,7 @@ export default defineComponent({
       onLike: () => toggleLike(props.clip),
       onShare: () => share(props.clip),
       onFollow: () => toggleFollow(props.clip.creator),
+      goToProfile: () => router.push(`/profile/${props.clip.creator.handle}`),
       compactNumber,
       heart,
       heartOutline,
@@ -228,6 +233,12 @@ export default defineComponent({
   align-items: center;
   gap: 10px;
   margin-bottom: 8px;
+}
+.who {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
 }
 .creator-name {
   font-weight: 700;

@@ -1,16 +1,18 @@
 <template>
   <article class="post-card">
     <header class="post-header">
-      <UserAvatar :user="post.author" :size="44" />
-      <div class="author">
-        <div class="name-row">
-          <span class="display-name">{{ post.author.displayName }}</span>
-          <span class="handle">@{{ post.author.handle }}</span>
+      <div class="who" @click="goToProfile">
+        <UserAvatar :user="post.author" :size="44" />
+        <div class="author">
+          <div class="name-row">
+            <span class="display-name">{{ post.author.displayName }}</span>
+            <span class="handle">@{{ post.author.handle }}</span>
+          </div>
+          <span class="meta">{{ roleLabel(post.author.role) }} · {{ timeAgo(post.createdAt) }}</span>
         </div>
-        <span class="meta">{{ roleLabel(post.author.role) }} · {{ timeAgo(post.createdAt) }}</span>
       </div>
       <ion-button
-        v-if="post.author.id !== 'u-me'"
+        v-if="showFollow && post.author.id !== 'u-me'"
         size="small"
         :fill="following ? 'outline' : 'solid'"
         class="follow-btn"
@@ -57,6 +59,7 @@
 
 <script lang="ts">
 import { computed, defineComponent, PropType } from 'vue';
+import { useRouter } from 'vue-router';
 import { IonButton, IonIcon } from '@ionic/vue';
 import {
   arrowRedoOutline,
@@ -84,9 +87,12 @@ export default defineComponent({
   components: { UserAvatar, IonButton, IonIcon },
   props: {
     post: { type: Object as PropType<Post>, required: true },
+    // Masqué sur le profil du créateur lui-même (bouton Suivre déjà en en-tête).
+    showFollow: { type: Boolean, default: true },
   },
   emits: ['comment'],
   setup(props) {
+    const router = useRouter();
     const { toggleLike, share } = useInteractions();
     const { isFollowing, toggleFollow } = useFollows();
 
@@ -97,6 +103,7 @@ export default defineComponent({
       onLike: () => toggleLike(props.post),
       onShare: () => share(props.post),
       onFollow: () => toggleFollow(props.post.author),
+      goToProfile: () => router.push(`/profile/${props.post.author.handle}`),
       roleLabel: (r: UserRole) => ROLE_LABELS[r],
       compactNumber,
       timeAgo,
@@ -120,8 +127,15 @@ export default defineComponent({
   align-items: center;
   gap: 12px;
 }
-.author {
+.who {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   flex: 1;
+  min-width: 0;
+  cursor: pointer;
+}
+.author {
   min-width: 0;
 }
 .name-row {

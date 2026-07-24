@@ -8,6 +8,10 @@ const routes: Array<RouteRecordRaw> = [
     redirect: '/tabs/feed'
   },
   {
+    path: '/profile/:handle',
+    component: () => import('@/views/CreatorProfile.vue')
+  },
+  {
     path: '/tabs/',
     component: Tabs,
     children: [
