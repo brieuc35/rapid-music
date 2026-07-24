@@ -118,6 +118,7 @@ export interface Comment {
   body: string;
   createdAt: string;
   likeCount: number;
+  likedByMe: boolean;
 }
 
 /** Enveloppe de pagination par curseur (voir §8.1 du plan). */
@@ -133,4 +134,16 @@ export interface ArticleFilter {
   sourceId?: string;
   from?: string; // ISO date
   to?: string;   // ISO date
+}
+
+export type NotificationType = 'follow' | 'like' | 'comment' | 'mention' | 'system';
+
+/** Notification in-app (§2.1 / §5.2). Préfixée « App » pour éviter le type DOM Notification. */
+export interface AppNotification {
+  id: string;
+  type: NotificationType;
+  actor?: User;        // absent pour les notifications système
+  text: string;        // libellé prêt à afficher
+  createdAt: string;
+  read: boolean;
 }

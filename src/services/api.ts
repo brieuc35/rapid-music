@@ -7,6 +7,7 @@
  * (fetch / axios) en conservant les mêmes signatures.
  */
 import {
+  AppNotification,
   Article,
   ArticleFilter,
   Clip,
@@ -18,7 +19,16 @@ import {
   Source,
   User,
 } from '@/models';
-import { articles, clips, currentUser, posts, seedComments, sources, users } from './mockData';
+import {
+  articles,
+  clips,
+  currentUser,
+  notifications,
+  posts,
+  seedComments,
+  sources,
+  users,
+} from './mockData';
 
 const PAGE_SIZE = 3;
 
@@ -96,6 +106,24 @@ export async function fetchUserPosts(userId: string): Promise<Post[]> {
   return posts.filter((p) => p.author.id === userId);
 }
 
+/** GET /api/v1/notifications — notifications in-app de l'utilisateur courant. */
+export async function fetchNotifications(): Promise<AppNotification[]> {
+  await delay(200);
+  return [...notifications];
+}
+
+/** Nombre de notifications non lues (pour la pastille). */
+export async function fetchUnreadCount(): Promise<number> {
+  await delay(80);
+  return notifications.filter((n) => !n.read).length;
+}
+
+/** POST /api/v1/notifications/read — marque tout comme lu. */
+export async function markNotificationsRead(): Promise<void> {
+  await delay(120);
+  notifications.forEach((n) => { n.read = true; });
+}
+
 // Magasin de commentaires en mémoire (copie des données seed pour rester
 // mutable sans altérer la source). Clé : « type:id » de la cible.
 const commentStore = new Map<string, Comment[]>(
@@ -128,6 +156,7 @@ export async function addComment(
     body: body.trim(),
     createdAt: new Date().toISOString(),
     likeCount: 0,
+    likedByMe: false,
   };
   const key = commentKey(type, id);
   const list = commentStore.get(key) ?? [];

@@ -12,6 +12,10 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/CreatorProfile.vue')
   },
   {
+    path: '/notifications',
+    component: () => import('@/views/NotificationsPage.vue')
+  },
+  {
     path: '/tabs/',
     component: Tabs,
     children: [

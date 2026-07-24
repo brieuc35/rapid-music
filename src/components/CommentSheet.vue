@@ -20,8 +20,14 @@
           <span class="time">· {{ timeAgo(comment.createdAt) }}</span>
         </div>
         <p class="text">{{ comment.body }}</p>
-        <button class="like" :aria-label="`${comment.likeCount} j'aime`">
-          <ion-icon :icon="heartOutline" />
+        <button
+          class="like"
+          :class="{ liked: comment.likedByMe }"
+          :aria-pressed="comment.likedByMe"
+          :aria-label="`${comment.likeCount} j'aime`"
+          @click="toggleCommentLike(comment)"
+        >
+          <ion-icon :icon="comment.likedByMe ? heart : heartOutline" />
           <span v-if="comment.likeCount">{{ compactNumber(comment.likeCount) }}</span>
         </button>
       </div>
@@ -61,8 +67,8 @@ import {
   IonToolbar,
   modalController,
 } from '@ionic/vue';
-import { heartOutline, sendOutline } from 'ionicons/icons';
-import { CommentTargetType } from '@/models';
+import { heart, heartOutline, sendOutline } from 'ionicons/icons';
+import { Comment, CommentTargetType } from '@/models';
 import { compactNumber, timeAgo } from '@/utils/format';
 import { useComments } from '@/composables/useComments';
 import { currentUser } from '@/services/mockData';
@@ -105,6 +111,11 @@ export default defineComponent({
       }
     }
 
+    function toggleCommentLike(comment: Comment) {
+      comment.likedByMe = !comment.likedByMe;
+      comment.likeCount += comment.likedByMe ? 1 : -1;
+    }
+
     return {
       currentUser,
       comments,
@@ -113,10 +124,12 @@ export default defineComponent({
       draft,
       canSend,
       send,
+      toggleCommentLike,
       close: () => modalController.dismiss(),
       onDraft: (e: Event) => (draft.value = (e.target as HTMLIonInputElement | null)?.value?.toString() ?? ''),
       timeAgo,
       compactNumber,
+      heart,
       heartOutline,
       sendOutline,
     };
@@ -168,6 +181,9 @@ export default defineComponent({
 }
 .like ion-icon {
   font-size: 16px;
+}
+.like.liked {
+  color: var(--ion-color-danger, #eb445a);
 }
 .composer {
   display: flex;

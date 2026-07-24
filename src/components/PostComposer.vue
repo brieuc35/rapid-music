@@ -59,12 +59,26 @@
       @keyup.enter="addTag"
     ></ion-input>
 
-    <!-- Lien optionnel -->
-    <ion-button v-if="!showLink" fill="clear" size="small" class="add-link" @click="showLink = true">
-      <ion-icon :icon="linkOutline" slot="start" />
-      Ajouter un lien
-    </ion-button>
-    <div v-else class="link-fields">
+    <!-- Photo optionnelle -->
+    <input ref="fileInput" type="file" accept="image/*" hidden @change="onFile" />
+    <div v-if="imageUrl" class="image-preview">
+      <img :src="imageUrl" alt="Aperçu de la photo" />
+      <ion-button fill="solid" size="small" class="remove-image" @click="imageUrl = ''">
+        <ion-icon :icon="closeCircle" slot="icon-only" />
+      </ion-button>
+    </div>
+
+    <div class="attach-row">
+      <ion-button v-if="!imageUrl" fill="clear" size="small" @click="pickImage">
+        <ion-icon :icon="imageOutline" slot="start" />
+        Ajouter une photo
+      </ion-button>
+      <ion-button v-if="!showLink" fill="clear" size="small" @click="showLink = true">
+        <ion-icon :icon="linkOutline" slot="start" />
+        Ajouter un lien
+      </ion-button>
+    </div>
+    <div v-if="showLink" class="link-fields">
       <ion-input
         placeholder="https://…"
         inputmode="url"
@@ -99,7 +113,7 @@ import {
   modalController,
   toastController,
 } from '@ionic/vue';
-import { closeCircle, linkOutline } from 'ionicons/icons';
+import { closeCircle, imageOutline, linkOutline } from 'ionicons/icons';
 import { MediaAttachment, PostVisibility } from '@/models';
 import { createPost } from '@/services/api';
 import { currentUser } from '@/services/mockData';
@@ -140,6 +154,22 @@ export default defineComponent({
     const linkTitle = ref('');
     const visibility = ref<PostVisibility>('public');
     const publishing = ref(false);
+    const fileInput = ref<HTMLInputElement | null>(null);
+    const imageUrl = ref('');
+
+    function pickImage() {
+      fileInput.value?.click();
+    }
+
+    // Lecture locale en data URL. En prod : upload vers le stockage objet via
+    // URL pré-signée (§4.4), puis on stocke l'URL renvoyée par le back-end.
+    function onFile(event: Event) {
+      const file = (event.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => { imageUrl.value = String(reader.result); };
+      reader.readAsDataURL(file);
+    }
 
     const remaining = computed(() => MAX_LENGTH - body.value.length);
     const canPublish = computed(
@@ -163,6 +193,9 @@ export default defineComponent({
       publishing.value = true;
       try {
         const media: MediaAttachment[] = [];
+        if (imageUrl.value) {
+          media.push({ type: 'image', url: imageUrl.value });
+        }
         if (showLink.value && linkUrl.value.trim()) {
           media.push({ type: 'link', url: linkUrl.value.trim(), title: linkTitle.value.trim() || undefined });
         }
@@ -194,6 +227,10 @@ export default defineComponent({
       linkTitle,
       visibility,
       publishing,
+      fileInput,
+      imageUrl,
+      pickImage,
+      onFile,
       remaining,
       canPublish,
       MAX_LENGTH,
@@ -208,6 +245,7 @@ export default defineComponent({
       onLinkTitle: (e: Event) => (linkTitle.value = targetValue(e)),
       onVisibility: (e: CustomEvent) => (visibility.value = e.detail.value as PostVisibility),
       closeCircle,
+      imageOutline,
       linkOutline,
     };
   },
@@ -257,9 +295,34 @@ export default defineComponent({
   font-size: 14px;
   border-bottom: 1px solid var(--ion-color-light-shade, #d7d8da);
 }
-.add-link {
+.attach-row {
+  display: flex;
+  gap: 4px;
   margin-top: 12px;
-  --padding-start: 0;
+}
+.attach-row ion-button {
+  --padding-start: 4px;
+  --padding-end: 8px;
+}
+.image-preview {
+  position: relative;
+  margin-top: 12px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.image-preview img {
+  width: 100%;
+  max-height: 320px;
+  object-fit: cover;
+  display: block;
+}
+.remove-image {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  --padding-start: 6px;
+  --padding-end: 6px;
+  --background: rgba(0, 0, 0, 0.55);
 }
 .link-fields {
   margin-top: 12px;

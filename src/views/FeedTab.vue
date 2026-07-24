@@ -3,6 +3,12 @@
     <ion-header>
       <ion-toolbar>
         <ion-title>Fil</ion-title>
+        <ion-buttons slot="end">
+          <ion-button aria-label="Notifications" @click="goToNotifications">
+            <ion-icon slot="icon-only" :icon="notificationsOutline" />
+            <ion-badge v-if="unreadCount" color="danger" class="notif-badge">{{ unreadCount }}</ion-badge>
+          </ion-button>
+        </ion-buttons>
       </ion-toolbar>
     </ion-header>
 
@@ -33,7 +39,11 @@
 
 <script lang="ts">
 import { defineComponent, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import {
+  IonBadge,
+  IonButton,
+  IonButtons,
   IonContent,
   IonFab,
   IonFabButton,
@@ -47,10 +57,12 @@ import {
   IonTitle,
   IonToolbar,
   modalController,
+  onIonViewWillEnter,
 } from '@ionic/vue';
-import { createOutline } from 'ionicons/icons';
+import { createOutline, notificationsOutline } from 'ionicons/icons';
 import { Post } from '@/models';
 import { useFeed } from '@/composables/useFeed';
+import { useNotifications } from '@/composables/useNotifications';
 import PostCard from '@/components/PostCard.vue';
 import PostComposer from '@/components/PostComposer.vue';
 import CommentSheet from '@/components/CommentSheet.vue';
@@ -59,6 +71,9 @@ export default defineComponent({
   name: 'FeedTab',
   components: {
     PostCard,
+    IonBadge,
+    IonButton,
+    IonButtons,
     IonContent,
     IonFab,
     IonFabButton,
@@ -73,9 +88,13 @@ export default defineComponent({
     IonToolbar,
   },
   setup() {
+    const router = useRouter();
     const { posts, loading, hasMore, refresh, loadMore, prepend } = useFeed();
+    const { unreadCount, refreshUnread } = useNotifications();
 
     onMounted(refresh);
+    // Rafraîchit la pastille à chaque entrée dans l'onglet (retour de la page notifs).
+    onIonViewWillEnter(refreshUnread);
 
     async function onRefresh(event: CustomEvent) {
       await refresh();
@@ -106,7 +125,19 @@ export default defineComponent({
       await modal.present();
     }
 
-    return { posts, loading, hasMore, onRefresh, onInfinite, openComposer, openComments, createOutline };
+    return {
+      posts,
+      loading,
+      hasMore,
+      unreadCount,
+      onRefresh,
+      onInfinite,
+      openComposer,
+      openComments,
+      goToNotifications: () => router.push('/notifications'),
+      createOutline,
+      notificationsOutline,
+    };
   },
 });
 </script>
@@ -120,5 +151,13 @@ export default defineComponent({
 .state.end {
   padding: 20px;
   font-size: 14px;
+}
+.notif-badge {
+  position: absolute;
+  top: 2px;
+  right: 0;
+  font-size: 10px;
+  --padding-start: 5px;
+  --padding-end: 5px;
 }
 </style>

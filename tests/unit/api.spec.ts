@@ -4,8 +4,11 @@ import {
   fetchComments,
   fetchCreatorClips,
   fetchFeed,
+  fetchNotifications,
+  fetchUnreadCount,
   fetchUserPosts,
   getUserByHandle,
+  markNotificationsRead,
   searchArticles,
 } from '@/services/api';
 
@@ -85,6 +88,7 @@ describe('commentaires', () => {
     expect(comment.body).toBe('superbe reprise');
     expect(comment.author.id).toBe('u-me');
     expect(comment.likeCount).toBe(0);
+    expect(comment.likedByMe).toBe(false);
 
     const after = await fetchComments('clip', 'c-3');
     expect(after.length).toBe(before + 1);
@@ -116,6 +120,22 @@ describe('profil créateur', () => {
     if (!user) throw new Error('utilisateur attendu');
     const list = await fetchUserPosts(user.id);
     expect(list.every((p) => p.author.id === user.id)).toBe(true);
+  });
+});
+
+describe('notifications', () => {
+  it('renvoie la liste et un décompte de non-lus cohérent', async () => {
+    const list = await fetchNotifications();
+    expect(list.length).toBeGreaterThan(0);
+    const unread = await fetchUnreadCount();
+    expect(unread).toBe(list.filter((n) => !n.read).length);
+  });
+
+  it('marque tout comme lu (décompte à zéro)', async () => {
+    await markNotificationsRead();
+    expect(await fetchUnreadCount()).toBe(0);
+    const list = await fetchNotifications();
+    expect(list.every((n) => n.read)).toBe(true);
   });
 });
 

@@ -24,17 +24,24 @@
 
     <p class="body">{{ post.body }}</p>
 
-    <a
-      v-for="media in post.media"
-      :key="media.url"
-      class="link-preview"
-      :href="media.url"
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      <ion-icon :icon="linkOutline" />
-      <span>{{ media.title || media.url }}</span>
-    </a>
+    <template v-for="media in post.media" :key="media.url">
+      <img
+        v-if="media.type === 'image'"
+        class="post-image"
+        :src="media.url"
+        :alt="media.title || 'Photo du post'"
+      />
+      <a
+        v-else
+        class="link-preview"
+        :href="media.url"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <ion-icon :icon="linkOutline" />
+        <span>{{ media.title || media.url }}</span>
+      </a>
+    </template>
 
     <div v-if="post.tags.length" class="tags">
       <span v-for="tag in post.tags" :key="tag" class="tag">#{{ tag }}</span>
@@ -163,6 +170,14 @@ export default defineComponent({
   margin: 12px 0;
   line-height: 1.5;
   white-space: pre-wrap;
+}
+.post-image {
+  width: 100%;
+  max-height: 420px;
+  object-fit: cover;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  display: block;
 }
 .link-preview {
   display: flex;

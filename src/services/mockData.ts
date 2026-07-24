@@ -5,7 +5,7 @@
  * (feedService, clipsService, newsService) consomment ces données via une
  * couche qui simule la latence réseau et la pagination par curseur.
  */
-import { Article, Clip, Comment, Post, Source, User } from '@/models';
+import { AppNotification, Article, Clip, Comment, Post, Source, User } from '@/models';
 
 export const currentUser: User = {
   id: 'u-me',
@@ -267,6 +267,7 @@ export const seedComments: Record<string, Comment[]> = {
       body: "Hâte d'entendre ça 🔥 tu lâches un extrait ?",
       createdAt: '2026-07-24T03:02:00Z',
       likeCount: 24,
+      likedByMe: false,
     },
     {
       id: 'cm-2',
@@ -274,6 +275,7 @@ export const seedComments: Record<string, Comment[]> = {
       body: '4h du mat le club des insomniaques du studio 😅',
       createdAt: '2026-07-24T05:40:00Z',
       likeCount: 8,
+      likedByMe: false,
     },
   ],
   'clip:c-2': [
@@ -283,6 +285,50 @@ export const seedComments: Record<string, Comment[]> = {
       body: 'Ce flow 🤯',
       createdAt: '2026-07-23T22:10:00Z',
       likeCount: 132,
+      likedByMe: false,
     },
   ],
 };
+
+// Notifications in-app mockées, de la plus récente à la plus ancienne.
+export const notifications: AppNotification[] = [
+  {
+    id: 'n-1',
+    type: 'like',
+    actor: userById('u-2'),
+    text: 'a aimé votre commentaire',
+    createdAt: '2026-07-24T11:30:00Z',
+    read: false,
+  },
+  {
+    id: 'n-2',
+    type: 'follow',
+    actor: userById('u-1'),
+    text: 'a commencé à vous suivre',
+    createdAt: '2026-07-24T10:05:00Z',
+    read: false,
+  },
+  {
+    id: 'n-3',
+    type: 'comment',
+    actor: userById('u-4'),
+    text: 'a répondu à votre commentaire : « totalement d\'accord ! »',
+    createdAt: '2026-07-24T08:45:00Z',
+    read: false,
+  },
+  {
+    id: 'n-4',
+    type: 'mention',
+    actor: userById('u-3'),
+    text: 'vous a mentionné dans un post',
+    createdAt: '2026-07-23T19:20:00Z',
+    read: true,
+  },
+  {
+    id: 'n-5',
+    type: 'system',
+    text: 'Bienvenue sur RapidMusic 🎧 Choisissez vos genres favoris pour personnaliser votre fil.',
+    createdAt: '2026-07-22T09:00:00Z',
+    read: true,
+  },
+];
