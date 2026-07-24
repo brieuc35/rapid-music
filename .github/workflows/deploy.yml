@@ -46,6 +46,10 @@ jobs:
         run: cp dist/index.html dist/404.html
 
       - uses: actions/configure-pages@v5
+        # Active Pages automatiquement (évite le passage manuel par Settings → Pages).
+        # Nécessite que le dépôt soit éligible : public, ou privé avec un plan GitHub Pro.
+        with:
+          enablement: true
 
       - uses: actions/upload-pages-artifact@v3
         with:
