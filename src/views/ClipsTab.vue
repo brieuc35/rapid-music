@@ -17,10 +17,11 @@
 
 <script lang="ts">
 import { defineComponent, onMounted } from 'vue';
-import { IonContent, IonPage, toastController } from '@ionic/vue';
+import { IonContent, IonPage, modalController } from '@ionic/vue';
 import { Clip } from '@/models';
 import { useClips } from '@/composables/useClips';
 import ClipPlayer from '@/components/ClipPlayer.vue';
+import CommentSheet from '@/components/CommentSheet.vue';
 
 export default defineComponent({
   name: 'ClipsTab',
@@ -31,11 +32,15 @@ export default defineComponent({
     onMounted(refresh);
 
     async function openComments(clip: Clip) {
-      const toast = await toastController.create({
-        message: `Commentaires du clip de @${clip.creator.handle} — à venir`,
-        duration: 1500,
+      const modal = await modalController.create({
+        component: CommentSheet,
+        componentProps: {
+          targetType: 'clip',
+          targetId: clip.id,
+          afterAdd: () => { clip.commentCount += 1; },
+        },
       });
-      await toast.present();
+      await modal.present();
     }
 
     return { clips, loading, openComments };

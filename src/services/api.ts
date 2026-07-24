@@ -6,8 +6,18 @@
  * il suffit de remplacer le corps de ces fonctions par des appels HTTP
  * (fetch / axios) en conservant les mêmes signatures.
  */
-import { Article, ArticleFilter, Clip, CreatePostInput, Page, Post, Source } from '@/models';
-import { articles, clips, currentUser, posts, sources } from './mockData';
+import {
+  Article,
+  ArticleFilter,
+  Clip,
+  Comment,
+  CommentTargetType,
+  CreatePostInput,
+  Page,
+  Post,
+  Source,
+} from '@/models';
+import { articles, clips, currentUser, posts, seedComments, sources } from './mockData';
 
 const PAGE_SIZE = 3;
 
@@ -65,6 +75,46 @@ export async function searchArticles(
 export async function getSources(): Promise<Source[]> {
   await delay(100);
   return sources;
+}
+
+// Magasin de commentaires en mémoire (copie des données seed pour rester
+// mutable sans altérer la source). Clé : « type:id » de la cible.
+const commentStore = new Map<string, Comment[]>(
+  Object.entries(seedComments).map(([key, list]) => [key, [...list]]),
+);
+
+function commentKey(type: CommentTargetType, id: string): string {
+  return `${type}:${id}`;
+}
+
+/** GET /api/v1/:type/:id/comments — commentaires d'un post ou d'un clip. */
+export async function fetchComments(type: CommentTargetType, id: string): Promise<Comment[]> {
+  await delay(200);
+  // Copie : ne pas exposer la référence interne du magasin (comme une vraie API).
+  return [...(commentStore.get(commentKey(type, id)) ?? [])];
+}
+
+let commentSeq = 0;
+
+/** POST /api/v1/:type/:id/comments — ajoute un commentaire au nom de l'utilisateur courant. */
+export async function addComment(
+  type: CommentTargetType,
+  id: string,
+  body: string,
+): Promise<Comment> {
+  await delay(200);
+  const comment: Comment = {
+    id: `cm-new-${Date.now()}-${commentSeq++}`,
+    author: currentUser,
+    body: body.trim(),
+    createdAt: new Date().toISOString(),
+    likeCount: 0,
+  };
+  const key = commentKey(type, id);
+  const list = commentStore.get(key) ?? [];
+  list.push(comment);
+  commentStore.set(key, list);
+  return comment;
 }
 
 let postSeq = 0;

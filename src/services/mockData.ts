@@ -5,7 +5,7 @@
  * (feedService, clipsService, newsService) consomment ces données via une
  * couche qui simule la latence réseau et la pagination par curseur.
  */
-import { Article, Clip, Post, Source, User } from '@/models';
+import { Article, Clip, Comment, Post, Source, User } from '@/models';
 
 export const currentUser: User = {
   id: 'u-me',
@@ -256,3 +256,33 @@ export const articles: Article[] = [
     publishedAt: '2026-07-19T16:45:00Z',
   },
 ];
+
+// Commentaires seed, indexés par « type:id » de la cible (post ou clip).
+// Le service alimente son magasin en mémoire à partir de ces données.
+export const seedComments: Record<string, Comment[]> = {
+  'post:p-1': [
+    {
+      id: 'cm-1',
+      author: userById('u-4'),
+      body: "Hâte d'entendre ça 🔥 tu lâches un extrait ?",
+      createdAt: '2026-07-24T03:02:00Z',
+      likeCount: 24,
+    },
+    {
+      id: 'cm-2',
+      author: userById('u-1'),
+      body: '4h du mat le club des insomniaques du studio 😅',
+      createdAt: '2026-07-24T05:40:00Z',
+      likeCount: 8,
+    },
+  ],
+  'clip:c-2': [
+    {
+      id: 'cm-3',
+      author: userById('u-1'),
+      body: 'Ce flow 🤯',
+      createdAt: '2026-07-23T22:10:00Z',
+      likeCount: 132,
+    },
+  ],
+};

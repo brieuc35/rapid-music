@@ -47,13 +47,13 @@ import {
   IonTitle,
   IonToolbar,
   modalController,
-  toastController,
 } from '@ionic/vue';
 import { createOutline } from 'ionicons/icons';
 import { Post } from '@/models';
 import { useFeed } from '@/composables/useFeed';
 import PostCard from '@/components/PostCard.vue';
 import PostComposer from '@/components/PostComposer.vue';
+import CommentSheet from '@/components/CommentSheet.vue';
 
 export default defineComponent({
   name: 'FeedTab',
@@ -95,11 +95,15 @@ export default defineComponent({
     }
 
     async function openComments(post: Post) {
-      const toast = await toastController.create({
-        message: `Commentaires de « ${post.author.displayName} » — à venir`,
-        duration: 1500,
+      const modal = await modalController.create({
+        component: CommentSheet,
+        componentProps: {
+          targetType: 'post',
+          targetId: post.id,
+          afterAdd: () => { post.commentCount += 1; },
+        },
       });
-      await toast.present();
+      await modal.present();
     }
 
     return { posts, loading, hasMore, onRefresh, onInfinite, openComposer, openComments, createOutline };

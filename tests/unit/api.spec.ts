@@ -1,4 +1,4 @@
-import { createPost, fetchFeed, searchArticles } from '@/services/api';
+import { addComment, createPost, fetchComments, fetchFeed, searchArticles } from '@/services/api';
 
 describe('searchArticles', () => {
   it('filtre par mot-clé (titre/résumé/artiste/tags)', async () => {
@@ -48,6 +48,38 @@ describe('createPost', () => {
     const b = await createPost({ body: 'b', tags: [], media: [], visibility: 'followers' });
     expect(a.id).not.toBe(b.id);
     expect(b.visibility).toBe('followers');
+  });
+});
+
+describe('commentaires', () => {
+  it('renvoie les commentaires seed d\'une cible', async () => {
+    const list = await fetchComments('post', 'p-1');
+    expect(list.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('renvoie une liste vide pour une cible sans commentaire', async () => {
+    const list = await fetchComments('post', 'p-3');
+    expect(list).toEqual([]);
+  });
+
+  it('renvoie une copie indépendante du magasin (pas de fuite de référence)', async () => {
+    const snapshot = await fetchComments('post', 'p-1');
+    const lenBefore = snapshot.length;
+    await addComment('post', 'p-1', 'nouveau');
+    // Le tableau déjà récupéré ne doit pas avoir été muté par l'ajout.
+    expect(snapshot.length).toBe(lenBefore);
+  });
+
+  it('ajoute un commentaire (trimé, auteur courant) et le persiste', async () => {
+    const before = (await fetchComments('clip', 'c-3')).length;
+    const comment = await addComment('clip', 'c-3', '  superbe reprise  ');
+    expect(comment.body).toBe('superbe reprise');
+    expect(comment.author.id).toBe('u-me');
+    expect(comment.likeCount).toBe(0);
+
+    const after = await fetchComments('clip', 'c-3');
+    expect(after.length).toBe(before + 1);
+    expect(after[after.length - 1].id).toBe(comment.id);
   });
 });
 

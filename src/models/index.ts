@@ -110,6 +110,8 @@ export interface Article {
   publishedAt: string;
 }
 
+export type CommentTargetType = 'post' | 'clip';
+
 export interface Comment {
   id: string;
   author: User;
