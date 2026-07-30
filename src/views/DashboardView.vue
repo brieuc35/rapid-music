@@ -1,0 +1,291 @@
+<template>
+  <div class="page">
+    <PageHeader
+      :title="`Bonjour ${store.artist.stageName} 👋`"
+      subtitle="Voici l'essentiel de votre carrière aujourd'hui."
+    />
+
+    <!-- Stats -->
+    <div class="grid grid--stats" style="margin-bottom: 26px">
+      <div class="stat">
+        <div class="stat__ico" style="background: var(--green-bg); color: var(--green)">
+          <Icon name="money" />
+        </div>
+        <div class="stat__val mono">{{ money(monthRevenue) }}</div>
+        <div class="stat__label">Revenus streaming (dernier mois)</div>
+        <div class="stat__delta" :class="revenueDelta >= 0 ? 'stat__delta--up' : 'stat__delta--down'">
+          <Icon :name="revenueDelta >= 0 ? 'trendUp' : 'trendDown'" style="width: 14px; height: 14px" />
+          {{ revenueDelta >= 0 ? '+' : '' }}{{ revenueDelta }}% vs mois précédent
+        </div>
+      </div>
+
+      <div class="stat">
+        <div class="stat__ico" style="background: var(--violet-100); color: var(--violet-600)">
+          <Icon name="concert" />
+        </div>
+        <div class="stat__val mono">{{ upcomingConcerts.length }}</div>
+        <div class="stat__label">Concerts à venir</div>
+        <div class="stat__delta stat__delta--up">
+          <Icon name="ticket" style="width: 14px; height: 14px" />
+          {{ number(totalTickets) }} billets vendus
+        </div>
+      </div>
+
+      <div class="stat">
+        <div class="stat__ico" style="background: var(--blue-bg); color: var(--blue)">
+          <Icon name="release" />
+        </div>
+        <div class="stat__val mono">{{ compact(totalStreams) }}</div>
+        <div class="stat__label">Streams cumulés (sorties)</div>
+        <div class="stat__delta stat__delta--up">
+          <Icon name="music" style="width: 14px; height: 14px" />
+          {{ store.releases.length }} sorties au catalogue
+        </div>
+      </div>
+
+      <div class="stat">
+        <div class="stat__ico" style="background: var(--amber-bg); color: var(--amber)">
+          <Icon name="contract" />
+        </div>
+        <div class="stat__val mono">{{ activeContracts }}</div>
+        <div class="stat__label">Contrats actifs</div>
+        <div class="stat__delta" :class="pendingContracts ? 'stat__delta--down' : 'stat__delta--up'">
+          <Icon name="clock" style="width: 14px; height: 14px" />
+          {{ pendingContracts }} en attente
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid--2">
+      <!-- Prochains concerts -->
+      <div class="card">
+        <div class="section-head" style="padding: 18px 20px 0">
+          <span class="section-head__title">Prochains concerts</span>
+          <RouterLink to="/concerts" class="btn btn--subtle btn--sm">Tout voir</RouterLink>
+        </div>
+        <div class="list" style="margin-top: 8px">
+          <div v-for="c in upcomingConcerts.slice(0, 4)" :key="c.id" class="row">
+            <div class="datechip">
+              <span class="datechip__d">{{ dayNum(c.date) }}</span>
+              <span class="datechip__m">{{ monthShort(c.date) }}</span>
+            </div>
+            <div class="row__main">
+              <div class="row__title">{{ c.venue }}</div>
+              <div class="row__sub">{{ c.city }} · {{ c.country }} · {{ c.time }}</div>
+            </div>
+            <span class="badge" :class="concertBadge(c.status)">{{ c.status }}</span>
+          </div>
+          <EmptyState
+            v-if="!upcomingConcerts.length"
+            icon="concert"
+            title="Aucun concert à venir"
+            text="Planifiez votre prochaine date."
+          />
+        </div>
+      </div>
+
+      <!-- Revenus par plateforme -->
+      <div class="card card--pad">
+        <div class="section-head">
+          <span class="section-head__title">Revenus par plateforme</span>
+          <RouterLink to="/royalties" class="btn btn--subtle btn--sm">Détails</RouterLink>
+        </div>
+        <div class="vstack" style="gap: 14px; margin-top: 6px">
+          <div v-for="p in platformBreakdown" :key="p.platform" class="vstack" style="gap: 6px">
+            <div class="hstack" style="justify-content: space-between; font-size: 13.5px">
+              <span class="hstack" style="gap: 8px">
+                <span class="dot" :style="{ background: p.color }" />
+                <b>{{ p.platform }}</b>
+              </span>
+              <span class="mono soft">{{ money(p.amount) }}</span>
+            </div>
+            <div class="bar">
+              <div
+                class="bar__fill"
+                :style="{ width: p.pct + '%', background: p.color }"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid--2" style="margin-top: 18px">
+      <!-- Prochaine session studio -->
+      <div class="card">
+        <div class="section-head" style="padding: 18px 20px 0">
+          <span class="section-head__title">Agenda studio</span>
+          <RouterLink to="/studio" class="btn btn--subtle btn--sm">Calendrier</RouterLink>
+        </div>
+        <div class="list" style="margin-top: 8px">
+          <div v-for="s in upcomingSessions.slice(0, 4)" :key="s.id" class="row">
+            <div class="stat__ico" style="width: 38px; height: 38px; margin: 0; background: var(--brand-gradient-soft); color: var(--violet-600)">
+              <Icon name="studio" style="width: 18px; height: 18px" />
+            </div>
+            <div class="row__main">
+              <div class="row__title">{{ s.title }}</div>
+              <div class="row__sub">{{ s.studio }} · {{ formatDate(s.date) }} · {{ s.startTime }}</div>
+            </div>
+            <span class="badge badge--gray badge--plain">{{ relativeDay(s.date) }}</span>
+          </div>
+          <EmptyState
+            v-if="!upcomingSessions.length"
+            icon="studio"
+            title="Studio libre"
+            text="Aucune session planifiée."
+          />
+        </div>
+      </div>
+
+      <!-- Dernières sorties -->
+      <div class="card">
+        <div class="section-head" style="padding: 18px 20px 0">
+          <span class="section-head__title">Dernières sorties</span>
+          <RouterLink to="/sorties" class="btn btn--subtle btn--sm">Catalogue</RouterLink>
+        </div>
+        <div class="list" style="margin-top: 8px">
+          <div v-for="r in recentReleases" :key="r.id" class="row">
+            <div class="cover" :style="{ background: coverGradient(r.cover) }">
+              <Icon name="music" style="width: 16px; height: 16px; color: #fff" />
+            </div>
+            <div class="row__main">
+              <div class="row__title">{{ r.title }}</div>
+              <div class="row__sub">{{ r.type }} · {{ formatDate(r.date) }}</div>
+            </div>
+            <div class="vstack" style="align-items: flex-end">
+              <b class="mono" style="font-size: 13.5px">{{ compact(r.streams) }}</b>
+              <span class="muted" style="font-size: 12px">streams</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { computed } from 'vue'
+import { RouterLink } from 'vue-router'
+import PageHeader from '@/components/PageHeader.vue'
+import Icon from '@/components/Icon.vue'
+import EmptyState from '@/components/EmptyState.vue'
+import { store } from '@/store'
+import {
+  money,
+  number,
+  compact,
+  formatDate,
+  dayNum,
+  monthShort,
+  relativeDay,
+  daysFromNow,
+} from '@/utils/format'
+
+const periods = computed(() => {
+  const set = Array.from(new Set(store.royalties.map((r) => r.period)))
+  return set
+})
+
+const monthRevenue = computed(() => {
+  const p = periods.value[0]
+  return store.royalties.filter((r) => r.period === p).reduce((s, r) => s + r.amount, 0)
+})
+
+const prevMonthRevenue = computed(() => {
+  const p = periods.value[1]
+  if (!p) return 0
+  return store.royalties.filter((r) => r.period === p).reduce((s, r) => s + r.amount, 0)
+})
+
+const revenueDelta = computed(() => {
+  if (!prevMonthRevenue.value) return 0
+  return Math.round(((monthRevenue.value - prevMonthRevenue.value) / prevMonthRevenue.value) * 100)
+})
+
+const upcomingConcerts = computed(() =>
+  store.concerts
+    .filter((c) => c.status !== 'Terminé' && daysFromNow(c.date) >= 0)
+    .sort((a, b) => a.date.localeCompare(b.date)),
+)
+
+const totalTickets = computed(() => upcomingConcerts.value.reduce((s, c) => s + c.ticketsSold, 0))
+const totalStreams = computed(() => store.releases.reduce((s, r) => s + r.streams, 0))
+const activeContracts = computed(() => store.contracts.filter((c) => c.status === 'Actif').length)
+const pendingContracts = computed(
+  () => store.contracts.filter((c) => c.status !== 'Actif' && c.status !== 'Expiré').length,
+)
+
+const upcomingSessions = computed(() =>
+  store.studio
+    .filter((s) => daysFromNow(s.date) >= 0)
+    .sort((a, b) => a.date.localeCompare(b.date)),
+)
+
+const recentReleases = computed(() =>
+  [...store.releases]
+    .filter((r) => r.status === 'Publié')
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, 4),
+)
+
+const platformBreakdown = computed(() => {
+  const p = periods.value[0]
+  const rows = store.royalties.filter((r) => r.period === p)
+  const max = Math.max(1, ...rows.map((r) => r.amount))
+  return rows
+    .sort((a, b) => b.amount - a.amount)
+    .map((r) => ({ ...r, pct: Math.round((r.amount / max) * 100) }))
+})
+
+function concertBadge(status: string): string {
+  return status === 'Confirmé'
+    ? 'badge--green'
+    : status === 'Option'
+      ? 'badge--amber'
+      : 'badge--blue'
+}
+
+function coverGradient(hex: string): string {
+  return `linear-gradient(135deg, ${hex}, ${hex}bb)`
+}
+</script>
+
+<style scoped>
+.datechip {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: var(--brand-gradient-soft);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.datechip__d {
+  font-weight: 700;
+  font-size: 17px;
+  line-height: 1;
+  color: var(--violet-700);
+}
+.datechip__m {
+  font-size: 11px;
+  color: var(--violet-600);
+  text-transform: uppercase;
+}
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.cover {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-sm);
+}
+</style>

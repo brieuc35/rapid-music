@@ -1,39 +1,63 @@
-import { createRouter, createWebHistory } from '@ionic/vue-router';
-import { RouteRecordRaw } from 'vue-router';
-import Tabs from '../views/Tabs.vue'
+import { createRouter, createWebHashHistory } from 'vue-router'
+import type { RouteRecordRaw } from 'vue-router'
 
-const routes: Array<RouteRecordRaw> = [
+const routes: RouteRecordRaw[] = [
+  { path: '/', redirect: '/tableau-de-bord' },
   {
-    path: '/',
-    redirect: '/tabs/tab1'
+    path: '/tableau-de-bord',
+    name: 'dashboard',
+    component: () => import('@/views/DashboardView.vue'),
+    meta: { title: 'Tableau de bord', icon: 'dashboard' },
   },
   {
-    path: '/tabs/',
-    component: Tabs,
-    children: [
-      {
-        path: '',
-        redirect: '/tabs/tab1'
-      },
-      {
-        path: 'tab1',
-        component: () => import('@/views/Tab1.vue')
-      },
-      {
-        path: 'tab2',
-        component: () => import('@/views/Tab2.vue')
-      },
-      {
-        path: 'tab3',
-        component: () => import('@/views/Tab3.vue')
-      }
-    ]
-  }
+    path: '/contrats',
+    name: 'contracts',
+    component: () => import('@/views/ContractsView.vue'),
+    meta: { title: 'Contrats', icon: 'contract' },
+  },
+  {
+    path: '/concerts',
+    name: 'concerts',
+    component: () => import('@/views/ConcertsView.vue'),
+    meta: { title: 'Concerts', icon: 'concert' },
+  },
+  {
+    path: '/sorties',
+    name: 'releases',
+    component: () => import('@/views/ReleasesView.vue'),
+    meta: { title: 'Sorties', icon: 'release' },
+  },
+  {
+    path: '/royalties',
+    name: 'royalties',
+    component: () => import('@/views/RoyaltiesView.vue'),
+    meta: { title: 'Royalties & Revenus', icon: 'money' },
+  },
+  {
+    path: '/studio',
+    name: 'studio',
+    component: () => import('@/views/StudioView.vue'),
+    meta: { title: 'Calendrier studio', icon: 'studio' },
+  },
+  {
+    path: '/contacts',
+    name: 'contacts',
+    component: () => import('@/views/ContactsView.vue'),
+    meta: { title: 'Contacts', icon: 'contacts' },
+  },
+  {
+    path: '/label',
+    name: 'label',
+    component: () => import('@/views/LabelView.vue'),
+    meta: { title: 'Label', icon: 'label' },
+  },
+  { path: '/:pathMatch(.*)*', redirect: '/tableau-de-bord' },
 ]
 
-const router = createRouter({
-  history: createWebHistory(process.env.BASE_URL),
-  routes
+export const router = createRouter({
+  history: createWebHashHistory(),
+  routes,
+  scrollBehavior() {
+    return { top: 0 }
+  },
 })
-
-export default router
