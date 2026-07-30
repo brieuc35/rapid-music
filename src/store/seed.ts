@@ -205,13 +205,13 @@ export function seedData(): AppData {
     ],
     royalties: [
       { id: 'y1', platform: 'Spotify', period: 'Juin 2026', streams: 820000, amount: 2870, color: '#1db954' },
-      { id: 'y2', platform: 'Apple Music', period: 'Juin 2026', streams: 240000, amount: 1680, color: '#fa2d48' },
-      { id: 'y3', platform: 'Deezer', period: 'Juin 2026', streams: 130000, amount: 690, color: '#ef5466' },
+      { id: 'y2', platform: 'Apple Music', period: 'Juin 2026', streams: 240000, amount: 1680, color: '#000000' },
+      { id: 'y3', platform: 'Deezer', period: 'Juin 2026', streams: 130000, amount: 690, color: '#8b5cf6' },
       { id: 'y4', platform: 'YouTube Music', period: 'Juin 2026', streams: 310000, amount: 540, color: '#ff0000' },
       { id: 'y5', platform: 'Amazon Music', period: 'Juin 2026', streams: 70000, amount: 420, color: '#25d1da' },
       { id: 'y6', platform: 'Spotify', period: 'Mai 2026', streams: 610000, amount: 2130, color: '#1db954' },
-      { id: 'y7', platform: 'Apple Music', period: 'Mai 2026', streams: 190000, amount: 1330, color: '#fa2d48' },
-      { id: 'y8', platform: 'Deezer', period: 'Mai 2026', streams: 95000, amount: 500, color: '#ef5466' },
+      { id: 'y7', platform: 'Apple Music', period: 'Mai 2026', streams: 190000, amount: 1330, color: '#000000' },
+      { id: 'y8', platform: 'Deezer', period: 'Mai 2026', streams: 95000, amount: 500, color: '#8b5cf6' },
       { id: 'y9', platform: 'YouTube Music', period: 'Mai 2026', streams: 250000, amount: 430, color: '#ff0000' },
     ],
     studio: [

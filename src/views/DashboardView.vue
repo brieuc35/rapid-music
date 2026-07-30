@@ -180,6 +180,7 @@ import {
   relativeDay,
   daysFromNow,
 } from '@/utils/format'
+import { platformColor } from '@/utils/platforms'
 
 const periods = computed(() => {
   const set = Array.from(new Set(store.royalties.map((r) => r.period)))
@@ -234,7 +235,11 @@ const platformBreakdown = computed(() => {
   const max = Math.max(1, ...rows.map((r) => r.amount))
   return rows
     .sort((a, b) => b.amount - a.amount)
-    .map((r) => ({ ...r, pct: Math.round((r.amount / max) * 100) }))
+    .map((r) => ({
+      ...r,
+      color: platformColor(r.platform, r.color),
+      pct: Math.round((r.amount / max) * 100),
+    }))
 })
 
 function concertBadge(status: string): string {
