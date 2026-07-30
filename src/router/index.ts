@@ -51,6 +51,12 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/LabelView.vue'),
     meta: { title: 'Label', icon: 'label' },
   },
+  {
+    path: '/mon-profil',
+    name: 'profile',
+    component: () => import('@/views/ProfileView.vue'),
+    meta: { title: 'Mon profil', icon: 'users' },
+  },
   { path: '/:pathMatch(.*)*', redirect: '/tableau-de-bord' },
 ]
 

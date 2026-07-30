@@ -92,6 +92,14 @@ export interface ArtistProfile {
   realName: string
   genre: string
   city: string
+  /** Photo de profil encodée en data URL (vide = initiales affichées). */
+  photo: string
+  bio: string
+  email: string
+  phone: string
+  instagram: string
+  spotify: string
+  website: string
 }
 
 export interface AppData {

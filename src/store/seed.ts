@@ -7,6 +7,13 @@ export function seedData(): AppData {
       realName: 'Léa Moreau',
       genre: 'Électro-pop',
       city: 'Paris, FR',
+      photo: '',
+      bio: "Artiste électro-pop basée à Paris. Premier album « Aurora » prévu pour août 2026.",
+      email: 'contact@nova-music.fr',
+      phone: '+33 6 00 00 00 00',
+      instagram: '@nova.music',
+      spotify: 'NOVA',
+      website: 'nova-music.fr',
     },
     label: {
       name: 'Halo Records',

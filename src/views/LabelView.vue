@@ -67,7 +67,13 @@
         <div class="section-head" style="margin-top: 24px"><span class="section-head__title">Profil artiste</span></div>
         <div class="vstack" style="gap: 12px">
           <div class="partner">
-            <div class="partner__ico" style="background: var(--brand-gradient); color: #fff">{{ initials(store.artist.stageName) }}</div>
+            <Avatar
+              :name="store.artist.stageName"
+              :photo="store.artist.photo"
+              :size="42"
+              radius="12px"
+              :font="14"
+            />
             <div class="row__main" v-if="!editMode">
               <div class="row__title">{{ store.artist.stageName }}</div>
               <div class="row__sub">{{ store.artist.realName }} · {{ store.artist.genre }} · {{ store.artist.city }}</div>
@@ -142,6 +148,7 @@ import { ref } from 'vue'
 import PageHeader from '@/components/PageHeader.vue'
 import Icon from '@/components/Icon.vue'
 import Modal from '@/components/Modal.vue'
+import Avatar from '@/components/Avatar.vue'
 import { store, resetData } from '@/store'
 import type { LabelInfo, ArtistProfile } from '@/store/types'
 import { initials } from '@/utils/format'

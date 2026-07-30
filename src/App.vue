@@ -1,5 +1,7 @@
 <template>
-  <div class="app-shell">
+  <LoginView v-if="!isLoggedIn" />
+
+  <div v-else class="app-shell">
     <!-- Mobile scrim -->
     <div class="scrim" :class="{ 'scrim--show': menuOpen }" @click="menuOpen = false" />
 
@@ -54,13 +56,25 @@
       </nav>
 
       <div class="nav__foot">
-        <div class="artist-chip">
-          <div class="artist-chip__avatar">{{ initials(store.artist.stageName) }}</div>
-          <div>
+        <RouterLink
+          to="/mon-profil"
+          class="artist-chip"
+          title="Voir mon profil"
+          @click="menuOpen = false"
+        >
+          <Avatar
+            :name="store.artist.stageName"
+            :photo="store.artist.photo"
+            :size="36"
+            radius="50%"
+            :font="14"
+          />
+          <div class="artist-chip__text">
             <div class="artist-chip__name">{{ store.artist.stageName }}</div>
             <div class="artist-chip__role">{{ store.artist.genre }}</div>
           </div>
-        </div>
+          <Icon name="up" class="artist-chip__chevron" />
+        </RouterLink>
       </div>
     </aside>
 
@@ -84,8 +98,10 @@
 import { ref, computed } from 'vue'
 import { RouterLink, RouterView } from 'vue-router'
 import Icon from './components/Icon.vue'
-import { store } from './store'
-import { initials, daysFromNow } from './utils/format'
+import Avatar from './components/Avatar.vue'
+import LoginView from './views/LoginView.vue'
+import { store, isLoggedIn } from './store'
+import { daysFromNow } from './utils/format'
 
 const menuOpen = ref(false)
 
@@ -108,6 +124,7 @@ const bottomNav = computed(() => [
   { path: '/contrats', title: 'Contrats', icon: 'contract', badge: store.contracts.length },
   { path: '/contacts', title: 'Contacts', icon: 'contacts', badge: store.contacts.length },
   { path: '/label', title: 'Label', icon: 'label', badge: 0 },
+  { path: '/mon-profil', title: 'Mon profil', icon: 'users', badge: 0 },
 ])
 </script>
 
