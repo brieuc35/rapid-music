@@ -2,7 +2,10 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { fileURLToPath, URL } from 'node:url'
 
-export default defineConfig({
+// https://vite.dev/config/
+export default defineConfig(({ command }) => ({
+  // Servi à la racine en développement, sous /rapid-music/ sur GitHub Pages.
+  base: command === 'build' ? '/rapid-music/' : '/',
   plugins: [vue()],
   resolve: {
     alias: {
@@ -13,4 +16,4 @@ export default defineConfig({
     host: true,
     port: 5173,
   },
-})
+}))
