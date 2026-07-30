@@ -104,7 +104,7 @@ const topNav = computed(() => [
 ])
 
 const bottomNav = computed(() => [
-  { path: '/studio', title: 'Agenda', icon: 'studio', badge: upcomingSessions.value },
+  { path: '/studio', title: 'Agenda', icon: 'calendar', badge: upcomingSessions.value },
   { path: '/contrats', title: 'Contrats', icon: 'contract', badge: store.contracts.length },
   { path: '/contacts', title: 'Contacts', icon: 'contacts', badge: store.contacts.length },
   { path: '/label', title: 'Label', icon: 'label', badge: 0 },

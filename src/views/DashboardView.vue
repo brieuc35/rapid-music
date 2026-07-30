@@ -114,13 +114,13 @@
       <!-- Prochaine session studio -->
       <div class="card">
         <div class="section-head" style="padding: 18px 20px 0">
-          <span class="section-head__title">Agenda studio</span>
+          <span class="section-head__title">Agenda</span>
           <RouterLink to="/studio" class="btn btn--subtle btn--sm">Calendrier</RouterLink>
         </div>
         <div class="list" style="margin-top: 8px">
           <div v-for="s in upcomingSessions.slice(0, 4)" :key="s.id" class="row">
             <div class="stat__ico" style="width: 38px; height: 38px; margin: 0; background: var(--brand-gradient-soft); color: var(--violet-600)">
-              <Icon name="studio" style="width: 18px; height: 18px" />
+              <Icon name="calendar" style="width: 18px; height: 18px" />
             </div>
             <div class="row__main">
               <div class="row__title">{{ s.title }}</div>
@@ -130,8 +130,8 @@
           </div>
           <EmptyState
             v-if="!upcomingSessions.length"
-            icon="studio"
-            title="Studio libre"
+            icon="calendar"
+            title="Agenda libre"
             text="Aucune session planifiée."
           />
         </div>
