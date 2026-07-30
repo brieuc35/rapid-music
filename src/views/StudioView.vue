@@ -75,7 +75,7 @@
 
           <EmptyState
             v-if="!sideList.length"
-            icon="studio"
+            icon="calendar"
             :title="selectedDate ? 'Journée libre' : 'Aucune session à venir'"
             :text="selectedDate ? 'Aucune session ce jour.' : 'Réservez votre prochaine session.'"
           />

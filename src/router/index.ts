@@ -37,7 +37,7 @@ const routes: RouteRecordRaw[] = [
     path: '/studio',
     name: 'studio',
     component: () => import('@/views/StudioView.vue'),
-    meta: { title: 'Agenda', icon: 'studio' },
+    meta: { title: 'Agenda', icon: 'calendar' },
   },
   {
     path: '/contacts',
