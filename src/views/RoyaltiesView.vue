@@ -135,17 +135,7 @@ import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import { store, upsert, remove, uid } from '@/store'
 import type { RoyaltyEntry } from '@/store/types'
 import { money, number, compact } from '@/utils/format'
-
-const platformColors: Record<string, string> = {
-  Spotify: '#1db954',
-  'Apple Music': '#fa2d48',
-  Deezer: '#ef5466',
-  'YouTube Music': '#ff0000',
-  'Amazon Music': '#25d1da',
-  Tidal: '#000000',
-  Bandcamp: '#629aa9',
-  SoundCloud: '#ff5500',
-}
+import { platformColors, platformColor } from '@/utils/platforms'
 
 const totalRevenue = computed(() => store.royalties.reduce((s, r) => s + r.amount, 0))
 const totalStreams = computed(() => store.royalties.reduce((s, r) => s + r.streams, 0))
@@ -172,7 +162,13 @@ const selectedPeriod = ref(periods.value[0] ?? '')
 const byPlatform = computed(() => {
   const rows = store.royalties.filter((r) => r.period === selectedPeriod.value)
   const max = Math.max(1, ...rows.map((r) => r.amount))
-  return rows.sort((a, b) => b.amount - a.amount).map((r) => ({ ...r, pct: Math.round((r.amount / max) * 100) }))
+  return rows
+    .sort((a, b) => b.amount - a.amount)
+    .map((r) => ({
+      ...r,
+      color: platformColor(r.platform, r.color),
+      pct: Math.round((r.amount / max) * 100),
+    }))
 })
 
 const chartData = computed(() => {
@@ -185,7 +181,9 @@ const chartData = computed(() => {
 })
 
 const sortedRoyalties = computed(() =>
-  [...store.royalties].sort((a, b) => b.period.localeCompare(a.period) || b.amount - a.amount),
+  [...store.royalties]
+    .sort((a, b) => b.period.localeCompare(a.period) || b.amount - a.amount)
+    .map((r) => ({ ...r, color: platformColor(r.platform, r.color) })),
 )
 
 const showForm = ref(false)
@@ -206,9 +204,6 @@ function openEdit(r: RoyaltyEntry) {
 }
 function save() {
   if (!editing.id) editing.id = uid()
-  if (!platformColors[editing.platform] && editing.color === '#8b5cf6') {
-    // keep default
-  }
   syncColor()
   upsert('royalties', JSON.parse(JSON.stringify(editing)))
   if (!periods.value.includes(selectedPeriod.value)) selectedPeriod.value = editing.period
