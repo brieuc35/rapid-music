@@ -15,6 +15,7 @@ export function seedData(): AppData {
       spotify: 'NOVA',
       website: 'nova-music.fr',
     },
+    links: [],
     label: {
       name: 'Halo Records',
       tagline: 'Label indépendant · Électro-pop & nouvelles scènes',
