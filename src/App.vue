@@ -98,7 +98,6 @@ const upcomingSessions = computed(
 
 const topNav = computed(() => [
   { path: '/tableau-de-bord', title: 'Tableau de bord', icon: 'dashboard', badge: 0 },
-  { path: '/contrats', title: 'Contrats', icon: 'contract', badge: store.contracts.length },
   { path: '/concerts', title: 'Concerts', icon: 'concert', badge: upcomingConcerts.value },
   { path: '/sorties', title: 'Sorties', icon: 'release', badge: store.releases.length },
   { path: '/royalties', title: 'Royalties', icon: 'money', badge: 0 },
@@ -106,6 +105,7 @@ const topNav = computed(() => [
 
 const bottomNav = computed(() => [
   { path: '/studio', title: 'Agenda', icon: 'studio', badge: upcomingSessions.value },
+  { path: '/contrats', title: 'Contrats', icon: 'contract', badge: store.contracts.length },
   { path: '/contacts', title: 'Contacts', icon: 'contacts', badge: store.contacts.length },
   { path: '/label', title: 'Label', icon: 'label', badge: 0 },
 ])
