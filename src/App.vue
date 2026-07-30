@@ -124,7 +124,6 @@ const bottomNav = computed(() => [
   { path: '/contrats', title: 'Contrats', icon: 'contract', badge: store.contracts.length },
   { path: '/contacts', title: 'Contacts', icon: 'contacts', badge: store.contacts.length },
   { path: '/label', title: 'Label', icon: 'label', badge: 0 },
-  { path: '/mon-profil', title: 'Mon profil', icon: 'users', badge: 0 },
 ])
 </script>
 
