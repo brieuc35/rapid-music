@@ -1,6 +1,6 @@
 <template>
   <div class="page">
-    <PageHeader title="Calendrier studio" subtitle="Sessions d'enregistrement, mix, répétitions et réunions.">
+    <PageHeader title="Agenda" subtitle="Sessions d'enregistrement, mix, répétitions et réunions.">
       <template #actions>
         <button class="btn btn--primary" @click="openNew"><Icon name="plus" /> Réserver une session</button>
       </template>
