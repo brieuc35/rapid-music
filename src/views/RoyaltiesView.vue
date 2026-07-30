@@ -65,6 +65,36 @@
       </div>
     </div>
 
+    <!-- Comptes des plateformes -->
+    <div class="section-head" style="margin: 28px 0 14px">
+      <span class="section-head__title">Comptes des plateformes</span>
+    </div>
+
+    <div class="notice">
+      <Icon name="bell" />
+      <div>
+        <b>La synchronisation automatique n'est pas disponible.</b>
+        Spotify, Apple Music et Deezer n'exposent aucune API publique de revenus par
+        artiste, et une connexion sécurisée à votre compte exigerait un serveur —
+        RapidMusic fonctionne sans serveur, directement dans votre navigateur.
+        Vous pouvez en revanche lier la référence de vos profils et
+        <b>importer les relevés de votre distributeur</b> pour alimenter vos revenus.
+      </div>
+    </div>
+
+    <div class="grid grid--cards" style="margin-bottom: 8px">
+      <PlatformCard
+        v-for="p in platformList"
+        :key="p.name"
+        :platform="p.name"
+        :color="p.color"
+        :link="p.link"
+        :total="p.total"
+        @link="openLink"
+        @import="openImport"
+      />
+    </div>
+
     <!-- Detailed table -->
     <div class="card" style="margin-top: 18px; overflow: hidden">
       <div class="section-head" style="padding: 18px 20px 12px"><span class="section-head__title">Relevés détaillés</span></div>
@@ -101,6 +131,97 @@
       </div>
     </div>
 
+    <!-- Lier / gérer un compte -->
+    <Modal :open="!!linkTarget" :title="`Compte ${linkTarget}`" @close="linkTarget = ''">
+      <div class="field">
+        <label>Profil artiste sur {{ linkTarget }}</label>
+        <input v-model="linkAccount" :placeholder="accountPlaceholder" />
+        <p class="field-help">
+          Identifiant, nom d'artiste ou lien vers votre page — conservé comme référence.
+        </p>
+      </div>
+      <div class="notice notice--sm">
+        <Icon name="bell" />
+        <div>
+          Aucune donnée n'est récupérée automatiquement depuis {{ linkTarget }} :
+          utilisez « Importer » pour charger un relevé de votre distributeur.
+        </div>
+      </div>
+      <template #footer>
+        <button v-if="existingLink" class="btn btn--danger" @click="unlink">
+          <Icon name="trash" /> Délier
+        </button>
+        <button class="btn btn--subtle" @click="linkTarget = ''">Annuler</button>
+        <button class="btn btn--primary" :disabled="!linkAccount.trim()" @click="saveLinkAccount">
+          <Icon name="check" /> Enregistrer
+        </button>
+      </template>
+    </Modal>
+
+    <!-- Import d'un relevé -->
+    <Modal :open="!!importTarget" :title="`Importer un relevé — ${importTarget}`" @close="closeImport">
+      <template v-if="!importPreview.length">
+        <p class="soft" style="margin: 0 0 14px; line-height: 1.6">
+          Chargez le relevé CSV fourni par votre distributeur. Le fichier doit contenir
+          une colonne <b>période</b>, une colonne <b>streams</b> et une colonne
+          <b>revenu</b> — les intitulés exacts et le séparateur sont détectés
+          automatiquement.
+        </p>
+        <input ref="csvInput" type="file" accept=".csv,text/csv,text/plain" class="hidden" @change="onCsvSelected" />
+        <button class="btn btn--ghost btn--block" @click="csvInput?.click()">
+          <Icon name="doc" /> Choisir un fichier CSV
+        </button>
+        <p class="field-help" style="text-align: center; margin-top: 10px">
+          Exemple d'en-tête : <code>Période;Streams;Revenu net</code>
+        </p>
+      </template>
+
+      <template v-else>
+        <p class="soft" style="margin: 0 0 12px">
+          <b>{{ importPreview.length }}</b> ligne(s) prête(s) à être importée(s) pour
+          <b>{{ importTarget }}</b> :
+        </p>
+        <div class="tablewrap" style="max-height: 220px; overflow-y: auto">
+          <table class="tbl">
+            <thead>
+              <tr><th>Période</th><th style="text-align: right">Streams</th><th style="text-align: right">Revenu</th></tr>
+            </thead>
+            <tbody>
+              <tr v-for="(r, i) in importPreview" :key="i">
+                <td>{{ r.period }}</td>
+                <td class="mono" style="text-align: right">{{ number(r.streams) }}</td>
+                <td class="mono" style="text-align: right">{{ money(r.amount, true) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="field-help" style="margin-top: 12px">
+          Une période déjà présente pour {{ importTarget }} sera mise à jour.
+        </p>
+      </template>
+
+      <div v-if="importProblems.length" class="import-problems">
+        <b>{{ importProblems.length }} avertissement(s) :</b>
+        <ul>
+          <li v-for="(p, i) in importProblems.slice(0, 5)" :key="i">{{ p }}</li>
+        </ul>
+        <span v-if="importProblems.length > 5" class="muted">
+          … et {{ importProblems.length - 5 }} autre(s).
+        </span>
+      </div>
+
+      <template #footer>
+        <button class="btn btn--subtle" @click="closeImport">Annuler</button>
+        <button
+          v-if="importPreview.length"
+          class="btn btn--primary"
+          @click="confirmImport"
+        >
+          <Icon name="check" /> Importer {{ importPreview.length }} ligne(s)
+        </button>
+      </template>
+    </Modal>
+
     <Modal :open="showForm" :title="editing.id ? 'Modifier le relevé' : 'Nouveau relevé'" @close="showForm = false">
       <div class="field--row">
         <div class="field">
@@ -132,10 +253,12 @@ import PageHeader from '@/components/PageHeader.vue'
 import Icon from '@/components/Icon.vue'
 import Modal from '@/components/Modal.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
-import { store, upsert, remove, uid } from '@/store'
+import PlatformCard from '@/components/PlatformCard.vue'
+import { store, upsert, remove, uid, getLink, saveLink, removeLink } from '@/store'
 import type { RoyaltyEntry } from '@/store/types'
-import { money, number, compact } from '@/utils/format'
+import { money, number, compact, formatDate } from '@/utils/format'
 import { platformColors, platformColor } from '@/utils/platforms'
+import { parseRoyaltyCsv, type ParsedRow } from '@/utils/csv'
 
 const totalRevenue = computed(() => store.royalties.reduce((s, r) => s + r.amount, 0))
 const totalStreams = computed(() => store.royalties.reduce((s, r) => s + r.streams, 0))
@@ -186,6 +309,118 @@ const sortedRoyalties = computed(() =>
     .map((r) => ({ ...r, color: platformColor(r.platform, r.color) })),
 )
 
+/* ---------------------------------------------------------------------- */
+/*  Comptes des plateformes                                               */
+/* ---------------------------------------------------------------------- */
+
+/** Plateformes de référence, plus toute plateforme déjà présente dans les données. */
+const platformList = computed(() => {
+  const names = new Set([...Object.keys(platformColors), ...store.royalties.map((r) => r.platform)])
+  return [...names]
+    .filter(Boolean)
+    .sort((a, b) => a.localeCompare(b))
+    .map((name) => ({
+      name,
+      color: platformColor(name),
+      link: getLink(name),
+      total: store.royalties
+        .filter((r) => r.platform === name)
+        .reduce((s, r) => s + r.amount, 0),
+    }))
+})
+
+const linkTarget = ref('')
+const linkAccount = ref('')
+const existingLink = computed(() => (linkTarget.value ? getLink(linkTarget.value) : undefined))
+const accountPlaceholder = computed(() =>
+  linkTarget.value === 'Spotify'
+    ? 'open.spotify.com/artist/…'
+    : `Votre profil ${linkTarget.value}`,
+)
+
+function openLink(platform: string) {
+  linkTarget.value = platform
+  linkAccount.value = getLink(platform)?.account ?? ''
+}
+function saveLinkAccount() {
+  const current = getLink(linkTarget.value)
+  saveLink({
+    platform: linkTarget.value,
+    account: linkAccount.value.trim(),
+    lastImport: current?.lastImport ?? '',
+    lastImportCount: current?.lastImportCount ?? 0,
+  })
+  linkTarget.value = ''
+}
+function unlink() {
+  removeLink(linkTarget.value)
+  linkTarget.value = ''
+}
+
+/* Import de relevé */
+const importTarget = ref('')
+const importPreview = ref<ParsedRow[]>([])
+const importProblems = ref<string[]>([])
+const csvInput = ref<HTMLInputElement | null>(null)
+
+function openImport(platform: string) {
+  importTarget.value = platform
+  importPreview.value = []
+  importProblems.value = []
+}
+function closeImport() {
+  importTarget.value = ''
+  importPreview.value = []
+  importProblems.value = []
+}
+
+async function onCsvSelected(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = ''
+  if (!file) return
+
+  try {
+    const text = await file.text()
+    const { rows, problems } = parseRoyaltyCsv(text)
+    importPreview.value = rows
+    importProblems.value = problems
+  } catch {
+    importPreview.value = []
+    importProblems.value = ['Ce fichier n’a pas pu être lu.']
+  }
+}
+
+function confirmImport() {
+  const platform = importTarget.value
+  importPreview.value.forEach((row) => {
+    const existing = store.royalties.find(
+      (r) => r.platform === platform && r.period === row.period,
+    )
+    upsert('royalties', {
+      id: existing?.id ?? uid(),
+      platform,
+      period: row.period,
+      streams: row.streams,
+      amount: row.amount,
+      color: platformColor(platform),
+    })
+  })
+
+  const current = getLink(platform)
+  saveLink({
+    platform,
+    account: current?.account ?? '',
+    lastImport: new Date().toISOString().slice(0, 10),
+    lastImportCount: importPreview.value.length,
+  })
+
+  if (!periods.value.includes(selectedPeriod.value)) {
+    selectedPeriod.value = periods.value[0] ?? ''
+  }
+  closeImport()
+}
+
 const showForm = ref(false)
 const emptyEntry = (): RoyaltyEntry => ({ id: '', platform: '', period: '', streams: 0, amount: 0, color: '#8b5cf6' })
 const editing = reactive<RoyaltyEntry>(emptyEntry())
@@ -226,6 +461,58 @@ function confirmDelete() {
   height: 10px;
   border-radius: 50%;
   flex-shrink: 0;
+}
+
+.notice {
+  display: flex;
+  gap: 13px;
+  background: var(--amber-bg);
+  border: 1px solid #f8e3bb;
+  border-radius: var(--radius);
+  padding: 15px 17px;
+  margin-bottom: 18px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: #7a5410;
+}
+.notice svg {
+  width: 19px;
+  height: 19px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--amber);
+}
+.notice--sm {
+  margin: 4px 0 0;
+  font-size: 13px;
+  padding: 12px 14px;
+}
+
+.field-help {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  margin: 6px 0 0;
+  line-height: 1.5;
+}
+.field-help code {
+  background: var(--surface-2);
+  padding: 1px 6px;
+  border-radius: 5px;
+  font-size: 12px;
+}
+
+.import-problems {
+  margin-top: 16px;
+  background: var(--red-bg);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-size: 12.5px;
+  color: #8f2020;
+  line-height: 1.5;
+}
+.import-problems ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
 }
 .mini-select {
   border: 1px solid var(--border-strong);
