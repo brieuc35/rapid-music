@@ -1,4 +1,4 @@
-import { reactive, watch } from 'vue'
+import { reactive, ref, watch } from 'vue'
 import type {
   AppData,
   Contract,
@@ -11,11 +11,40 @@ import type {
 import { seedData } from './seed'
 
 const STORAGE_KEY = 'rapidmusic:data:v1'
+const SESSION_KEY = 'rapidmusic:session:v1'
+
+/**
+ * Complète les données enregistrées avec les valeurs par défaut manquantes.
+ * Nécessaire pour les données créées avant l'ajout de nouveaux champs
+ * (profil artiste enrichi, etc.) : sans cela, les champs absents seraient
+ * `undefined` et casseraient les formulaires.
+ */
+function withDefaults(saved: Partial<AppData>): AppData {
+  const base = seedData()
+  // Champs de profil ajoutés après la première version : on les laisse vides
+  // plutôt que de reprendre les valeurs de démonstration, qui n'auraient aucun
+  // sens dans le profil d'un artiste déjà enregistré.
+  const addedFields = {
+    photo: '',
+    bio: '',
+    email: '',
+    phone: '',
+    instagram: '',
+    spotify: '',
+    website: '',
+  }
+  return {
+    ...base,
+    ...saved,
+    artist: { ...base.artist, ...addedFields, ...(saved.artist ?? {}) },
+    label: { ...base.label, ...(saved.label ?? {}) },
+  }
+}
 
 function load(): AppData {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) return JSON.parse(raw) as AppData
+    if (raw) return withDefaults(JSON.parse(raw) as Partial<AppData>)
   } catch {
     /* ignore corrupted storage */
   }
@@ -43,6 +72,41 @@ export function uid(): string {
 export function resetData(): void {
   const fresh = seedData()
   Object.assign(store, fresh)
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Session locale                                                            */
+/*                                                                            */
+/*  L'application n'a pas de serveur ni d'authentification : la « session »    */
+/*  est un simple indicateur local qui permet de verrouiller l'interface.      */
+/*  Les données de l'artiste restent enregistrées après déconnexion.           */
+/* -------------------------------------------------------------------------- */
+
+function loadSession(): boolean {
+  try {
+    // Par défaut connecté, pour ne pas verrouiller les utilisateurs existants.
+    return localStorage.getItem(SESSION_KEY) !== 'out'
+  } catch {
+    return true
+  }
+}
+
+export const isLoggedIn = ref<boolean>(loadSession())
+
+watch(isLoggedIn, (v) => {
+  try {
+    localStorage.setItem(SESSION_KEY, v ? 'in' : 'out')
+  } catch {
+    /* storage unavailable */
+  }
+})
+
+export function logout(): void {
+  isLoggedIn.value = false
+}
+
+export function login(): void {
+  isLoggedIn.value = true
 }
 
 /* -------------------------------------------------------------------------- */
