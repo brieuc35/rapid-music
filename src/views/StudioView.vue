@@ -1,8 +1,8 @@
 <template>
   <div class="page">
-    <PageHeader title="Agenda" subtitle="Sessions d'enregistrement, mix, répétitions et réunions.">
+    <PageHeader title="Agenda" subtitle="Vos évènements : enregistrement, mix, répétitions et réunions.">
       <template #actions>
-        <button class="btn btn--primary" @click="openNew"><Icon name="plus" /> Réserver une session</button>
+        <button class="btn btn--primary" @click="openNew"><Icon name="plus" /> Ajouter un évènement</button>
       </template>
     </PageHeader>
 
@@ -45,7 +45,7 @@
       <!-- Day detail / upcoming -->
       <div class="card card--pad">
         <div class="section-head">
-          <span class="section-head__title">{{ selectedDate ? formatDate(selectedDate, { weekday: 'long', day: 'numeric', month: 'long' }) : 'Sessions à venir' }}</span>
+          <span class="section-head__title">{{ selectedDate ? formatDate(selectedDate, { weekday: 'long', day: 'numeric', month: 'long' }) : 'Évènements à venir' }}</span>
           <button v-if="selectedDate" class="btn btn--subtle btn--sm" @click="selectedDate = ''">Tout voir</button>
         </div>
 
@@ -76,14 +76,14 @@
           <EmptyState
             v-if="!sideList.length"
             icon="calendar"
-            :title="selectedDate ? 'Journée libre' : 'Aucune session à venir'"
-            :text="selectedDate ? 'Aucune session ce jour.' : 'Réservez votre prochaine session.'"
+            :title="selectedDate ? 'Journée libre' : 'Aucun évènement à venir'"
+            :text="selectedDate ? 'Aucun évènement ce jour.' : 'Ajoutez votre prochain évènement.'"
           />
         </div>
       </div>
     </div>
 
-    <Modal :open="showForm" :title="editing.id ? 'Modifier la session' : 'Nouvelle session'" @close="showForm = false">
+    <Modal :open="showForm" :title="editing.id ? 'Modifier l’évènement' : 'Nouvel évènement'" @close="showForm = false">
       <div class="field"><label>Intitulé</label><input v-model="editing.title" placeholder="Ex : Enregistrement voix" /></div>
       <div class="field--row">
         <div class="field"><label>Studio</label><input v-model="editing.studio" /></div>
