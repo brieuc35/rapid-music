@@ -8,14 +8,14 @@
     <!-- Stats -->
     <div class="grid grid--stats" style="margin-bottom: 26px">
       <div class="stat">
-        <div class="stat__ico" style="background: var(--green-bg); color: var(--green)">
-          <Icon name="money" />
+        <div class="stat__ico" style="background: var(--blue-bg); color: var(--blue)">
+          <Icon name="release" />
         </div>
-        <div class="stat__val mono">{{ money(monthRevenue) }}</div>
-        <div class="stat__label">Revenus streaming (dernier mois)</div>
-        <div class="stat__delta" :class="revenueDelta >= 0 ? 'stat__delta--up' : 'stat__delta--down'">
-          <Icon :name="revenueDelta >= 0 ? 'trendUp' : 'trendDown'" style="width: 14px; height: 14px" />
-          {{ revenueDelta >= 0 ? '+' : '' }}{{ revenueDelta }}% vs mois précédent
+        <div class="stat__val mono">{{ compact(totalStreams) }}</div>
+        <div class="stat__label">Streams cumulés (sorties)</div>
+        <div class="stat__delta stat__delta--up">
+          <Icon name="music" style="width: 14px; height: 14px" />
+          {{ store.releases.length }} sorties au catalogue
         </div>
       </div>
 
@@ -32,14 +32,14 @@
       </div>
 
       <div class="stat">
-        <div class="stat__ico" style="background: var(--blue-bg); color: var(--blue)">
-          <Icon name="release" />
+        <div class="stat__ico" style="background: var(--green-bg); color: var(--green)">
+          <Icon name="money" />
         </div>
-        <div class="stat__val mono">{{ compact(totalStreams) }}</div>
-        <div class="stat__label">Streams cumulés (sorties)</div>
-        <div class="stat__delta stat__delta--up">
-          <Icon name="music" style="width: 14px; height: 14px" />
-          {{ store.releases.length }} sorties au catalogue
+        <div class="stat__val mono">{{ money(monthRevenue) }}</div>
+        <div class="stat__label">Revenus streaming (dernier mois)</div>
+        <div class="stat__delta" :class="revenueDelta >= 0 ? 'stat__delta--up' : 'stat__delta--down'">
+          <Icon :name="revenueDelta >= 0 ? 'trendUp' : 'trendDown'" style="width: 14px; height: 14px" />
+          {{ revenueDelta >= 0 ? '+' : '' }}{{ revenueDelta }}% vs mois précédent
         </div>
       </div>
 
