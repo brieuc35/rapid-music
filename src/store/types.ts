@@ -57,7 +57,7 @@ export interface StudioSession {
   date: string
   startTime: string
   endTime: string
-  type: 'Enregistrement' | 'Mix' | 'Mastering' | 'Répétition' | 'Écriture' | 'Réunion'
+  type: 'Enregistrement' | 'Mix' | 'Mastering' | 'Répétition' | 'Écriture' | 'Réunion' | 'Autre'
   cost: number
   engineer: string
   notes: string
