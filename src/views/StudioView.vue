@@ -122,7 +122,15 @@ import { store, upsert, remove, uid } from '@/store'
 import type { StudioSession } from '@/store/types'
 import { money, formatDate, daysFromNow } from '@/utils/format'
 
-const types: StudioSession['type'][] = ['Enregistrement', 'Mix', 'Mastering', 'Répétition', 'Écriture', 'Réunion']
+const types: StudioSession['type'][] = [
+  'Enregistrement',
+  'Mix',
+  'Mastering',
+  'Répétition',
+  'Écriture',
+  'Réunion',
+  'Autre',
+]
 const typeColors: Record<string, string> = {
   Enregistrement: '#8b5cf6',
   Mix: '#3b82f6',
@@ -130,6 +138,7 @@ const typeColors: Record<string, string> = {
   Répétition: '#10b981',
   Écriture: '#f59e0b',
   Réunion: '#06b6d4',
+  Autre: '#64748b',
 }
 function typeColor(t: string): string {
   return typeColors[t] ?? '#8b5cf6'
