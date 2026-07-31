@@ -26,8 +26,9 @@ const icons: Record<string, string> = {
     '<path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><path d="M12 18v4"/><path d="M8 22h8"/>',
   release:
     '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/><path d="M12 3a9 9 0 0 1 0 18"/>',
+  // Euro : l'application affiche tous les montants en euros.
   money:
-    '<path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>',
+    '<path d="M4 10h12"/><path d="M4 14h9"/><path d="M19.5 5.8A7.7 7.7 0 0 0 14 3.5c-4.4 0-8 3.8-8 8.5s3.6 8.5 8 8.5a7.7 7.7 0 0 0 5.5-2.3"/>',
   studio:
     '<path d="M12 2v10"/><circle cx="12" cy="16" r="4"/><path d="M15.5 13.5 20 9V4h-4"/>',
   contacts:
