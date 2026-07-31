@@ -83,10 +83,7 @@
           <select v-model="editing.status"><option v-for="s in statuses" :key="s">{{ s }}</option></select>
         </div>
       </div>
-      <div class="field--row">
-        <div class="field"><label>Date de sortie</label><input v-model="editing.date" type="date" /></div>
-        <div class="field"><label>Streams</label><input v-model.number="editing.streams" type="number" min="0" /></div>
-      </div>
+      <div class="field"><label>Date de sortie</label><input v-model="editing.date" type="date" /></div>
       <div class="field--row">
         <div class="field"><label>Featuring</label><input v-model="editing.featuring" placeholder="Optionnel" /></div>
         <div class="field"><label>ISRC</label><input v-model="editing.isrc" placeholder="FR-XXX-..." /></div>
