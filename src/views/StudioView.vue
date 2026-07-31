@@ -100,7 +100,6 @@
         <div class="field"><label>Début</label><input v-model="editing.startTime" type="time" /></div>
         <div class="field"><label>Fin</label><input v-model="editing.endTime" type="time" /></div>
       </div>
-      <div class="field"><label>Ingénieur / Intervenant</label><input v-model="editing.engineer" /></div>
       <div class="field"><label>Notes</label><textarea v-model="editing.notes" /></div>
       <template #footer>
         <button class="btn btn--subtle" @click="showForm = false">Annuler</button>
