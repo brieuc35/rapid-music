@@ -57,29 +57,28 @@
     </div>
 
     <div class="grid grid--2">
-      <!-- Prochains concerts -->
+      <!-- Agenda -->
       <div class="card">
         <div class="section-head" style="padding: 18px 20px 0">
-          <span class="section-head__title">Prochains concerts</span>
-          <RouterLink to="/concerts" class="btn btn--subtle btn--sm">Tout voir</RouterLink>
+          <span class="section-head__title">Agenda</span>
+          <RouterLink to="/studio" class="btn btn--subtle btn--sm">Calendrier</RouterLink>
         </div>
         <div class="list" style="margin-top: 8px">
-          <div v-for="c in upcomingConcerts.slice(0, 4)" :key="c.id" class="row">
-            <div class="datechip">
-              <span class="datechip__d">{{ dayNum(c.date) }}</span>
-              <span class="datechip__m">{{ monthShort(c.date) }}</span>
+          <div v-for="s in upcomingSessions.slice(0, 4)" :key="s.id" class="row">
+            <div class="stat__ico" style="width: 38px; height: 38px; margin: 0; background: var(--brand-gradient-soft); color: var(--violet-600)">
+              <Icon name="calendar" style="width: 18px; height: 18px" />
             </div>
             <div class="row__main">
-              <div class="row__title">{{ c.venue }}</div>
-              <div class="row__sub">{{ c.city }} · {{ c.country }} · {{ c.time }}</div>
+              <div class="row__title">{{ s.title }}</div>
+              <div class="row__sub">{{ s.studio }} · {{ formatDate(s.date) }} · {{ s.startTime }}</div>
             </div>
-            <span class="badge" :class="concertBadge(c.status)">{{ c.status }}</span>
+            <span class="badge badge--gray badge--plain">{{ relativeDay(s.date) }}</span>
           </div>
           <EmptyState
-            v-if="!upcomingConcerts.length"
-            icon="concert"
-            title="Aucun concert à venir"
-            text="Planifiez votre prochaine date."
+            v-if="!upcomingSessions.length"
+            icon="calendar"
+            title="Agenda libre"
+            text="Aucun évènement planifié."
           />
         </div>
       </div>
@@ -111,28 +110,29 @@
     </div>
 
     <div class="grid grid--2" style="margin-top: 18px">
-      <!-- Prochaine session studio -->
+      <!-- Prochains concerts -->
       <div class="card">
         <div class="section-head" style="padding: 18px 20px 0">
-          <span class="section-head__title">Agenda</span>
-          <RouterLink to="/studio" class="btn btn--subtle btn--sm">Calendrier</RouterLink>
+          <span class="section-head__title">Prochains concerts</span>
+          <RouterLink to="/concerts" class="btn btn--subtle btn--sm">Tout voir</RouterLink>
         </div>
         <div class="list" style="margin-top: 8px">
-          <div v-for="s in upcomingSessions.slice(0, 4)" :key="s.id" class="row">
-            <div class="stat__ico" style="width: 38px; height: 38px; margin: 0; background: var(--brand-gradient-soft); color: var(--violet-600)">
-              <Icon name="calendar" style="width: 18px; height: 18px" />
+          <div v-for="c in upcomingConcerts.slice(0, 4)" :key="c.id" class="row">
+            <div class="datechip">
+              <span class="datechip__d">{{ dayNum(c.date) }}</span>
+              <span class="datechip__m">{{ monthShort(c.date) }}</span>
             </div>
             <div class="row__main">
-              <div class="row__title">{{ s.title }}</div>
-              <div class="row__sub">{{ s.studio }} · {{ formatDate(s.date) }} · {{ s.startTime }}</div>
+              <div class="row__title">{{ c.venue }}</div>
+              <div class="row__sub">{{ c.city }} · {{ c.country }} · {{ c.time }}</div>
             </div>
-            <span class="badge badge--gray badge--plain">{{ relativeDay(s.date) }}</span>
+            <span class="badge" :class="concertBadge(c.status)">{{ c.status }}</span>
           </div>
           <EmptyState
-            v-if="!upcomingSessions.length"
-            icon="calendar"
-            title="Agenda libre"
-            text="Aucune session planifiée."
+            v-if="!upcomingConcerts.length"
+            icon="concert"
+            title="Aucun concert à venir"
+            text="Planifiez votre prochaine date."
           />
         </div>
       </div>
