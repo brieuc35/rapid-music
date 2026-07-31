@@ -47,11 +47,11 @@
         <div class="stat__ico" style="background: var(--amber-bg); color: var(--amber)">
           <Icon name="contract" />
         </div>
-        <div class="stat__val mono">{{ activeContracts }}</div>
-        <div class="stat__label">Contrats actifs</div>
-        <div class="stat__delta" :class="pendingContracts ? 'stat__delta--down' : 'stat__delta--up'">
-          <Icon name="clock" style="width: 14px; height: 14px" />
-          {{ pendingContracts }} en attente
+        <div class="stat__val mono">{{ pendingContracts }}</div>
+        <div class="stat__label">Contrats en attente</div>
+        <div class="stat__delta stat__delta--up">
+          <Icon name="check" style="width: 14px; height: 14px" />
+          {{ activeContracts }} actifs
         </div>
       </div>
     </div>
