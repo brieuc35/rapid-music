@@ -10,12 +10,16 @@ export interface ParsedRow {
   period: string
   streams: number
   amount: number
+  /** Présent si le fichier comporte une colonne de plateforme. */
+  platform?: string
 }
 
 export interface ParseResult {
   rows: ParsedRow[]
   /** Messages destinés à l'utilisateur (lignes ignorées, colonne absente…). */
   problems: string[]
+  /** Vrai si le fichier répartit ses lignes entre plusieurs plateformes. */
+  hasPlatformColumn: boolean
 }
 
 /** Découpe une ligne CSV en tenant compte des champs entre guillemets. */
@@ -74,6 +78,31 @@ function findIndex(headers: string[], keywords: string[]): number {
   return headers.findIndex((h) => keywords.some((k) => h.includes(k)))
 }
 
+/**
+ * Ramène le nom de plateforme d'un relevé sur celui utilisé par l'application.
+ * Les distributeurs écrivent « APPLE MUSIC », « Spotify FR », « iTunes »… ;
+ * sans cela, chaque variante créerait une plateforme distincte.
+ */
+function normalizePlatform(raw: string): string {
+  const s = raw.toLowerCase()
+  const known: [string, string][] = [
+    ['spotify', 'Spotify'],
+    ['apple', 'Apple Music'],
+    ['itunes', 'Apple Music'],
+    ['deezer', 'Deezer'],
+    ['youtube', 'YouTube Music'],
+    ['amazon', 'Amazon Music'],
+    ['tidal', 'Tidal'],
+    ['bandcamp', 'Bandcamp'],
+    ['soundcloud', 'SoundCloud'],
+  ]
+  for (const [needle, label] of known) {
+    if (s.includes(needle)) return label
+  }
+  // Plateforme inconnue : on garde le libellé d'origine, proprement capitalisé.
+  return raw.charAt(0).toUpperCase() + raw.slice(1)
+}
+
 export function parseRoyaltyCsv(text: string): ParseResult {
   const problems: string[] = []
   const lines = text
@@ -82,7 +111,11 @@ export function parseRoyaltyCsv(text: string): ParseResult {
     .filter(Boolean)
 
   if (lines.length < 2) {
-    return { rows: [], problems: ['Le fichier doit contenir un en-tête et au moins une ligne.'] }
+    return {
+      rows: [],
+      problems: ['Le fichier doit contenir un en-tête et au moins une ligne.'],
+      hasPlatformColumn: false,
+    }
   }
 
   const sep = detectSeparator(lines[0])
@@ -91,6 +124,9 @@ export function parseRoyaltyCsv(text: string): ParseResult {
   const iPeriod = findIndex(headers, ['période', 'periode', 'period', 'mois', 'month', 'date'])
   const iStreams = findIndex(headers, ['stream', 'écoute', 'ecoute', 'play', 'quantit'])
   const iAmount = findIndex(headers, ['revenu', 'montant', 'amount', 'net', 'royalt', 'earning'])
+  // Les relevés de distributeur regroupent toutes les plateformes dans un même
+  // fichier, avec une colonne les distinguant.
+  const iPlatform = findIndex(headers, ['plateforme', 'platform', 'store', 'dsp', 'boutique', 'service'])
 
   const missing: string[] = []
   if (iPeriod < 0) missing.push('période')
@@ -103,6 +139,7 @@ export function parseRoyaltyCsv(text: string): ParseResult {
         `Colonnes introuvables : ${missing.join(', ')}. ` +
           `En-tête détecté : ${headers.join(' | ') || '(vide)'}`,
       ],
+      hasPlatformColumn: false,
     }
   }
 
@@ -121,9 +158,19 @@ export function parseRoyaltyCsv(text: string): ParseResult {
       problems.push(`Ligne ${idx + 2} ignorée : streams ou revenu illisible.`)
       return
     }
-    rows.push({ period, streams: Math.round(streams), amount })
+
+    const row: ParsedRow = { period, streams: Math.round(streams), amount }
+    if (iPlatform >= 0) {
+      const platform = (cells[iPlatform] ?? '').trim()
+      if (!platform) {
+        problems.push(`Ligne ${idx + 2} ignorée : plateforme vide.`)
+        return
+      }
+      row.platform = normalizePlatform(platform)
+    }
+    rows.push(row)
   })
 
   if (!rows.length && !problems.length) problems.push('Aucune ligne exploitable.')
-  return { rows, problems }
+  return { rows, problems, hasPlatformColumn: iPlatform >= 0 }
 }

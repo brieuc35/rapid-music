@@ -68,6 +68,9 @@
     <!-- Comptes des plateformes -->
     <div class="section-head" style="margin: 28px 0 14px">
       <span class="section-head__title">Comptes des plateformes</span>
+      <button class="btn btn--primary btn--sm" @click="openImport('')">
+        <Icon name="doc" /> Importer un relevé
+      </button>
     </div>
 
     <div class="notice">
@@ -77,8 +80,9 @@
         Spotify, Apple Music et Deezer n'exposent aucune API publique de revenus par
         artiste, et une connexion sécurisée à votre compte exigerait un serveur —
         RapidMusic fonctionne sans serveur, directement dans votre navigateur.
-        Vous pouvez en revanche lier la référence de vos profils et
-        <b>importer les relevés de votre distributeur</b> pour alimenter vos revenus.
+        Le moyen d'obtenir vos vrais chiffres est
+        <b>d'importer le relevé de votre distributeur</b> : un seul fichier remplit
+        toutes les plateformes d'un coup.
       </div>
     </div>
 
@@ -159,35 +163,75 @@
     </Modal>
 
     <!-- Import d'un relevé -->
-    <Modal :open="!!importTarget" :title="`Importer un relevé — ${importTarget}`" @close="closeImport">
+    <Modal :open="importOpen" :title="importTitle" @close="closeImport">
       <template v-if="!importPreview.length">
         <p class="soft" style="margin: 0 0 14px; line-height: 1.6">
-          Chargez le relevé CSV fourni par votre distributeur. Le fichier doit contenir
-          une colonne <b>période</b>, une colonne <b>streams</b> et une colonne
-          <b>revenu</b> — les intitulés exacts et le séparateur sont détectés
-          automatiquement.
+          <template v-if="importTarget">
+            Chargez un relevé ne concernant que <b>{{ importTarget }}</b>. Il doit contenir
+            une colonne <b>période</b>, <b>streams</b> et <b>revenu</b>.
+          </template>
+          <template v-else>
+            Chargez le relevé CSV de votre distributeur. S'il comporte une colonne
+            <b>plateforme</b>, chaque ligne sera dirigée automatiquement vers la bonne
+            plateforme — un seul fichier suffit.
+          </template>
+          Les intitulés de colonnes et le séparateur sont détectés automatiquement.
         </p>
+
         <input ref="csvInput" type="file" accept=".csv,text/csv,text/plain" class="hidden" @change="onCsvSelected" />
-        <button class="btn btn--ghost btn--block" @click="csvInput?.click()">
-          <Icon name="doc" /> Choisir un fichier CSV
-        </button>
+        <div
+          class="dropzone"
+          :class="{ 'dropzone--over': dragOver }"
+          @click="csvInput?.click()"
+          @dragover.prevent="dragOver = true"
+          @dragenter.prevent="dragOver = true"
+          @dragleave.prevent="dragOver = false"
+          @drop.prevent="onDrop"
+        >
+          <Icon name="doc" />
+          <b>Glissez votre relevé ici</b>
+          <span class="muted">ou cliquez pour choisir un fichier CSV</span>
+        </div>
         <p class="field-help" style="text-align: center; margin-top: 10px">
-          Exemple d'en-tête : <code>Période;Streams;Revenu net</code>
+          En-tête reconnu, par exemple :
+          <code>{{ importTarget ? 'Période;Streams;Revenu net' : 'Plateforme;Période;Streams;Revenu net' }}</code>
         </p>
       </template>
 
       <template v-else>
         <p class="soft" style="margin: 0 0 12px">
-          <b>{{ importPreview.length }}</b> ligne(s) prête(s) à être importée(s) pour
-          <b>{{ importTarget }}</b> :
+          <b>{{ importPreview.length }}</b> ligne(s) prête(s) à être importée(s)
+          <template v-if="importTarget">pour <b>{{ importTarget }}</b></template>
+          <template v-else-if="previewPlatforms.length">
+            sur <b>{{ previewPlatforms.length }}</b> plateforme(s)
+          </template>
+          :
         </p>
+
+        <div v-if="!importTarget && previewPlatforms.length" class="chips" style="margin-bottom: 12px">
+          <span
+            v-for="p in previewPlatforms"
+            :key="p.name"
+            class="badge badge--plain"
+            :style="{ color: '#fff', background: p.color }"
+          >
+            {{ p.name }} · {{ p.count }}
+          </span>
+        </div>
+
         <div class="tablewrap" style="max-height: 220px; overflow-y: auto">
           <table class="tbl">
             <thead>
-              <tr><th>Période</th><th style="text-align: right">Streams</th><th style="text-align: right">Revenu</th></tr>
+              <tr>
+                <th v-if="!importTarget">Plateforme</th>
+                <th>Période</th>
+                <th style="text-align: right">Streams</th>
+                <th style="text-align: right">Revenu</th>
+              </tr>
             </thead>
             <tbody>
               <tr v-for="(r, i) in importPreview" :key="i">
+                <td v-if="!importTarget">{{ r.platform }}</td>
                 <td>{{ r.period }}</td>
                 <td class="mono" style="text-align: right">{{ number(r.streams) }}</td>
                 <td class="mono" style="text-align: right">{{ money(r.amount, true) }}</td>
@@ -195,8 +239,9 @@
             </tbody>
           </table>
         </div>
-        <p class="field-help" style="margin-top: 12px">
-          Une période déjà présente pour {{ importTarget }} sera mise à jour.
+        <p v-if="importNote" class="field-help" style="margin-top: 12px">{{ importNote }}</p>
+        <p class="field-help" style="margin-top: 6px">
+          Une période déjà enregistrée pour une plateforme sera mise à jour, jamais dupliquée.
         </p>
       </template>
 
@@ -357,43 +402,134 @@ function unlink() {
   linkTarget.value = ''
 }
 
-/* Import de relevé */
+/* Import de relevé
+ *
+ * Deux modes : depuis une case de plateforme (la plateforme est imposée), ou
+ * depuis le bouton général (elle est lue dans le fichier). Les relevés de
+ * distributeur couvrant toutes les plateformes en un seul fichier, le second
+ * mode est le cas courant.
+ */
+const importOpen = ref(false)
 const importTarget = ref('')
 const importPreview = ref<ParsedRow[]>([])
 const importProblems = ref<string[]>([])
+const importNote = ref('')
 const csvInput = ref<HTMLInputElement | null>(null)
+const dragOver = ref(false)
+
+const importTitle = computed(() =>
+  importTarget.value ? `Importer un relevé — ${importTarget.value}` : 'Importer un relevé',
+)
+
+/** Récapitulatif par plateforme de l'aperçu, pour un import multi-plateforme. */
+const previewPlatforms = computed(() => {
+  const counts = new Map<string, number>()
+  importPreview.value.forEach((r) => {
+    if (r.platform) counts.set(r.platform, (counts.get(r.platform) ?? 0) + 1)
+  })
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([name, count]) => ({ name, count, color: platformColor(name) }))
+})
 
 function openImport(platform: string) {
   importTarget.value = platform
   importPreview.value = []
   importProblems.value = []
+  importNote.value = ''
+  dragOver.value = false
+  importOpen.value = true
 }
 function closeImport() {
+  importOpen.value = false
   importTarget.value = ''
   importPreview.value = []
   importProblems.value = []
+  importNote.value = ''
+  dragOver.value = false
+}
+
+/**
+ * Regroupe les lignes visant la même plateforme et la même période en
+ * additionnant streams et revenus.
+ *
+ * Indispensable : un relevé de distributeur détaille souvent plusieurs lignes
+ * pour une même plateforme (streaming et téléchargement, ou déclinaisons
+ * régionales). Sans cette somme, l'enregistrement ne garderait que la dernière
+ * ligne et perdrait les montants des précédentes.
+ */
+function aggregateRows(rows: ParsedRow[], forced: string): ParsedRow[] {
+  const merged = new Map<string, ParsedRow>()
+  rows.forEach((row) => {
+    const platform = forced || row.platform || ''
+    const key = `${platform}\u0000${row.period}`
+    const found = merged.get(key)
+    if (found) {
+      found.streams += row.streams
+      found.amount += row.amount
+    } else {
+      merged.set(key, { ...row, platform: platform || undefined })
+    }
+  })
+  return [...merged.values()].sort(
+    (a, b) =>
+      (a.platform ?? '').localeCompare(b.platform ?? '') || a.period.localeCompare(b.period),
+  )
+}
+
+async function readCsv(file: File) {
+  try {
+    const text = await file.text()
+    const { rows, problems, hasPlatformColumn } = parseRoyaltyCsv(text)
+
+    if (!importTarget.value && rows.length && !hasPlatformColumn) {
+      // Import général sans colonne de plateforme : impossible de répartir.
+      importPreview.value = []
+      importNote.value = ''
+      importProblems.value = [
+        'Aucune colonne « plateforme » trouvée. Utilisez le bouton « Importer » ' +
+          "d'une case de plateforme, ou ajoutez cette colonne au fichier.",
+        ...problems,
+      ]
+      return
+    }
+
+    const merged = aggregateRows(rows, importTarget.value)
+    importNote.value =
+      merged.length < rows.length
+        ? `${rows.length} lignes du fichier ont été regroupées en ${merged.length} : ` +
+          `celles visant la même plateforme sur la même période sont additionnées.`
+        : ''
+    importPreview.value = merged
+    importProblems.value = problems
+  } catch {
+    importPreview.value = []
+    importNote.value = ''
+    importProblems.value = ['Ce fichier n’a pas pu être lu.']
+  }
 }
 
 async function onCsvSelected(event: Event) {
   const input = event.target as HTMLInputElement
   const file = input.files?.[0]
   input.value = ''
-  if (!file) return
+  if (file) await readCsv(file)
+}
 
-  try {
-    const text = await file.text()
-    const { rows, problems } = parseRoyaltyCsv(text)
-    importPreview.value = rows
-    importProblems.value = problems
-  } catch {
-    importPreview.value = []
-    importProblems.value = ['Ce fichier n’a pas pu être lu.']
-  }
+async function onDrop(event: DragEvent) {
+  dragOver.value = false
+  const file = event.dataTransfer?.files?.[0]
+  if (file) await readCsv(file)
 }
 
 function confirmImport() {
-  const platform = importTarget.value
+  const touched = new Set<string>()
+
   importPreview.value.forEach((row) => {
+    const platform = importTarget.value || row.platform
+    if (!platform) return
+    touched.add(platform)
+
     const existing = store.royalties.find(
       (r) => r.platform === platform && r.period === row.period,
     )
@@ -407,12 +543,18 @@ function confirmImport() {
     })
   })
 
-  const current = getLink(platform)
-  saveLink({
-    platform,
-    account: current?.account ?? '',
-    lastImport: new Date().toISOString().slice(0, 10),
-    lastImportCount: importPreview.value.length,
+  const today = new Date().toISOString().slice(0, 10)
+  touched.forEach((platform) => {
+    const current = getLink(platform)
+    const count = importPreview.value.filter(
+      (r) => (importTarget.value || r.platform) === platform,
+    ).length
+    saveLink({
+      platform,
+      account: current?.account ?? '',
+      lastImport: today,
+      lastImportCount: count,
+    })
   })
 
   if (!periods.value.includes(selectedPeriod.value)) {
@@ -499,6 +641,37 @@ function confirmDelete() {
   padding: 1px 6px;
   border-radius: 5px;
   font-size: 12px;
+}
+
+.dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 30px 20px;
+  border: 2px dashed var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.15s, background 0.15s;
+}
+.dropzone:hover {
+  border-color: var(--violet-400);
+  background: var(--violet-50);
+}
+.dropzone--over {
+  border-color: var(--violet-600);
+  background: var(--violet-100);
+}
+.dropzone svg {
+  width: 30px;
+  height: 30px;
+  color: var(--violet-600);
+  margin-bottom: 4px;
+}
+.dropzone span {
+  font-size: 13px;
 }
 
 .import-problems {
