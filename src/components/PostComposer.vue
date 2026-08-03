@@ -293,7 +293,7 @@ export default defineComponent({
 .tag-input {
   --padding-start: 0;
   font-size: 14px;
-  border-bottom: 1px solid var(--ion-color-light-shade, #d7d8da);
+  border-bottom: 1px solid var(--rm-border);
 }
 .attach-row {
   display: flex;
@@ -326,7 +326,7 @@ export default defineComponent({
 }
 .link-fields {
   margin-top: 12px;
-  border: 1px solid var(--ion-color-light-shade, #d7d8da);
+  border: 1px solid var(--rm-border);
   border-radius: 12px;
   padding: 4px 12px;
 }

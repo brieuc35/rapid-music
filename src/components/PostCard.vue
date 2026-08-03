@@ -159,7 +159,14 @@ export default defineComponent({
 <style scoped>
 .post-card {
   padding: 16px;
-  border-bottom: 8px solid var(--ion-color-light, #f4f5f8);
+  margin: 12px 12px 0;
+  background: var(--rm-surface);
+  border: 1px solid var(--rm-border);
+  border-radius: var(--rm-radius);
+  box-shadow: var(--rm-shadow-sm);
+}
+.post-card:last-of-type {
+  margin-bottom: 12px;
 }
 .repost-banner {
   display: flex;
@@ -228,8 +235,9 @@ export default defineComponent({
   align-items: center;
   gap: 8px;
   padding: 12px;
-  border: 1px solid var(--ion-color-light-shade, #d7d8da);
-  border-radius: 12px;
+  background: var(--rm-chip);
+  border: 1px solid var(--rm-border);
+  border-radius: var(--rm-radius-sm);
   text-decoration: none;
   color: inherit;
   margin-bottom: 12px;

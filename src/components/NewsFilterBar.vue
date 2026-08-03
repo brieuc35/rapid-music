@@ -88,7 +88,7 @@ export default defineComponent({
 <style scoped>
 .filter-bar {
   padding: 4px 8px 8px;
-  border-bottom: 1px solid var(--ion-color-light-shade, #e0e0e0);
+  border-bottom: 1px solid var(--rm-border);
 }
 .selects {
   display: flex;
@@ -99,7 +99,7 @@ export default defineComponent({
 ion-select {
   max-width: 45%;
   --padding-start: 8px;
-  border: 1px solid var(--ion-color-light-shade, #d7d8da);
+  border: 1px solid var(--rm-border);
   border-radius: 20px;
   font-size: 13px;
 }

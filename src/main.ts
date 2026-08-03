@@ -20,13 +20,19 @@ import '@ionic/vue/css/text-transformation.css';
 import '@ionic/vue/css/flex-utils.css';
 import '@ionic/vue/css/display.css';
 
-/* Theme variables */
+/* Theme variables + couche moderne */
 import './theme/variables.css';
+import './theme/modern.css';
+
+import { initTheme } from './composables/useTheme';
+
+// Applique le thème enregistré (ou la préférence système) avant le montage.
+initTheme();
 
 const app = createApp(App)
   .use(IonicVue)
   .use(router);
-  
+
 router.isReady().then(() => {
   app.mount('#app');
 });

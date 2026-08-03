@@ -56,7 +56,8 @@ export default defineComponent({
   display: flex;
   gap: 12px;
   padding: 14px 16px;
-  border-bottom: 1px solid var(--ion-color-light-shade, #e0e0e0);
+  background: var(--rm-surface);
+  border-bottom: 1px solid var(--rm-border);
   text-decoration: none;
   color: inherit;
 }

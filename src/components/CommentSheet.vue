@@ -194,7 +194,7 @@ export default defineComponent({
 .field {
   flex: 1;
   --padding-start: 12px;
-  --background: var(--ion-color-light, #f4f5f8);
+  --background: var(--rm-chip);
   border-radius: 20px;
 }
 </style>

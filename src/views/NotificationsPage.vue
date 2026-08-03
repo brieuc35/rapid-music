@@ -132,11 +132,11 @@ export default defineComponent({
   background: none;
   border: none;
   padding: 14px 16px;
-  border-bottom: 1px solid var(--ion-color-light-shade, #ebebeb);
+  border-bottom: 1px solid var(--rm-border);
   cursor: pointer;
 }
 .notif.unread {
-  background: rgba(56, 128, 255, 0.06);
+  background: rgba(var(--ion-color-primary-rgb), 0.07);
 }
 .icon {
   width: 40px;

@@ -4,6 +4,9 @@
       <ion-toolbar>
         <ion-title>Fil</ion-title>
         <ion-buttons slot="end">
+          <ion-button :aria-label="isDark ? 'Passer en clair' : 'Passer en sombre'" @click="toggleTheme">
+            <ion-icon slot="icon-only" :icon="isDark ? sunnyOutline : moonOutline" />
+          </ion-button>
           <ion-button aria-label="Notifications" @click="goToNotifications">
             <ion-icon slot="icon-only" :icon="notificationsOutline" />
             <ion-badge v-if="unreadCount" color="danger" class="notif-badge">{{ unreadCount }}</ion-badge>
@@ -59,10 +62,11 @@ import {
   modalController,
   onIonViewWillEnter,
 } from '@ionic/vue';
-import { createOutline, notificationsOutline } from 'ionicons/icons';
+import { createOutline, moonOutline, notificationsOutline, sunnyOutline } from 'ionicons/icons';
 import { Post } from '@/models';
 import { useFeed } from '@/composables/useFeed';
 import { useNotifications } from '@/composables/useNotifications';
+import { useTheme } from '@/composables/useTheme';
 import PostCard from '@/components/PostCard.vue';
 import PostComposer from '@/components/PostComposer.vue';
 import CommentSheet from '@/components/CommentSheet.vue';
@@ -91,6 +95,7 @@ export default defineComponent({
     const router = useRouter();
     const { posts, loading, hasMore, refresh, ensureLoaded, loadMore, prepend } = useFeed();
     const { unreadCount, refreshUnread } = useNotifications();
+    const { isDark, toggle: toggleTheme } = useTheme();
 
     onMounted(ensureLoaded);
     // Rafraîchit la pastille à chaque entrée dans l'onglet (retour de la page notifs).
@@ -135,8 +140,12 @@ export default defineComponent({
       openComposer,
       openComments,
       goToNotifications: () => router.push('/notifications'),
+      isDark,
+      toggleTheme,
       createOutline,
       notificationsOutline,
+      moonOutline,
+      sunnyOutline,
     };
   },
 });

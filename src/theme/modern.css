@@ -1,0 +1,146 @@
+/* =====================================================================
+   RapidMusic — couche « moderne » globale
+   Retouches structurelles au-dessus du thème Ionic : barres translucides,
+   FAB dégradé, boutons pilule, typographie, micro-interactions.
+   ===================================================================== */
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.01em;
+}
+
+/* ---- En-têtes / toolbars : translucides + effet verre ---- */
+ion-header {
+  box-shadow: none;
+}
+ion-header ion-toolbar {
+  --background: var(--ion-toolbar-background);
+  --border-width: 0 !important;
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid var(--rm-border);
+}
+ion-title {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+/* ---- Barre d'onglets : translucide, accent sélectionné ---- */
+ion-tab-bar {
+  --background: var(--ion-tab-bar-background);
+  --border: 0;
+  border-top: 1px solid var(--rm-border);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+  height: 58px;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+ion-tab-button {
+  --color: var(--ion-color-medium);
+  --color-selected: var(--ion-color-primary);
+}
+ion-tab-button ion-icon {
+  font-size: 24px;
+  transition: transform 0.2s ease;
+}
+ion-tab-button.tab-selected ion-icon {
+  transform: translateY(-1px) scale(1.08);
+}
+ion-tab-button ion-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+/* ---- Boutons : pilule + poids ---- */
+ion-button {
+  --border-radius: var(--rm-radius-pill);
+  --box-shadow: none;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-transform: none;
+}
+ion-button[fill="solid"] {
+  --box-shadow: 0 8px 18px -10px rgba(var(--ion-color-primary-rgb), 0.8);
+}
+
+/* ---- FAB : dégradé de marque (repli sur la couleur pleine si ::part indispo) ---- */
+ion-fab-button {
+  --background: var(--ion-color-primary);
+  --background-activated: var(--ion-color-primary-shade);
+  --box-shadow: 0 12px 26px -10px rgba(var(--ion-color-primary-rgb), 0.75);
+  --color: #fff;
+}
+ion-fab-button::part(native) {
+  background-image: var(--rm-gradient);
+}
+
+/* ---- Recherche & sélecteurs ---- */
+ion-searchbar {
+  --background: var(--rm-chip) !important;
+  --border-radius: var(--rm-radius) !important;
+  --box-shadow: none !important;
+  --color: var(--ion-text-color);
+  --placeholder-color: var(--rm-muted);
+  --icon-color: var(--rm-muted);
+  padding-top: 6px !important;
+  padding-bottom: 6px !important;
+}
+
+/* ---- Segment (onglets internes du profil) ---- */
+ion-segment {
+  --background: transparent;
+}
+ion-segment-button {
+  --color: var(--ion-color-medium);
+  --color-checked: var(--ion-color-primary);
+  --indicator-color: var(--ion-color-primary);
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: -0.01em;
+  min-height: 46px;
+}
+
+/* ---- Modales (composer, commentaires) sur surface ---- */
+ion-modal {
+  --background: var(--rm-surface);
+  --border-radius: 20px;
+}
+
+/* ---- Chips ---- */
+ion-chip {
+  --background: var(--rm-chip);
+  border-radius: var(--rm-radius-pill);
+  font-weight: 600;
+}
+
+/* ---- Contenu ---- */
+ion-content {
+  --background: var(--ion-background-color);
+}
+
+/* ---- Micro-interactions ---- */
+@keyframes rm-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.28); }
+  100% { transform: scale(1); }
+}
+.action.active ion-icon,
+.rail-btn.active ion-icon,
+.like.liked ion-icon {
+  animation: rm-pop 0.32s ease;
+}
+.action:active,
+.rail-btn:active {
+  transform: scale(0.94);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
