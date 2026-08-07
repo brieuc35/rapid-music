@@ -7,7 +7,6 @@ import type {
   RoyaltyEntry,
   StudioSession,
   Contact,
-  PlatformLink,
 } from './types'
 import { seedData } from './seed'
 
@@ -39,7 +38,6 @@ function withDefaults(saved: Partial<AppData>): AppData {
     ...saved,
     artist: { ...base.artist, ...addedFields, ...(saved.artist ?? {}) },
     label: { ...base.label, ...(saved.label ?? {}) },
-    links: saved.links ?? [],
   }
 }
 
@@ -74,25 +72,6 @@ export function uid(): string {
 export function resetData(): void {
   const fresh = seedData()
   Object.assign(store, fresh)
-}
-
-/* -------------------------------------------------------------------------- */
-/*  Comptes de plateformes                                                    */
-/* -------------------------------------------------------------------------- */
-
-export function getLink(platform: string): PlatformLink | undefined {
-  return store.links.find((l) => l.platform === platform)
-}
-
-export function saveLink(link: PlatformLink): void {
-  const idx = store.links.findIndex((l) => l.platform === link.platform)
-  if (idx >= 0) store.links.splice(idx, 1, link)
-  else store.links.push(link)
-}
-
-export function removeLink(platform: string): void {
-  const idx = store.links.findIndex((l) => l.platform === platform)
-  if (idx >= 0) store.links.splice(idx, 1)
 }
 
 /* -------------------------------------------------------------------------- */

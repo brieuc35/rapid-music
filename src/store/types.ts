@@ -102,28 +102,9 @@ export interface ArtistProfile {
   website: string
 }
 
-/**
- * Compte de plateforme rattaché à RapidMusic.
- *
- * La synchronisation automatique des royalties n'est pas possible : aucune
- * plateforme de streaming n'expose d'API publique de revenus par artiste, et
- * une authentification OAuth demanderait un serveur. Ce lien sert donc à
- * conserver la référence du profil et la trace des relevés importés.
- */
-export interface PlatformLink {
-  platform: string
-  /** Identifiant ou URL du profil artiste sur la plateforme. */
-  account: string
-  /** Date ISO du dernier relevé importé, vide si aucun. */
-  lastImport: string
-  /** Nombre de lignes ajoutées lors du dernier import. */
-  lastImportCount: number
-}
-
 export interface AppData {
   artist: ArtistProfile
   label: LabelInfo
-  links: PlatformLink[]
   contracts: Contract[]
   concerts: Concert[]
   releases: Release[]
