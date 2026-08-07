@@ -46,18 +46,6 @@
           </div>
         </div>
 
-        <div class="chips" style="margin-bottom: 18px">
-          <button
-            v-for="f in postFilters"
-            :key="f"
-            class="chip"
-            :class="{ 'chip--active': activeFilter === f }"
-            @click="activeFilter = f"
-          >
-            {{ f }}
-          </button>
-        </div>
-
         <div class="vstack" style="gap: 14px">
           <PostCard
             v-for="p in filteredPosts"
@@ -77,11 +65,7 @@
             v-if="!filteredPosts.length"
             icon="globe"
             title="Aucune publication"
-            :text="
-              activeFilter === 'Mes relations'
-                ? 'Connectez-vous à des membres pour voir leurs publications ici.'
-                : 'Aucun résultat pour cette recherche.'
-            "
+            text="Aucun résultat pour cette recherche."
           />
         </div>
       </div>
@@ -433,9 +417,7 @@ const categories: PostCategory[] = [
   'Concert',
   'Autre',
 ]
-const postFilters = ['Tout', 'Mes relations', ...categories]
 const q = ref('')
-const activeFilter = ref('Tout')
 
 const sortedPosts = computed(() => [...store.posts].sort((a, b) => b.date.localeCompare(a.date)))
 
@@ -445,19 +427,10 @@ const filteredPosts = computed(() =>
     const needle = q.value.trim().toLowerCase()
     const haystack = `${p.content} ${p.tags.join(' ')} ${account?.name ?? ''} ${account?.handle ?? ''}`
     // Une recherche « #tag » ne doit correspondre qu'aux mots-clés.
-    const matchQ = !needle
-      ? true
-      : needle.startsWith('#')
-        ? p.tags.some((t) => t.toLowerCase().includes(needle.slice(1)))
-        : haystack.toLowerCase().includes(needle)
-
-    let matchF = true
-    if (activeFilter.value === 'Mes relations') {
-      matchF = isFollowing(p.accountId) || p.accountId === 'me'
-    } else if (activeFilter.value !== 'Tout') {
-      matchF = p.category === activeFilter.value
-    }
-    return matchQ && matchF
+    if (!needle) return true
+    return needle.startsWith('#')
+      ? p.tags.some((t) => t.toLowerCase().includes(needle.slice(1)))
+      : haystack.toLowerCase().includes(needle)
   }),
 )
 
@@ -479,7 +452,6 @@ const savedPosts = computed(() => sortedPosts.value.filter((p) => p.saved).slice
 function onTag(tag: string) {
   tab.value = 'fil'
   q.value = '#' + tag
-  activeFilter.value = 'Tout'
 }
 
 /* ---------------------------- Relations ---------------------------- */
