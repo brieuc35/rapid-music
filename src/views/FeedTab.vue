@@ -2,7 +2,9 @@
   <ion-page>
     <ion-header>
       <ion-toolbar>
-        <ion-title>Fil</ion-title>
+        <ion-title>
+          <BrandLogo />
+        </ion-title>
         <ion-buttons slot="end">
           <ion-button :aria-label="isDark ? 'Passer en clair' : 'Passer en sombre'" @click="toggleTheme">
             <ion-icon slot="icon-only" :icon="isDark ? sunnyOutline : moonOutline" />
@@ -70,11 +72,13 @@ import { useTheme } from '@/composables/useTheme';
 import PostCard from '@/components/PostCard.vue';
 import PostComposer from '@/components/PostComposer.vue';
 import CommentSheet from '@/components/CommentSheet.vue';
+import BrandLogo from '@/components/BrandLogo.vue';
 
 export default defineComponent({
   name: 'FeedTab',
   components: {
     PostCard,
+    BrandLogo,
     IonBadge,
     IonButton,
     IonButtons,

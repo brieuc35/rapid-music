@@ -61,8 +61,13 @@ ion-button {
   letter-spacing: -0.01em;
   text-transform: none;
 }
-ion-button[fill="solid"] {
-  --box-shadow: 0 8px 18px -10px rgba(var(--ion-color-primary-rgb), 0.8);
+/* Dégradé de marque réservé au CTA « Suivre » (hors état outline « Abonné »
+   et hors color="light" des clips). Les boutons de barre restent sobres. */
+ion-button.follow-btn:not([color]):not([fill="outline"]) {
+  --box-shadow: 0 8px 18px -8px rgba(124, 58, 237, 0.45);
+}
+ion-button.follow-btn:not([color]):not([fill="outline"])::part(native) {
+  background-image: var(--rm-gradient);
 }
 
 /* ---- FAB : dégradé de marque (repli sur la couleur pleine si ::part indispo) ---- */

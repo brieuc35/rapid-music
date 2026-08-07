@@ -1,178 +1,176 @@
 /* =====================================================================
    RapidMusic — système de thème
-   Identité « studio nocturne » : neutres slate froids, accent magenta
-   vif + cyan, pensé mobile / jeune public. Clair + sombre.
+   Aligné sur le design system « RapidMusic » (app gestionnaire de carrière) :
+   dégradé de marque violet→rose, police Inter, neutres propres ; l'énergie
+   dark et le logo viennent du site vitrine. Clair + sombre.
    ===================================================================== */
 
 :root {
   /* ---- Accent de marque (partagé clair/sombre) ---- */
-  --ion-color-primary: #ff2e93;
-  --ion-color-primary-rgb: 255, 46, 147;
+  --ion-color-primary: #7c3aed;
+  --ion-color-primary-rgb: 124, 58, 237;
   --ion-color-primary-contrast: #ffffff;
   --ion-color-primary-contrast-rgb: 255, 255, 255;
-  --ion-color-primary-shade: #e02982;
-  --ion-color-primary-tint: #ff479f;
+  --ion-color-primary-shade: #6d28d9;
+  --ion-color-primary-tint: #8b5cf6;
 
-  --ion-color-secondary: #12c9d6;
-  --ion-color-secondary-rgb: 18, 201, 214;
-  --ion-color-secondary-contrast: #00201f;
-  --ion-color-secondary-contrast-rgb: 0, 32, 31;
-  --ion-color-secondary-shade: #10b1bc;
-  --ion-color-secondary-tint: #2acfda;
+  --ion-color-secondary: #ec4899;
+  --ion-color-secondary-rgb: 236, 72, 153;
+  --ion-color-secondary-contrast: #ffffff;
+  --ion-color-secondary-contrast-rgb: 255, 255, 255;
+  --ion-color-secondary-shade: #db2777;
+  --ion-color-secondary-tint: #f472b6;
 
-  --ion-color-tertiary: #8b5cf6;
-  --ion-color-tertiary-rgb: 139, 92, 246;
+  --ion-color-tertiary: #06b6d4;
+  --ion-color-tertiary-rgb: 6, 182, 212;
   --ion-color-tertiary-contrast: #ffffff;
   --ion-color-tertiary-contrast-rgb: 255, 255, 255;
-  --ion-color-tertiary-shade: #7a51d8;
-  --ion-color-tertiary-tint: #976cf7;
+  --ion-color-tertiary-shade: #0891b2;
+  --ion-color-tertiary-tint: #22d3ee;
 
-  --ion-color-success: #22c55e;
-  --ion-color-success-rgb: 34, 197, 94;
+  --ion-color-success: #10b981;
+  --ion-color-success-rgb: 16, 185, 129;
   --ion-color-success-contrast: #ffffff;
   --ion-color-success-contrast-rgb: 255, 255, 255;
-  --ion-color-success-shade: #1ead53;
-  --ion-color-success-tint: #38cb6e;
+  --ion-color-success-shade: #0ea372;
+  --ion-color-success-tint: #28c08e;
 
-  --ion-color-warning: #f5a524;
-  --ion-color-warning-rgb: 245, 165, 36;
+  --ion-color-warning: #f59e0b;
+  --ion-color-warning-rgb: 245, 158, 11;
   --ion-color-warning-contrast: #000000;
   --ion-color-warning-contrast-rgb: 0, 0, 0;
-  --ion-color-warning-shade: #d89120;
-  --ion-color-warning-tint: #f6ae3a;
+  --ion-color-warning-shade: #d88b0a;
+  --ion-color-warning-tint: #f6a823;
 
   /* Rouge « coeur » — réservé aux j'aime et aux actions destructrices */
-  --ion-color-danger: #ff3b6b;
-  --ion-color-danger-rgb: 255, 59, 107;
+  --ion-color-danger: #ef4444;
+  --ion-color-danger-rgb: 239, 68, 68;
   --ion-color-danger-contrast: #ffffff;
   --ion-color-danger-contrast-rgb: 255, 255, 255;
-  --ion-color-danger-shade: #e0345e;
-  --ion-color-danger-tint: #ff4f7a;
+  --ion-color-danger-shade: #d23c3c;
+  --ion-color-danger-tint: #f15757;
 
-  --ion-color-dark: #17151d;
-  --ion-color-dark-rgb: 23, 21, 29;
+  --ion-color-dark: #17141f;
+  --ion-color-dark-rgb: 23, 20, 31;
   --ion-color-dark-contrast: #ffffff;
   --ion-color-dark-contrast-rgb: 255, 255, 255;
-  --ion-color-dark-shade: #141219;
-  --ion-color-dark-tint: #2e2c34;
+  --ion-color-dark-shade: #141119;
+  --ion-color-dark-tint: #2e2b36;
 
   /* « light » reste une vraie couleur claire (utilisé par color="light",
      ex. bouton Suivre sur les clips en plein écran noir) */
   --ion-color-light: #f2f0f7;
   --ion-color-light-rgb: 242, 240, 247;
-  --ion-color-light-contrast: #17151d;
-  --ion-color-light-contrast-rgb: 23, 21, 29;
+  --ion-color-light-contrast: #17141f;
+  --ion-color-light-contrast-rgb: 23, 20, 31;
   --ion-color-light-shade: #d5d3da;
   --ion-color-light-tint: #f3f2f8;
 
-  /* Dégradé de marque (wordmark, FAB, accents) */
-  --rm-gradient: linear-gradient(135deg, #ff2e93 0%, #ff6a3d 100%);
-  --rm-gradient-soft: linear-gradient(135deg, rgba(255, 46, 147, 0.16), rgba(139, 92, 246, 0.16));
+  /* Dégradé de marque (logo, FAB, CTA, indicateurs) */
+  --rm-gradient: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+  --rm-gradient-soft: linear-gradient(135deg, rgba(139, 92, 246, 0.14), rgba(236, 72, 153, 0.14));
 
-  /* Rayons & élévation */
-  --rm-radius: 18px;
+  /* Rayons & police */
+  --rm-radius: 16px;
   --rm-radius-sm: 12px;
   --rm-radius-pill: 999px;
-
-  /* Police */
-  --ion-font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
-    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --ion-font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif;
 
   /* ---- Neutres — thème clair (défaut) ---- */
-  --ion-background-color: #f4f2f9;
-  --ion-background-color-rgb: 244, 242, 249;
-  --ion-text-color: #17151d;
-  --ion-text-color-rgb: 23, 21, 29;
+  --ion-background-color: #f6f7fb;
+  --ion-background-color-rgb: 246, 247, 251;
+  --ion-text-color: #17141f;
+  --ion-text-color-rgb: 23, 20, 31;
 
   --ion-color-medium: #6d6a7a;
   --ion-color-medium-rgb: 109, 106, 122;
   --ion-color-medium-contrast: #ffffff;
-  --ion-color-medium-shade: #57545f;
-  --ion-color-medium-tint: #86838f;
+  --ion-color-medium-shade: #5b5670;
+  --ion-color-medium-tint: #918da6;
 
   --ion-toolbar-background: rgba(255, 255, 255, 0.82);
   --ion-tab-bar-background: rgba(255, 255, 255, 0.9);
   --ion-item-background: #ffffff;
   --ion-card-background: #ffffff;
 
-  /* Tokens de surface RapidMusic */
   --rm-surface: #ffffff;
   --rm-elevated: #ffffff;
-  --rm-chip: #ece9f3;
-  --rm-border: #e7e4ee;
-  --rm-muted: #6d6a7a;
-  --rm-shadow: 0 6px 24px -12px rgba(23, 21, 29, 0.28);
-  --rm-shadow-sm: 0 2px 8px -4px rgba(23, 21, 29, 0.2);
+  --rm-chip: #f0eff7;
+  --rm-border: #ecebf3;
+  --rm-muted: #918da6;
+  --rm-shadow: 0 8px 26px -14px rgba(23, 20, 31, 0.24);
+  --rm-shadow-sm: 0 1px 3px rgba(23, 20, 31, 0.07);
 }
 
 /* Réaffirme le clair quand l'utilisateur force le thème clair */
 :root[data-theme="light"] {
-  --ion-background-color: #f4f2f9;
-  --ion-text-color: #17151d;
+  --ion-background-color: #f6f7fb;
+  --ion-text-color: #17141f;
   --ion-color-medium: #6d6a7a;
-  --ion-color-medium-shade: #57545f;
+  --ion-color-medium-shade: #5b5670;
   --ion-toolbar-background: rgba(255, 255, 255, 0.82);
   --ion-tab-bar-background: rgba(255, 255, 255, 0.9);
   --ion-item-background: #ffffff;
   --ion-card-background: #ffffff;
   --rm-surface: #ffffff;
   --rm-elevated: #ffffff;
-  --rm-chip: #ece9f3;
-  --rm-border: #e7e4ee;
-  --rm-muted: #6d6a7a;
-  --rm-shadow: 0 6px 24px -12px rgba(23, 21, 29, 0.28);
-  --rm-shadow-sm: 0 2px 8px -4px rgba(23, 21, 29, 0.2);
+  --rm-chip: #f0eff7;
+  --rm-border: #ecebf3;
+  --rm-muted: #918da6;
+  --rm-shadow: 0 8px 26px -14px rgba(23, 20, 31, 0.24);
+  --rm-shadow-sm: 0 1px 3px rgba(23, 20, 31, 0.07);
 }
 
-/* ---- Neutres — thème sombre ---- */
+/* ---- Neutres — thème sombre (inspiré du site vitrine) ---- */
 :root[data-theme="dark"] {
-  --ion-background-color: #0c0b11;
-  --ion-background-color-rgb: 12, 11, 17;
-  --ion-text-color: #f4f2fa;
-  --ion-text-color-rgb: 244, 242, 250;
+  --ion-background-color: #0d0b1a;
+  --ion-background-color-rgb: 13, 11, 26;
+  --ion-text-color: #f4f3fb;
+  --ion-text-color-rgb: 244, 243, 251;
 
-  --ion-color-medium: #948fa4;
-  --ion-color-medium-rgb: 148, 143, 164;
-  --ion-color-medium-shade: #827d90;
-  --ion-color-medium-tint: #a29eb5;
+  --ion-color-medium: #a9a6c4;
+  --ion-color-medium-rgb: 169, 166, 196;
+  --ion-color-medium-shade: #948fa4;
+  --ion-color-medium-tint: #b8b5d0;
 
-  --ion-toolbar-background: rgba(15, 13, 21, 0.72);
-  --ion-tab-bar-background: rgba(15, 13, 21, 0.86);
-  --ion-item-background: #16131f;
-  --ion-card-background: #16131f;
+  --ion-toolbar-background: rgba(13, 11, 26, 0.72);
+  --ion-tab-bar-background: rgba(13, 11, 26, 0.86);
+  --ion-item-background: #16132a;
+  --ion-card-background: #16132a;
 
-  --rm-surface: #16131f;
-  --rm-elevated: #1d1a29;
-  --rm-chip: #221e2e;
-  --rm-border: #2a2637;
-  --rm-muted: #948fa4;
-  --rm-shadow: 0 8px 30px -14px rgba(0, 0, 0, 0.7);
-  --rm-shadow-sm: 0 2px 10px -4px rgba(0, 0, 0, 0.6);
+  --rm-surface: #16132a;
+  --rm-elevated: #1c1730;
+  --rm-chip: #221d3a;
+  --rm-border: #29244180;
+  --rm-muted: #a9a6c4;
+  --rm-shadow: 0 18px 48px -18px rgba(0, 0, 0, 0.7);
+  --rm-shadow-sm: 0 2px 10px -4px rgba(0, 0, 0, 0.55);
 }
 
 /* Suit la préférence système tant que l'utilisateur n'a pas choisi le clair */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --ion-background-color: #0c0b11;
-    --ion-background-color-rgb: 12, 11, 17;
-    --ion-text-color: #f4f2fa;
-    --ion-text-color-rgb: 244, 242, 250;
+    --ion-background-color: #0d0b1a;
+    --ion-background-color-rgb: 13, 11, 26;
+    --ion-text-color: #f4f3fb;
+    --ion-text-color-rgb: 244, 243, 251;
 
-    --ion-color-medium: #948fa4;
-    --ion-color-medium-rgb: 148, 143, 164;
-    --ion-color-medium-shade: #827d90;
+    --ion-color-medium: #a9a6c4;
+    --ion-color-medium-rgb: 169, 166, 196;
+    --ion-color-medium-shade: #948fa4;
 
-    --ion-toolbar-background: rgba(15, 13, 21, 0.72);
-    --ion-tab-bar-background: rgba(15, 13, 21, 0.86);
-    --ion-item-background: #16131f;
-    --ion-card-background: #16131f;
+    --ion-toolbar-background: rgba(13, 11, 26, 0.72);
+    --ion-tab-bar-background: rgba(13, 11, 26, 0.86);
+    --ion-item-background: #16132a;
+    --ion-card-background: #16132a;
 
-    --rm-surface: #16131f;
-    --rm-elevated: #1d1a29;
-    --rm-chip: #221e2e;
-    --rm-border: #2a2637;
-    --rm-muted: #948fa4;
-    --rm-shadow: 0 8px 30px -14px rgba(0, 0, 0, 0.7);
-    --rm-shadow-sm: 0 2px 10px -4px rgba(0, 0, 0, 0.6);
+    --rm-surface: #16132a;
+    --rm-elevated: #1c1730;
+    --rm-chip: #221d3a;
+    --rm-border: #29244180;
+    --rm-muted: #a9a6c4;
+    --rm-shadow: 0 18px 48px -18px rgba(0, 0, 0, 0.7);
+    --rm-shadow-sm: 0 2px 10px -4px rgba(0, 0, 0, 0.55);
   }
 }
