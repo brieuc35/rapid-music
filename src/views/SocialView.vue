@@ -58,7 +58,7 @@
 
           <EmptyState
             v-if="!filtered.length"
-            icon="network"
+            icon="globe"
             title="Aucune publication"
             :text="
               activeFilter === 'Suivis'

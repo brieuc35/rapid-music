@@ -55,7 +55,7 @@ const routes: RouteRecordRaw[] = [
     path: '/reseau',
     name: 'social',
     component: () => import('@/views/SocialView.vue'),
-    meta: { title: 'Réseau', icon: 'network' },
+    meta: { title: 'Réseau', icon: 'globe' },
   },
   {
     path: '/mon-profil',

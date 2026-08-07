@@ -60,7 +60,7 @@
           class="nav__item nav__item--highlight"
           @click="menuOpen = false"
         >
-          <Icon name="network" />
+          <Icon name="globe" />
           <span>Réseau</span>
         </RouterLink>
       </nav>
