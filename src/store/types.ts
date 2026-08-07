@@ -157,4 +157,9 @@ export interface AppData {
   posts: Post[]
   /** Identifiants des comptes suivis. */
   following: ID[]
+  /**
+   * Date ISO de la dernière consultation du Réseau. Les publications
+   * postérieures sont comptées comme non lues.
+   */
+  networkLastSeen: string
 }

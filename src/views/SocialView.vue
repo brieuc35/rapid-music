@@ -196,7 +196,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import PageHeader from '@/components/PageHeader.vue'
 import Icon from '@/components/Icon.vue'
 import Modal from '@/components/Modal.vue'
@@ -212,6 +212,7 @@ import {
   toggleSave,
   addPost,
   removePost,
+  markNetworkSeen,
 } from '@/store'
 import type { Post, PostCategory } from '@/store/types'
 import { initials } from '@/utils/format'
@@ -228,6 +229,9 @@ const filters = ['Tout', 'Suivis', ...categories]
 
 const q = ref('')
 const activeFilter = ref('Tout')
+
+// Ouvrir le fil vaut consultation : le compteur du tableau de bord se vide.
+onMounted(markNetworkSeen)
 
 const sorted = computed(() => [...store.posts].sort((a, b) => b.date.localeCompare(a.date)))
 

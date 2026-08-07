@@ -8,6 +8,18 @@
     <!-- Stats -->
     <div class="grid grid--stats" style="margin-bottom: 26px">
       <div class="stat">
+        <div class="stat__ico" style="background: var(--amber-bg); color: var(--amber)">
+          <Icon name="contract" />
+        </div>
+        <div class="stat__val mono">{{ pendingContracts }}</div>
+        <div class="stat__label">Contrats en attente</div>
+        <div class="stat__delta stat__delta--up">
+          <Icon name="check" style="width: 14px; height: 14px" />
+          {{ activeContracts }} actifs
+        </div>
+      </div>
+
+      <div class="stat">
         <div class="stat__ico" style="background: var(--blue-bg); color: var(--blue)">
           <Icon name="release" />
         </div>
@@ -31,29 +43,17 @@
         </div>
       </div>
 
-      <div class="stat">
-        <div class="stat__ico" style="background: var(--green-bg); color: var(--green)">
-          <Icon name="money" />
+      <RouterLink to="/reseau" class="stat stat--link">
+        <div class="stat__ico" style="background: rgba(236, 72, 153, 0.12); color: var(--pink-500)">
+          <Icon name="bell" />
         </div>
-        <div class="stat__val mono">{{ money(monthRevenue) }}</div>
-        <div class="stat__label">Revenus streaming (dernier mois)</div>
-        <div class="stat__delta" :class="revenueDelta >= 0 ? 'stat__delta--up' : 'stat__delta--down'">
-          <Icon :name="revenueDelta >= 0 ? 'trendUp' : 'trendDown'" style="width: 14px; height: 14px" />
-          {{ revenueDelta >= 0 ? '+' : '' }}{{ revenueDelta }}% vs mois précédent
-        </div>
-      </div>
-
-      <div class="stat">
-        <div class="stat__ico" style="background: var(--amber-bg); color: var(--amber)">
-          <Icon name="contract" />
-        </div>
-        <div class="stat__val mono">{{ pendingContracts }}</div>
-        <div class="stat__label">Contrats en attente</div>
+        <div class="stat__val mono">{{ unreadPosts.length }}</div>
+        <div class="stat__label">Notifications réseau</div>
         <div class="stat__delta stat__delta--up">
-          <Icon name="check" style="width: 14px; height: 14px" />
-          {{ activeContracts }} actifs
+          <Icon name="globe" style="width: 14px; height: 14px" />
+          {{ unreadPosts.length ? 'Voir le fil' : 'Fil à jour' }}
         </div>
-      </div>
+      </RouterLink>
     </div>
 
     <div class="grid grid--2">
@@ -169,7 +169,7 @@ import { RouterLink } from 'vue-router'
 import PageHeader from '@/components/PageHeader.vue'
 import Icon from '@/components/Icon.vue'
 import EmptyState from '@/components/EmptyState.vue'
-import { store } from '@/store'
+import { store, unreadPosts } from '@/store'
 import {
   money,
   number,
@@ -185,22 +185,6 @@ import { platformColor } from '@/utils/platforms'
 const periods = computed(() => {
   const set = Array.from(new Set(store.royalties.map((r) => r.period)))
   return set
-})
-
-const monthRevenue = computed(() => {
-  const p = periods.value[0]
-  return store.royalties.filter((r) => r.period === p).reduce((s, r) => s + r.amount, 0)
-})
-
-const prevMonthRevenue = computed(() => {
-  const p = periods.value[1]
-  if (!p) return 0
-  return store.royalties.filter((r) => r.period === p).reduce((s, r) => s + r.amount, 0)
-})
-
-const revenueDelta = computed(() => {
-  if (!prevMonthRevenue.value) return 0
-  return Math.round(((monthRevenue.value - prevMonthRevenue.value) / prevMonthRevenue.value) * 100)
 })
 
 const upcomingConcerts = computed(() =>
@@ -256,6 +240,19 @@ function coverGradient(hex: string): string {
 </script>
 
 <style scoped>
+/* La carte des notifications est cliquable, sans se distinguer des autres. */
+.stat--link {
+  display: block;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.08s;
+}
+.stat--link:hover {
+  border-color: var(--violet-400);
+  box-shadow: var(--shadow);
+}
+.stat--link:active {
+  transform: translateY(1px);
+}
+
 .datechip {
   width: 46px;
   height: 46px;
