@@ -1,5 +1,10 @@
 import type { AppData } from './types'
 
+/** Date ISO située il y a `h` heures — le fil paraît ainsi toujours récent. */
+function hoursAgo(h: number): string {
+  return new Date(Date.now() - h * 3_600_000).toISOString()
+}
+
 export function seedData(): AppData {
   return {
     artist: {
@@ -344,5 +349,149 @@ export function seedData(): AppData {
         notes: 'Coordination générale de carrière.',
       },
     ],
+    accounts: [
+      { id: 'a1', name: 'SNEP', handle: '@snep', role: 'Syndicat', verified: true, color: '#1d4ed8' },
+      { id: 'a2', name: 'Mehdi Larbi', handle: '@mehdi.rap', role: 'Journaliste', verified: true, color: '#db2777' },
+      { id: 'a3', name: 'Halo Records', handle: '@halorecords', role: 'Label', verified: true, color: '#8b5cf6' },
+      { id: 'a4', name: 'SACEM', handle: '@sacem', role: 'Société de droits', verified: true, color: '#0d9488' },
+      { id: 'a5', name: 'Believe', handle: '@believe', role: 'Distributeur', verified: true, color: '#0ea5e9' },
+      { id: 'a6', name: 'Kaïto', handle: '@kaito', role: 'Artiste', verified: false, color: '#f59e0b' },
+      { id: 'a7', name: 'La Cigale', handle: '@lacigale', role: 'Salle', verified: true, color: '#dc2626' },
+      { id: 'a8', name: 'Scène Ouverte', handle: '@sceneouverte', role: 'Média', verified: false, color: '#7c3aed' },
+      { id: 'a9', name: 'Lune Bleue', handle: '@lunebleue', role: 'Artiste', verified: false, color: '#2563eb' },
+    ],
+    posts: [
+      {
+        id: 'p1',
+        accountId: 'a1',
+        category: 'Certification',
+        content:
+          "Nouvelle certification : le single « Néon » de NOVA est certifié SINGLE D'OR (15 millions d'équivalents streams). Félicitations à l'artiste et à Halo Records.",
+        date: hoursAgo(3),
+        likes: 1284,
+        comments: 96,
+        liked: false,
+        saved: false,
+        tags: ['certification', 'or', 'electro-pop'],
+      },
+      {
+        id: 'p2',
+        accountId: 'a2',
+        category: 'Interview',
+        content:
+          "Demain 18h, je publie une interview longue avec NOVA : la fabrication de l'album « Aurora », le rapport au live et la question des royalties dans l'électro indépendante. Un échange sans filtre.",
+        date: hoursAgo(6),
+        likes: 432,
+        comments: 51,
+        liked: false,
+        saved: true,
+        tags: ['interview', 'aurora'],
+      },
+      {
+        id: 'p3',
+        accountId: 'a4',
+        category: 'Industrie',
+        content:
+          "Rappel : les demandes d'aide à la création pour le programme automne se clôturent le 30 septembre. Les artistes autoproduits sont éligibles dès un titre déposé.",
+        date: hoursAgo(11),
+        likes: 297,
+        comments: 34,
+        liked: false,
+        saved: false,
+        tags: ['aide', 'financement'],
+      },
+      {
+        id: 'p4',
+        accountId: 'a3',
+        category: 'Sortie',
+        content:
+          "« Aurora », premier album de NOVA, sort le 14 août. 11 titres, deux ans de travail. Précommandes ouvertes, vinyle en édition limitée à 500 exemplaires.",
+        date: hoursAgo(20),
+        likes: 856,
+        comments: 73,
+        liked: true,
+        saved: false,
+        tags: ['album', 'aurora', 'vinyle'],
+      },
+      {
+        id: 'p5',
+        accountId: 'a5',
+        category: 'Industrie',
+        content:
+          'Les relevés de juillet sont disponibles dans votre espace. Rappel utile : le versement intervient environ deux mois après le mois de diffusion.',
+        date: hoursAgo(26),
+        likes: 165,
+        comments: 22,
+        liked: false,
+        saved: false,
+        tags: ['royalties', 'relevé'],
+      },
+      {
+        id: 'p6',
+        accountId: 'a7',
+        category: 'Concert',
+        content:
+          "Complet ! La release party de NOVA le 14 août affiche guichet fermé. Une seconde date est à l'étude pour l'automne.",
+        date: hoursAgo(32),
+        likes: 640,
+        comments: 88,
+        liked: false,
+        saved: false,
+        tags: ['concert', 'paris', 'complet'],
+      },
+      {
+        id: 'p7',
+        accountId: 'a6',
+        category: 'Sortie',
+        content:
+          "Mon featuring avec NOVA sur « Gravité » passe les 500 000 écoutes. Merci à tous. On remet ça bientôt en studio.",
+        date: hoursAgo(44),
+        likes: 512,
+        comments: 61,
+        liked: false,
+        saved: false,
+        tags: ['featuring', 'hyperpop'],
+      },
+      {
+        id: 'p8',
+        accountId: 'a8',
+        category: 'Industrie',
+        content:
+          "Enquête : combien gagne réellement un artiste indépendant sur 1 million de streams ? Nous avons comparé cinq plateformes et interrogé sept artistes. À lire cette semaine.",
+        date: hoursAgo(52),
+        likes: 923,
+        comments: 147,
+        liked: false,
+        saved: true,
+        tags: ['enquête', 'streaming', 'revenus'],
+      },
+      {
+        id: 'p9',
+        accountId: 'a1',
+        category: 'Certification',
+        content:
+          'Bilan du premier semestre : le streaming représente désormais 78 % des revenus de la musique enregistrée en France. Le vinyle poursuit sa progression.',
+        date: hoursAgo(70),
+        likes: 388,
+        comments: 42,
+        liked: false,
+        saved: false,
+        tags: ['marché', 'streaming', 'vinyle'],
+      },
+      {
+        id: 'p10',
+        accountId: 'a9',
+        category: 'Concert',
+        content:
+          "Je cherche une première partie pour ma tournée de novembre, cinq dates en région. Électro, indie ou pop alternative. Écrivez-moi.",
+        date: hoursAgo(78),
+        likes: 214,
+        comments: 96,
+        liked: false,
+        saved: false,
+        tags: ['tournée', 'première partie'],
+      },
+    ],
+    following: ['a1', 'a2', 'a3', 'a4'],
   }
 }

@@ -52,6 +52,12 @@ const routes: RouteRecordRaw[] = [
     meta: { title: 'Label', icon: 'label' },
   },
   {
+    path: '/reseau',
+    name: 'social',
+    component: () => import('@/views/SocialView.vue'),
+    meta: { title: 'Réseau', icon: 'network' },
+  },
+  {
     path: '/mon-profil',
     name: 'profile',
     component: () => import('@/views/ProfileView.vue'),
