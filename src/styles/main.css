@@ -290,12 +290,16 @@ textarea {
   padding: 1px 8px;
 }
 
-/* Entrée mise en avant, détachée des deux catégories */
+/* Entrée mise en avant, détachée des deux catégories.
+   Le fond est limité à la zone intérieure : peint sous la bordure, le dégradé
+   laisserait dépasser ses extrémités — violet à gauche, rose à droite — sous
+   forme d'un liseré coloré de 1 px sur les côtés. */
 .nav__item--highlight {
   margin-top: 18px;
   color: #fff;
   font-weight: 600;
   background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(236, 72, 153, 0.3));
+  background-clip: padding-box;
   border: 1px solid rgba(167, 139, 250, 0.45);
 }
 .nav__item--highlight svg {
@@ -304,12 +308,16 @@ textarea {
 }
 .nav__item--highlight:hover {
   background: linear-gradient(135deg, rgba(139, 92, 246, 0.45), rgba(236, 72, 153, 0.45));
+  background-clip: padding-box;
   border-color: rgba(167, 139, 250, 0.7);
 }
 .nav__item--highlight.router-link-active {
   background: var(--brand-gradient);
-  border-color: transparent;
-  box-shadow: 0 6px 18px rgba(124, 58, 237, 0.35);
+  background-clip: padding-box;
+  border-color: rgba(255, 255, 255, 0.16);
+  /* Écartement négatif : l'ombre reste sous l'élément au lieu de former un
+     halo coloré de part et d'autre. */
+  box-shadow: 0 4px 12px -4px rgba(124, 58, 237, 0.6);
 }
 .nav__item--highlight.router-link-active svg {
   color: #fff;
