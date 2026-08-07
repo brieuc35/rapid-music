@@ -20,7 +20,7 @@
       </div>
       <div class="stat">
         <div class="stat__val mono" style="color: var(--amber)">{{ negoCount }}</div>
-        <div class="stat__label">En négociation / attente</div>
+        <div class="stat__label">En attente</div>
       </div>
       <div class="stat">
         <div class="stat__val mono">{{ money(totalValue) }}</div>
@@ -186,8 +186,8 @@ const types: Contract['type'][] = [
   'Licence',
   'Autre',
 ]
-const statuses: Contract['status'][] = ['Actif', 'En négociation', 'En attente signature', 'Expiré']
-const filters = ['Tous', 'Actif', 'En négociation', 'En attente signature', 'Expiré']
+const statuses: Contract['status'][] = ['Actif', 'En attente', 'Expiré']
+const filters = ['Tous', 'Actif', 'En attente', 'Expiré']
 
 const q = ref('')
 const activeFilter = ref('Tous')
@@ -204,7 +204,7 @@ const filtered = computed(() =>
 
 const activeCount = computed(() => store.contracts.filter((c) => c.status === 'Actif').length)
 const negoCount = computed(
-  () => store.contracts.filter((c) => c.status === 'En négociation' || c.status === 'En attente signature').length,
+  () => store.contracts.filter((c) => c.status === 'En attente').length,
 )
 const totalValue = computed(() => store.contracts.reduce((s, c) => s + (c.value || 0), 0))
 
@@ -214,7 +214,7 @@ const emptyContract = (): Contract => ({
   title: '',
   party: '',
   type: 'Enregistrement',
-  status: 'En négociation',
+  status: 'En attente',
   startDate: '',
   endDate: '',
   value: 0,
@@ -251,7 +251,7 @@ function statusBadge(status: string): string {
     ? 'badge--green'
     : status === 'Expiré'
       ? 'badge--red'
-      : status === 'En négociation'
+      : status === 'En attente'
         ? 'badge--amber'
         : 'badge--blue'
 }

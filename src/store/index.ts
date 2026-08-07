@@ -37,9 +37,20 @@ function withDefaults(saved: Partial<AppData>): AppData {
     spotify: '',
     website: '',
   }
+  // « En négociation » et « En attente signature » ont fusionné en
+  // « En attente » : sans cette reprise, les contrats enregistrés avant le
+  // changement garderaient un statut que plus aucun filtre ne reconnaît.
+  const contracts = (saved.contracts ?? base.contracts).map((c) => {
+    const legacy = c.status as string
+    return legacy === 'En négociation' || legacy === 'En attente signature'
+      ? { ...c, status: 'En attente' as const }
+      : c
+  })
+
   return {
     ...base,
     ...saved,
+    contracts,
     artist: { ...base.artist, ...addedFields, ...(saved.artist ?? {}) },
     label: { ...base.label, ...(saved.label ?? {}) },
     // Le réseau est arrivé après coup : les données déjà enregistrées reçoivent

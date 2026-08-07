@@ -116,6 +116,9 @@ const upcomingConcerts = computed(
 const upcomingSessions = computed(
   () => store.studio.filter((s) => daysFromNow(s.date) >= 0).length,
 )
+const pendingContracts = computed(
+  () => store.contracts.filter((c) => c.status === 'En attente').length,
+)
 
 const topNav = computed(() => [
   { path: '/tableau-de-bord', title: 'Tableau de bord', icon: 'dashboard', badge: 0 },
@@ -126,8 +129,8 @@ const topNav = computed(() => [
 
 const bottomNav = computed(() => [
   { path: '/studio', title: 'Agenda', icon: 'calendar', badge: upcomingSessions.value },
-  { path: '/contrats', title: 'Contrats', icon: 'contract', badge: store.contracts.length },
-  { path: '/contacts', title: 'Contacts', icon: 'contacts', badge: store.contacts.length },
+  { path: '/contrats', title: 'Contrats', icon: 'contract', badge: pendingContracts.value },
+  { path: '/contacts', title: 'Contacts', icon: 'contacts', badge: 0 },
   { path: '/label', title: 'Label', icon: 'label', badge: 0 },
 ])
 </script>
