@@ -102,6 +102,48 @@ export interface ArtistProfile {
   website: string
 }
 
+/* -------------------------------------------------------------------------- */
+/*  Réseau                                                                    */
+/*                                                                            */
+/*  Le fil est local : sans serveur, les publications ne circulent pas entre   */
+/*  utilisateurs. Les comptes fournis servent de contenu de démonstration.     */
+/* -------------------------------------------------------------------------- */
+
+export type PostCategory =
+  | 'Certification'
+  | 'Interview'
+  | 'Sortie'
+  | 'Industrie'
+  | 'Concert'
+  | 'Autre'
+
+export interface SocialAccount {
+  id: ID
+  name: string
+  handle: string
+  /** Nature du compte : Syndicat, Journaliste, Label, Média, Artiste… */
+  role: string
+  verified: boolean
+  /** Couleur d'accent de l'avatar. */
+  color: string
+}
+
+export interface Post {
+  id: ID
+  accountId: ID
+  category: PostCategory
+  content: string
+  /** Date et heure ISO de publication. */
+  date: string
+  likes: number
+  comments: number
+  /** Aimé par l'artiste (état local). */
+  liked: boolean
+  /** Mis de côté pour lecture ultérieure. */
+  saved: boolean
+  tags: string[]
+}
+
 export interface AppData {
   artist: ArtistProfile
   label: LabelInfo
@@ -111,4 +153,8 @@ export interface AppData {
   royalties: RoyaltyEntry[]
   studio: StudioSession[]
   contacts: Contact[]
+  accounts: SocialAccount[]
+  posts: Post[]
+  /** Identifiants des comptes suivis. */
+  following: ID[]
 }

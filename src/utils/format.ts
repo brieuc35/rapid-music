@@ -74,6 +74,22 @@ export function relativeDay(iso: string): string {
   return `Il y a ${-n} j`
 }
 
+/** « à l'instant », « il y a 3 h », « il y a 2 j », puis la date. */
+export function relativeTime(iso: string): string {
+  if (!iso) return ''
+  const then = new Date(iso).getTime()
+  if (isNaN(then)) return ''
+  const mins = Math.round((Date.now() - then) / 60_000)
+
+  if (mins < 1) return "à l'instant"
+  if (mins < 60) return `il y a ${mins} min`
+  const hours = Math.round(mins / 60)
+  if (hours < 24) return `il y a ${hours} h`
+  const days = Math.round(hours / 24)
+  if (days < 7) return `il y a ${days} j`
+  return formatDate(iso.slice(0, 10))
+}
+
 export function initials(name: string): string {
   return name
     .split(' ')

@@ -117,6 +117,7 @@ const topNav = computed(() => [
   { path: '/concerts', title: 'Concerts', icon: 'concert', badge: upcomingConcerts.value },
   { path: '/sorties', title: 'Sorties', icon: 'release', badge: store.releases.length },
   { path: '/royalties', title: 'Royalties', icon: 'money', badge: 0 },
+  { path: '/reseau', title: 'Réseau', icon: 'network', badge: 0 },
 ])
 
 const bottomNav = computed(() => [
