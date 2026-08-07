@@ -1008,4 +1008,42 @@ table.tbl tbody tr:hover {
   .page-head__title {
     font-size: 22px;
   }
+  /* Les actions d'en-tête ne tiennent pas toujours sur une ligne
+     (deux boutons sur la page Revenus) : on autorise le retour à la ligne. */
+  .page-head .hstack {
+    flex-wrap: wrap;
+  }
+
+  /* Cartes de statistiques : deux par ligne, en version compacte.
+     Empilées une par une, elles repoussaient tout le contenu vers le bas. */
+  .grid--stats {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .stat {
+    padding: 14px 14px 15px;
+    border-radius: var(--radius-sm);
+  }
+  .stat__ico {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    margin-bottom: 10px;
+  }
+  .stat__ico svg {
+    width: 16px;
+    height: 16px;
+  }
+  .stat__val {
+    font-size: 21px;
+  }
+  .stat__label {
+    font-size: 12px;
+    line-height: 1.35;
+  }
+  .stat__delta {
+    font-size: 11.5px;
+    margin-top: 7px;
+    line-height: 1.35;
+  }
 }
