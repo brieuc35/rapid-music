@@ -12,7 +12,10 @@
         <div class="stat__label">Dates à venir</div>
       </div>
       <div class="stat">
-        <div class="stat__val mono">{{ money(totalFees) }}</div>
+        <div class="stat__val mono">
+          <template v-if="isPro">{{ money(totalFees) }}</template>
+          <RouterLink v-else to="/abonnement" class="locked"><Icon name="star" /> Pro</RouterLink>
+        </div>
         <div class="stat__label">Cachets à venir</div>
       </div>
       <div class="stat">
@@ -73,7 +76,10 @@
           </div>
 
           <div class="concert-fee">
-            <div class="mono" style="font-weight: 700">{{ money(c.fee) }}</div>
+            <div v-if="isPro" class="mono" style="font-weight: 700">{{ money(c.fee) }}</div>
+            <RouterLink v-else to="/abonnement" class="locked locked--sm">
+              <Icon name="star" /> Pro
+            </RouterLink>
             <div class="muted micro">cachet</div>
           </div>
 
@@ -114,7 +120,13 @@
             <option v-for="s in statuses" :key="s">{{ s }}</option>
           </select>
         </div>
-        <div class="field"><label>Cachet (€)</label><input v-model.number="editing.fee" type="number" min="0" /></div>
+        <div class="field">
+          <label>Cachet (€)</label>
+          <input v-if="isPro" v-model.number="editing.fee" type="number" min="0" />
+          <RouterLink v-else to="/abonnement" class="btn btn--ghost btn--block">
+            <Icon name="star" /> Réservé à Pro
+          </RouterLink>
+        </div>
       </div>
       <div class="field--row">
         <div class="field"><label>Jauge</label><input v-model.number="editing.capacity" type="number" min="0" /></div>
@@ -134,12 +146,13 @@
 
 <script setup lang="ts">
 import { ref, computed, reactive } from 'vue'
+import { RouterLink } from 'vue-router'
 import PageHeader from '@/components/PageHeader.vue'
 import Icon from '@/components/Icon.vue'
 import Modal from '@/components/Modal.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
-import { store, upsert, remove, uid } from '@/store'
+import { store, upsert, remove, uid, isPro } from '@/store'
 import type { Concert } from '@/store/types'
 import { money, number, dayNum, monthShort, daysFromNow } from '@/utils/format'
 
@@ -272,6 +285,29 @@ function statusBadge(status: string): string {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.03em;
+}
+.locked {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--violet-600);
+  background: var(--brand-gradient-soft);
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+.locked svg {
+  width: 13px;
+  height: 13px;
+  fill: var(--violet-600);
+}
+.locked:hover {
+  background: var(--violet-200);
+}
+.locked--sm {
+  font-size: 12px;
+  padding: 2px 8px;
 }
 .icon-sm {
   width: 34px;

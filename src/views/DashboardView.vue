@@ -87,7 +87,10 @@
       <div class="card card--pad">
         <div class="section-head">
           <span class="section-head__title">Revenus par plateforme</span>
-          <RouterLink to="/royalties" class="btn btn--subtle btn--sm">Détails</RouterLink>
+          <RouterLink v-if="isPro" to="/royalties" class="btn btn--subtle btn--sm">Détails</RouterLink>
+          <RouterLink v-else to="/abonnement" class="btn btn--subtle btn--sm">
+            <Icon name="star" /> Pro
+          </RouterLink>
         </div>
         <div class="vstack" style="gap: 14px; margin-top: 6px">
           <div v-for="p in platformBreakdown" :key="p.platform" class="vstack" style="gap: 6px">
@@ -96,7 +99,10 @@
                 <span class="dot" :style="{ background: p.color }" />
                 <b>{{ p.platform }}</b>
               </span>
-              <span class="mono soft">{{ money(p.amount) }}</span>
+              <!-- Hors abonnement, le montant n'est pas rendu du tout : un
+                   simple flou laisserait la valeur lisible dans la page. -->
+              <span v-if="isPro" class="mono soft">{{ money(p.amount) }}</span>
+              <span v-else class="mono masked">••• €</span>
             </div>
             <div class="bar">
               <div
@@ -169,7 +175,7 @@ import { RouterLink } from 'vue-router'
 import PageHeader from '@/components/PageHeader.vue'
 import Icon from '@/components/Icon.vue'
 import EmptyState from '@/components/EmptyState.vue'
-import { store, unreadPosts } from '@/store'
+import { store, unreadPosts, isPro } from '@/store'
 import {
   money,
   number,
@@ -251,6 +257,10 @@ function coverGradient(hex: string): string {
 }
 .stat--link:active {
   transform: translateY(1px);
+}
+.masked {
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
 }
 
 .datechip {

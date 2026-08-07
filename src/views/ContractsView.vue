@@ -2,11 +2,23 @@
   <div class="page">
     <PageHeader title="Contrats" subtitle="Tous vos accords et engagements au même endroit.">
       <template #actions>
-        <button class="btn btn--primary" @click="openNew">
+        <button v-if="isPro" class="btn btn--primary" @click="openNew">
           <Icon name="plus" /> Nouveau contrat
         </button>
       </template>
     </PageHeader>
+
+    <ProGate
+      title="Gardez la main sur vos contrats"
+      lead="Avances, taux, échéances : l'onglet Contrats réunit vos engagements et vous alerte sur ce qui reste à signer."
+      :features="[
+        'Suivi par statut : actif, en attente, expiré',
+        'Avance ou valeur, et taux artiste pour chaque accord',
+        'Périodes de validité et échéances en un coup d\'œil',
+        'Recherche par intitulé, partenaire ou type de contrat',
+        'Valeur cumulée de vos avances',
+      ]"
+    >
 
     <!-- Summary -->
     <div class="grid grid--stats" style="margin-bottom: 22px">
@@ -100,6 +112,8 @@
       <button class="btn btn--primary" @click="openNew"><Icon name="plus" /> Nouveau contrat</button>
     </EmptyState>
 
+    </ProGate>
+
     <!-- Modal form -->
     <Modal :open="showForm" :title="editing.id ? 'Modifier le contrat' : 'Nouveau contrat'" @close="showForm = false">
       <div class="field">
@@ -169,11 +183,12 @@
 <script setup lang="ts">
 import { ref, computed, reactive } from 'vue'
 import PageHeader from '@/components/PageHeader.vue'
+import ProGate from '@/components/ProGate.vue'
 import Icon from '@/components/Icon.vue'
 import Modal from '@/components/Modal.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
-import { store, upsert, remove, uid } from '@/store'
+import { store, upsert, remove, uid, isPro } from '@/store'
 import type { Contract } from '@/store/types'
 import { money, formatDate } from '@/utils/format'
 

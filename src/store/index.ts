@@ -52,6 +52,7 @@ function withDefaults(saved: Partial<AppData>): AppData {
     ...saved,
     contracts,
     artist: { ...base.artist, ...addedFields, ...(saved.artist ?? {}) },
+    subscription: saved.subscription ?? base.subscription,
     label: { ...base.label, ...(saved.label ?? {}) },
     // Le réseau est arrivé après coup : les données déjà enregistrées reçoivent
     // le fil de démonstration plutôt qu'un onglet vide.
@@ -208,6 +209,26 @@ export function addPost(content: string, category: PostCategory, tags: string[])
     saved: false,
     tags,
   })
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Abonnement                                                                */
+/*                                                                            */
+/*  Aucun paiement n'est encaissé : sans serveur ni prestataire, l'activation  */
+/*  reste une bascule locale servant à présenter l'offre. Une facturation      */
+/*  réelle demanderait un back-end et un prestataire de paiement.              */
+/* -------------------------------------------------------------------------- */
+
+export const PRO_PRICE = 9.99
+
+export const isPro = computed(() => store.subscription.plan === 'pro')
+
+export function activatePro(): void {
+  store.subscription = { plan: 'pro', since: new Date().toISOString().slice(0, 10) }
+}
+
+export function cancelPro(): void {
+  store.subscription = { plan: 'free', since: '' }
 }
 
 /* -------------------------------------------------------------------------- */

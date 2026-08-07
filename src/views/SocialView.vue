@@ -2,7 +2,7 @@
   <div class="page">
     <PageHeader title="Réseau" subtitle="Le réseau professionnel de l'univers musical.">
       <template #actions>
-        <button v-if="tab === 'annonces'" class="btn btn--primary" @click="showOppForm = true">
+        <button v-if="tab === 'annonces' && isPro" class="btn btn--primary" @click="showOppForm = true">
           <Icon name="plus" /> Publier une annonce
         </button>
         <button v-else class="btn btn--primary" @click="showCompose = true">
@@ -190,7 +190,17 @@
     </div>
 
     <!-- ================= ANNONCES ================= -->
-    <div v-else>
+    <ProGate
+      v-else
+      title="Les opportunités du milieu, au même endroit"
+      lead="Premières parties, sessions studio, créneaux de mixage, programmations : les annonces réservées aux abonnés Pro."
+      :features="[
+        'Toutes les annonces du réseau, filtrables par nature et par métier',
+        'Profil recherché, lieu et date limite pour chaque offre',
+        'Mise de côté des annonces qui vous intéressent',
+        'Publication de vos propres recherches de collaborateurs',
+      ]"
+    >
       <div class="toolbar">
         <div class="search">
           <Icon name="search" />
@@ -232,7 +242,7 @@
           <Icon name="plus" /> Publier une annonce
         </button>
       </EmptyState>
-    </div>
+    </ProGate>
 
     <!-- Profil d'un membre -->
     <ProfileCard
@@ -374,11 +384,13 @@ import Modal from '@/components/Modal.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import PostCard from '@/components/PostCard.vue'
+import ProGate from '@/components/ProGate.vue'
 import AccountCard from '@/components/AccountCard.vue'
 import OpportunityCard from '@/components/OpportunityCard.vue'
 import ProfileCard from '@/components/ProfileCard.vue'
 import {
   store,
+  isPro,
   accountById,
   isFollowing,
   toggleFollow,
