@@ -1,9 +1,9 @@
 import { mount } from '@vue/test-utils'
-import Tab1 from '@/views/Tab1.vue'
+import Feed from '@/views/Feed.vue'
 
-describe('Tab1.vue', () => {
-  it('renders tab 1 view', () => {
-    const wrapper = mount(Tab1)
-    expect(wrapper.text()).toMatch('Tab 1 page')
+describe('Feed.vue', () => {
+  it('affiche le fil musical', () => {
+    const wrapper = mount(Feed)
+    expect(wrapper.text()).toMatch('Ton fil musical')
   })
 })

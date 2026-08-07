@@ -23,6 +23,9 @@ import '@ionic/vue/css/display.css';
 /* Theme variables */
 import './theme/variables.css';
 
+/* Style global Rapid Music (repris du site vitrine) */
+import './theme/app.css';
+
 const app = createApp(App)
   .use(IonicVue)
   .use(router);
