@@ -121,11 +121,39 @@ export interface SocialAccount {
   id: ID
   name: string
   handle: string
-  /** Nature du compte : Syndicat, Journaliste, Label, Média, Artiste… */
+  /** Métier exercé : Journaliste, Label, Ingénieur du son, Booker… */
   role: string
   verified: boolean
   /** Couleur d'accent de l'avatar. */
   color: string
+  /** Structure de rattachement (label, média, salle…). */
+  company: string
+  location: string
+  /** Présentation professionnelle. */
+  bio: string
+  /** Compétences et domaines mis en avant. */
+  specialties: string[]
+  /** Nombre de relations affiché sur le profil. */
+  connections: number
+}
+
+/** Nature d'une annonce publiée sur le réseau. */
+export type OpportunityKind = 'Rémunéré' | 'Collaboration' | 'Bénévole'
+
+export interface Opportunity {
+  id: ID
+  accountId: ID
+  title: string
+  /** Métier ou profil recherché. */
+  role: string
+  kind: OpportunityKind
+  location: string
+  description: string
+  /** Date ISO de publication. */
+  date: string
+  /** Date limite de candidature, vide si aucune. */
+  deadline: string
+  saved: boolean
 }
 
 export interface Post {
@@ -155,7 +183,8 @@ export interface AppData {
   contacts: Contact[]
   accounts: SocialAccount[]
   posts: Post[]
-  /** Identifiants des comptes suivis. */
+  opportunities: Opportunity[]
+  /** Identifiants des comptes avec lesquels l'artiste est en relation. */
   following: ID[]
   /**
    * Date ISO de la dernière consultation du Réseau. Les publications

@@ -10,6 +10,7 @@ import type {
   SocialAccount,
   Post,
   PostCategory,
+  Opportunity,
 } from './types'
 import { seedData } from './seed'
 
@@ -43,8 +44,11 @@ function withDefaults(saved: Partial<AppData>): AppData {
     label: { ...base.label, ...(saved.label ?? {}) },
     // Le réseau est arrivé après coup : les données déjà enregistrées reçoivent
     // le fil de démonstration plutôt qu'un onglet vide.
-    accounts: saved.accounts ?? base.accounts,
+    // Les comptes se sont enrichis (métier, structure, compétences) : on reprend
+    // ceux de la démonstration si les données enregistrées sont antérieures.
+    accounts: saved.accounts?.[0]?.specialties ? saved.accounts : base.accounts,
     posts: saved.posts ?? base.posts,
+    opportunities: saved.opportunities ?? base.opportunities,
     following: saved.following ?? base.following,
     networkLastSeen: saved.networkLastSeen ?? base.networkLastSeen,
   }
@@ -123,30 +127,67 @@ export function markNetworkSeen(): void {
   store.networkLastSeen = new Date().toISOString()
 }
 
+/* Annonces */
+
+export function toggleSaveOpportunity(o: Opportunity): void {
+  o.saved = !o.saved
+}
+
+export function addOpportunity(
+  data: Omit<Opportunity, 'id' | 'accountId' | 'date' | 'saved'>,
+): void {
+  ensureOwnAccount()
+  store.opportunities.unshift({
+    ...data,
+    id: uid(),
+    accountId: 'me',
+    date: new Date().toISOString(),
+    saved: false,
+  })
+}
+
+export function removeOpportunity(id: string): void {
+  const idx = store.opportunities.findIndex((o) => o.id === id)
+  if (idx >= 0) store.opportunities.splice(idx, 1)
+}
+
 export function removePost(id: string): void {
   const idx = store.posts.findIndex((p) => p.id === id)
   if (idx >= 0) store.posts.splice(idx, 1)
 }
 
 /**
- * Publie au nom de l'artiste. Un compte le représentant est créé au premier
- * message, afin que ses publications s'affichent comme celles des autres.
+ * Crée au besoin le compte représentant l'artiste, afin que ses publications et
+ * ses annonces s'affichent comme celles des autres membres. Le profil reprend
+ * les informations saisies dans « Mon profil ».
  */
-export function addPost(content: string, category: PostCategory, tags: string[]): void {
-  const me = 'me'
-  if (!accountById(me)) {
-    store.accounts.unshift({
-      id: me,
-      name: store.artist.stageName || 'Moi',
-      handle: '@' + (store.artist.stageName || 'moi').toLowerCase().replace(/\s+/g, ''),
-      role: 'Artiste',
-      verified: false,
-      color: '#8b5cf6',
-    })
+export function ensureOwnAccount(): SocialAccount {
+  const existing = accountById('me')
+  if (existing) return existing
+
+  const account: SocialAccount = {
+    id: 'me',
+    name: store.artist.stageName || 'Moi',
+    handle: '@' + (store.artist.stageName || 'moi').toLowerCase().replace(/\s+/g, ''),
+    role: 'Artiste',
+    verified: false,
+    color: '#8b5cf6',
+    company: store.label.name,
+    location: store.artist.city,
+    bio: store.artist.bio,
+    specialties: store.artist.genre ? [store.artist.genre] : [],
+    connections: store.following.length,
   }
+  store.accounts.unshift(account)
+  return account
+}
+
+/** Publie au nom de l'artiste. */
+export function addPost(content: string, category: PostCategory, tags: string[]): void {
+  ensureOwnAccount()
   store.posts.unshift({
     id: uid(),
-    accountId: me,
+    accountId: 'me',
     category,
     content,
     date: new Date().toISOString(),
