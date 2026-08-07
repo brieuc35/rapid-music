@@ -2,10 +2,24 @@
   <div class="page">
     <PageHeader title="Royalties & Revenus" subtitle="Suivi de vos revenus des plateformes de streaming.">
       <template #actions>
-        <button class="btn btn--ghost" @click="openImport"><Icon name="doc" /> Importer un relevé</button>
-        <button class="btn btn--primary" @click="openNew"><Icon name="plus" /> Ajouter un relevé</button>
+        <template v-if="isPro">
+          <button class="btn btn--ghost" @click="openImport"><Icon name="doc" /> Importer un relevé</button>
+          <button class="btn btn--primary" @click="openNew"><Icon name="plus" /> Ajouter un relevé</button>
+        </template>
       </template>
     </PageHeader>
+
+    <ProGate
+      title="Suivez vos revenus, plateforme par plateforme"
+      lead="L'onglet Revenus rassemble ce que rapportent réellement vos titres, et vous évite de recopier vos relevés à la main."
+      :features="[
+        'Revenus et streams cumulés, revenu moyen pour 1000 écoutes',
+        'Graphique d\'évolution mois par mois',
+        'Répartition par plateforme, période par période',
+        'Import du relevé de votre distributeur : un fichier remplit toutes les plateformes',
+        'Historique complet, modifiable ligne à ligne',
+      ]"
+    >
 
     <div class="grid grid--stats" style="margin-bottom: 22px">
       <div class="stat">
@@ -101,6 +115,8 @@
         </table>
       </div>
     </div>
+
+    </ProGate>
 
     <!-- Import d'un relevé -->
     <Modal :open="importOpen" :title="importTitle" @close="closeImport">
@@ -240,10 +256,11 @@
 <script setup lang="ts">
 import { ref, computed, reactive } from 'vue'
 import PageHeader from '@/components/PageHeader.vue'
+import ProGate from '@/components/ProGate.vue'
 import Icon from '@/components/Icon.vue'
 import Modal from '@/components/Modal.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
-import { store, upsert, remove, uid } from '@/store'
+import { store, upsert, remove, uid, isPro } from '@/store'
 import type { RoyaltyEntry } from '@/store/types'
 import { money, number, compact } from '@/utils/format'
 import { platformColors, platformColor } from '@/utils/platforms'

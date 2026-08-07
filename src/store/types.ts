@@ -172,8 +172,24 @@ export interface Post {
   tags: string[]
 }
 
+/* -------------------------------------------------------------------------- */
+/*  Abonnement                                                                */
+/*                                                                            */
+/*  L'application n'a ni serveur ni prestataire de paiement : l'abonnement est */
+/*  un indicateur local. Une facturation réelle exigerait un back-end.         */
+/* -------------------------------------------------------------------------- */
+
+export type Plan = 'free' | 'pro'
+
+export interface Subscription {
+  plan: Plan
+  /** Date ISO d'activation, vide en offre gratuite. */
+  since: string
+}
+
 export interface AppData {
   artist: ArtistProfile
+  subscription: Subscription
   label: LabelInfo
   contracts: Contract[]
   concerts: Concert[]

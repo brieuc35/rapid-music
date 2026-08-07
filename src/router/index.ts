@@ -63,6 +63,12 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/ProfileView.vue'),
     meta: { title: 'Mon profil', icon: 'users' },
   },
+  {
+    path: '/abonnement',
+    name: 'pricing',
+    component: () => import('@/views/PricingView.vue'),
+    meta: { title: 'Abonnement', icon: 'star' },
+  },
   { path: '/:pathMatch(.*)*', redirect: '/tableau-de-bord' },
 ]
 

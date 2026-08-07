@@ -289,6 +289,18 @@ textarea {
   border-radius: 20px;
   padding: 1px 8px;
 }
+/* Remplace le compteur sur les onglets réservés à l'abonnement Pro. */
+.nav__pro {
+  margin-left: auto;
+  background: var(--brand-gradient);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 20px;
+  padding: 2px 8px;
+}
 
 /* Entrée mise en avant, détachée des deux catégories.
    Le fond est limité à la zone intérieure : peint sous la bordure, le dégradé
@@ -335,6 +347,53 @@ textarea {
 .nav__foot {
   padding: 12px;
   margin-top: 8px;
+}
+.upsell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 11px;
+  margin-bottom: 10px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.22), rgba(236, 72, 153, 0.22));
+  background-clip: padding-box;
+  border: 1px solid rgba(167, 139, 250, 0.4);
+  transition: background 0.15s, border-color 0.15s;
+}
+.upsell:hover {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.38), rgba(236, 72, 153, 0.38));
+  background-clip: padding-box;
+  border-color: rgba(167, 139, 250, 0.65);
+}
+.upsell__ico {
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  background: var(--brand-gradient);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.upsell__ico svg {
+  width: 15px;
+  height: 15px;
+  color: #fff;
+  fill: #fff;
+}
+.upsell__text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+.upsell__text b {
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+}
+.upsell__text span {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 11.5px;
 }
 .artist-chip {
   display: flex;

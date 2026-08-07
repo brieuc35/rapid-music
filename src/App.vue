@@ -28,7 +28,8 @@
         >
           <Icon :name="item.icon" />
           <span>{{ item.title }}</span>
-          <span v-if="item.badge" class="nav__badge">{{ item.badge }}</span>
+          <span v-if="item.pro && !isPro" class="nav__pro">Pro</span>
+          <span v-else-if="item.badge" class="nav__badge">{{ item.badge }}</span>
         </RouterLink>
 
         <span class="nav__label">Organisation</span>
@@ -41,7 +42,8 @@
         >
           <Icon :name="item.icon" />
           <span>{{ item.title }}</span>
-          <span v-if="item.badge" class="nav__badge">{{ item.badge }}</span>
+          <span v-if="item.pro && !isPro" class="nav__pro">Pro</span>
+          <span v-else-if="item.badge" class="nav__badge">{{ item.badge }}</span>
         </RouterLink>
 
         <!-- Mis en avant sous les deux catégories -->
@@ -57,6 +59,14 @@
       </nav>
 
       <div class="nav__foot">
+        <RouterLink v-if="!isPro" to="/abonnement" class="upsell">
+          <span class="upsell__ico"><Icon name="star" /></span>
+          <div class="upsell__text">
+            <b>Passer à Pro</b>
+            <span>Revenus, contrats, annonces</span>
+          </div>
+        </RouterLink>
+
         <RouterLink
           to="/mon-profil"
           class="artist-chip"
@@ -105,7 +115,7 @@ import Icon from './components/Icon.vue'
 import Avatar from './components/Avatar.vue'
 import BrandMark from './components/BrandMark.vue'
 import LoginView from './views/LoginView.vue'
-import { store, isLoggedIn, unreadPosts } from './store'
+import { store, isLoggedIn, unreadPosts, isPro } from './store'
 import { daysFromNow } from './utils/format'
 
 const menuOpen = ref(false)
@@ -124,12 +134,12 @@ const topNav = computed(() => [
   { path: '/tableau-de-bord', title: 'Tableau de bord', icon: 'dashboard', badge: 0 },
   { path: '/concerts', title: 'Concerts', icon: 'concert', badge: upcomingConcerts.value },
   { path: '/sorties', title: 'Sorties', icon: 'release', badge: store.releases.length },
-  { path: '/royalties', title: 'Royalties', icon: 'money', badge: 0 },
+  { path: '/royalties', title: 'Royalties', icon: 'money', badge: 0, pro: true },
 ])
 
 const bottomNav = computed(() => [
   { path: '/studio', title: 'Agenda', icon: 'calendar', badge: upcomingSessions.value },
-  { path: '/contrats', title: 'Contrats', icon: 'contract', badge: pendingContracts.value },
+  { path: '/contrats', title: 'Contrats', icon: 'contract', badge: pendingContracts.value, pro: true },
   { path: '/contacts', title: 'Contacts', icon: 'contacts', badge: 0 },
   { path: '/label', title: 'Label', icon: 'label', badge: 0 },
 ])
