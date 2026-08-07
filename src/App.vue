@@ -84,7 +84,10 @@
         <button class="icon-btn" @click="menuOpen = true" aria-label="Menu">
           <Icon name="menu" />
         </button>
-        <span class="topbar__title">Rapid<b style="color: var(--violet-400)">Music</b></span>
+        <RouterLink to="/tableau-de-bord" class="topbar__brand">
+          <span class="topbar__mark"><BrandMark /></span>
+          <span class="topbar__title">Rapid<b>Music</b></span>
+        </RouterLink>
       </header>
 
       <RouterView v-slot="{ Component }">
