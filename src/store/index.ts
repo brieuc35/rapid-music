@@ -1,4 +1,4 @@
-import { reactive, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import type {
   AppData,
   Contract,
@@ -46,6 +46,7 @@ function withDefaults(saved: Partial<AppData>): AppData {
     accounts: saved.accounts ?? base.accounts,
     posts: saved.posts ?? base.posts,
     following: saved.following ?? base.following,
+    networkLastSeen: saved.networkLastSeen ?? base.networkLastSeen,
   }
 }
 
@@ -107,6 +108,19 @@ export function toggleLike(post: Post): void {
 
 export function toggleSave(post: Post): void {
   post.saved = !post.saved
+}
+
+/**
+ * Publications parues depuis la dernière consultation du Réseau.
+ * Celles de l'artiste sont exclues : on ne se notifie pas soi-même.
+ */
+export const unreadPosts = computed(() =>
+  store.posts.filter((p) => p.accountId !== 'me' && p.date > store.networkLastSeen),
+)
+
+/** Marque le Réseau comme consulté : le compteur retombe à zéro. */
+export function markNetworkSeen(): void {
+  store.networkLastSeen = new Date().toISOString()
 }
 
 export function removePost(id: string): void {

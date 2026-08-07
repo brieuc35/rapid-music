@@ -493,5 +493,8 @@ export function seedData(): AppData {
       },
     ],
     following: ['a1', 'a2', 'a3', 'a4'],
+    // Une journée en arrière : les publications récentes apparaissent comme
+    // non lues au premier lancement.
+    networkLastSeen: hoursAgo(24),
   }
 }
