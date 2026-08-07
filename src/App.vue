@@ -9,17 +9,7 @@
     <aside class="sidebar" :class="{ 'sidebar--open': menuOpen }">
       <div class="brand">
         <div class="brand__mark">
-          <svg viewBox="0 0 24 24" fill="none">
-            <path
-              d="M9 17V4l11-2v13"
-              stroke="#fff"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-            <circle cx="6" cy="17" r="3" stroke="#fff" stroke-width="2" />
-            <circle cx="17" cy="15" r="3" stroke="#fff" stroke-width="2" />
-          </svg>
+          <BrandMark />
         </div>
         <div>
           <div class="brand__name">Rapid<b>Music</b></div>
@@ -109,6 +99,7 @@ import { ref, computed } from 'vue'
 import { RouterLink, RouterView } from 'vue-router'
 import Icon from './components/Icon.vue'
 import Avatar from './components/Avatar.vue'
+import BrandMark from './components/BrandMark.vue'
 import LoginView from './views/LoginView.vue'
 import { store, isLoggedIn } from './store'
 import { daysFromNow } from './utils/format'

@@ -3,17 +3,7 @@
     <div class="login__card">
       <div class="login__brand">
         <div class="brand__mark">
-          <svg viewBox="0 0 24 24" fill="none">
-            <path
-              d="M9 17V4l11-2v13"
-              stroke="#fff"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-            <circle cx="6" cy="17" r="3" stroke="#fff" stroke-width="2" />
-            <circle cx="17" cy="15" r="3" stroke="#fff" stroke-width="2" />
-          </svg>
+          <BrandMark />
         </div>
         <div class="login__title">Rapid<b>Music</b></div>
       </div>
@@ -49,6 +39,7 @@
 
 <script setup lang="ts">
 import Avatar from '@/components/Avatar.vue'
+import BrandMark from '@/components/BrandMark.vue'
 import Icon from '@/components/Icon.vue'
 import { store, login } from '@/store'
 </script>
