@@ -2,6 +2,7 @@
   <div class="page">
     <PageHeader title="Royalties & Revenus" subtitle="Suivi de vos revenus des plateformes de streaming.">
       <template #actions>
+        <button class="btn btn--ghost" @click="openImport"><Icon name="doc" /> Importer un relevé</button>
         <button class="btn btn--primary" @click="openNew"><Icon name="plus" /> Ajouter un relevé</button>
       </template>
     </PageHeader>
@@ -65,36 +66,6 @@
       </div>
     </div>
 
-    <!-- Comptes des plateformes -->
-    <div class="section-head" style="margin: 28px 0 14px">
-      <span class="section-head__title">Comptes des plateformes</span>
-    </div>
-
-    <div class="notice">
-      <Icon name="bell" />
-      <div>
-        <b>La synchronisation automatique n'est pas disponible.</b>
-        Spotify, Apple Music et Deezer n'exposent aucune API publique de revenus par
-        artiste, et une connexion sécurisée à votre compte exigerait un serveur —
-        RapidMusic fonctionne sans serveur, directement dans votre navigateur.
-        Vous pouvez en revanche lier la référence de vos profils et
-        <b>importer les relevés de votre distributeur</b> pour alimenter vos revenus.
-      </div>
-    </div>
-
-    <div class="grid grid--cards" style="margin-bottom: 8px">
-      <PlatformCard
-        v-for="p in platformList"
-        :key="p.name"
-        :platform="p.name"
-        :color="p.color"
-        :link="p.link"
-        :total="p.total"
-        @link="openLink"
-        @import="openImport"
-      />
-    </div>
-
     <!-- Detailed table -->
     <div class="card" style="margin-top: 18px; overflow: hidden">
       <div class="section-head" style="padding: 18px 20px 12px"><span class="section-head__title">Relevés détaillés</span></div>
@@ -131,63 +102,80 @@
       </div>
     </div>
 
-    <!-- Lier / gérer un compte -->
-    <Modal :open="!!linkTarget" :title="`Compte ${linkTarget}`" @close="linkTarget = ''">
-      <div class="field">
-        <label>Profil artiste sur {{ linkTarget }}</label>
-        <input v-model="linkAccount" :placeholder="accountPlaceholder" />
-        <p class="field-help">
-          Identifiant, nom d'artiste ou lien vers votre page — conservé comme référence.
-        </p>
-      </div>
-      <div class="notice notice--sm">
-        <Icon name="bell" />
-        <div>
-          Aucune donnée n'est récupérée automatiquement depuis {{ linkTarget }} :
-          utilisez « Importer » pour charger un relevé de votre distributeur.
-        </div>
-      </div>
-      <template #footer>
-        <button v-if="existingLink" class="btn btn--danger" @click="unlink">
-          <Icon name="trash" /> Délier
-        </button>
-        <button class="btn btn--subtle" @click="linkTarget = ''">Annuler</button>
-        <button class="btn btn--primary" :disabled="!linkAccount.trim()" @click="saveLinkAccount">
-          <Icon name="check" /> Enregistrer
-        </button>
-      </template>
-    </Modal>
-
     <!-- Import d'un relevé -->
-    <Modal :open="!!importTarget" :title="`Importer un relevé — ${importTarget}`" @close="closeImport">
+    <Modal :open="importOpen" :title="importTitle" @close="closeImport">
       <template v-if="!importPreview.length">
         <p class="soft" style="margin: 0 0 14px; line-height: 1.6">
-          Chargez le relevé CSV fourni par votre distributeur. Le fichier doit contenir
-          une colonne <b>période</b>, une colonne <b>streams</b> et une colonne
-          <b>revenu</b> — les intitulés exacts et le séparateur sont détectés
-          automatiquement.
+          Chargez le relevé CSV de votre distributeur. S'il comporte une colonne
+          <b>plateforme</b>, chaque ligne est dirigée vers la bonne plateforme — un seul
+          fichier suffit. Sinon, vous choisirez la plateforme à l'étape suivante.
+          Les intitulés de colonnes et le séparateur sont détectés automatiquement.
         </p>
+
         <input ref="csvInput" type="file" accept=".csv,text/csv,text/plain" class="hidden" @change="onCsvSelected" />
-        <button class="btn btn--ghost btn--block" @click="csvInput?.click()">
-          <Icon name="doc" /> Choisir un fichier CSV
-        </button>
+        <div
+          class="dropzone"
+          :class="{ 'dropzone--over': dragOver }"
+          @click="csvInput?.click()"
+          @dragover.prevent="dragOver = true"
+          @dragenter.prevent="dragOver = true"
+          @dragleave.prevent="dragOver = false"
+          @drop.prevent="onDrop"
+        >
+          <Icon name="doc" />
+          <b>Glissez votre relevé ici</b>
+          <span class="muted">ou cliquez pour choisir un fichier CSV</span>
+        </div>
         <p class="field-help" style="text-align: center; margin-top: 10px">
-          Exemple d'en-tête : <code>Période;Streams;Revenu net</code>
+          En-tête reconnu, par exemple :
+          <code>Plateforme;Période;Streams;Revenu net</code>
         </p>
       </template>
 
       <template v-else>
         <p class="soft" style="margin: 0 0 12px">
-          <b>{{ importPreview.length }}</b> ligne(s) prête(s) à être importée(s) pour
-          <b>{{ importTarget }}</b> :
+          <b>{{ importPreview.length }}</b> ligne(s) prête(s) à être importée(s)
+          <template v-if="previewPlatforms.length">
+            sur <b>{{ previewPlatforms.length }}</b> plateforme(s)
+          </template>
+          :
         </p>
+
+        <div v-if="previewPlatforms.length" class="chips" style="margin-bottom: 12px">
+          <span
+            v-for="p in previewPlatforms"
+            :key="p.name"
+            class="badge badge--plain"
+            :style="{ color: '#fff', background: p.color }"
+          >
+            {{ p.name }} · {{ p.count }}
+          </span>
+        </div>
+
+        <div v-if="needsPlatform" class="field">
+          <label>À quelle plateforme rattacher ces lignes ?</label>
+          <select v-model="manualPlatform">
+            <option value="" disabled>Choisir une plateforme…</option>
+            <option v-for="name in knownPlatforms" :key="name">{{ name }}</option>
+          </select>
+          <p class="field-help">
+            Ce fichier ne comporte pas de colonne plateforme.
+          </p>
+        </div>
+
         <div class="tablewrap" style="max-height: 220px; overflow-y: auto">
           <table class="tbl">
             <thead>
-              <tr><th>Période</th><th style="text-align: right">Streams</th><th style="text-align: right">Revenu</th></tr>
+              <tr>
+                <th v-if="!needsPlatform">Plateforme</th>
+                <th>Période</th>
+                <th style="text-align: right">Streams</th>
+                <th style="text-align: right">Revenu</th>
+              </tr>
             </thead>
             <tbody>
               <tr v-for="(r, i) in importPreview" :key="i">
+                <td v-if="!needsPlatform">{{ r.platform }}</td>
                 <td>{{ r.period }}</td>
                 <td class="mono" style="text-align: right">{{ number(r.streams) }}</td>
                 <td class="mono" style="text-align: right">{{ money(r.amount, true) }}</td>
@@ -195,8 +183,9 @@
             </tbody>
           </table>
         </div>
-        <p class="field-help" style="margin-top: 12px">
-          Une période déjà présente pour {{ importTarget }} sera mise à jour.
+        <p v-if="importNote" class="field-help" style="margin-top: 12px">{{ importNote }}</p>
+        <p class="field-help" style="margin-top: 6px">
+          Une période déjà enregistrée pour une plateforme sera mise à jour, jamais dupliquée.
         </p>
       </template>
 
@@ -215,6 +204,7 @@
         <button
           v-if="importPreview.length"
           class="btn btn--primary"
+          :disabled="needsPlatform && !manualPlatform"
           @click="confirmImport"
         >
           <Icon name="check" /> Importer {{ importPreview.length }} ligne(s)
@@ -253,10 +243,9 @@ import PageHeader from '@/components/PageHeader.vue'
 import Icon from '@/components/Icon.vue'
 import Modal from '@/components/Modal.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
-import PlatformCard from '@/components/PlatformCard.vue'
-import { store, upsert, remove, uid, getLink, saveLink, removeLink } from '@/store'
+import { store, upsert, remove, uid } from '@/store'
 import type { RoyaltyEntry } from '@/store/types'
-import { money, number, compact, formatDate } from '@/utils/format'
+import { money, number, compact } from '@/utils/format'
 import { platformColors, platformColor } from '@/utils/platforms'
 import { parseRoyaltyCsv, type ParsedRow } from '@/utils/csv'
 
@@ -309,91 +298,126 @@ const sortedRoyalties = computed(() =>
     .map((r) => ({ ...r, color: platformColor(r.platform, r.color) })),
 )
 
-/* ---------------------------------------------------------------------- */
-/*  Comptes des plateformes                                               */
-/* ---------------------------------------------------------------------- */
-
-/** Plateformes de référence, plus toute plateforme déjà présente dans les données. */
-const platformList = computed(() => {
-  const names = new Set([...Object.keys(platformColors), ...store.royalties.map((r) => r.platform)])
-  return [...names]
-    .filter(Boolean)
-    .sort((a, b) => a.localeCompare(b))
-    .map((name) => ({
-      name,
-      color: platformColor(name),
-      link: getLink(name),
-      total: store.royalties
-        .filter((r) => r.platform === name)
-        .reduce((s, r) => s + r.amount, 0),
-    }))
-})
-
-const linkTarget = ref('')
-const linkAccount = ref('')
-const existingLink = computed(() => (linkTarget.value ? getLink(linkTarget.value) : undefined))
-const accountPlaceholder = computed(() =>
-  linkTarget.value === 'Spotify'
-    ? 'open.spotify.com/artist/…'
-    : `Votre profil ${linkTarget.value}`,
-)
-
-function openLink(platform: string) {
-  linkTarget.value = platform
-  linkAccount.value = getLink(platform)?.account ?? ''
-}
-function saveLinkAccount() {
-  const current = getLink(linkTarget.value)
-  saveLink({
-    platform: linkTarget.value,
-    account: linkAccount.value.trim(),
-    lastImport: current?.lastImport ?? '',
-    lastImportCount: current?.lastImportCount ?? 0,
-  })
-  linkTarget.value = ''
-}
-function unlink() {
-  removeLink(linkTarget.value)
-  linkTarget.value = ''
-}
-
-/* Import de relevé */
-const importTarget = ref('')
+/* Import de relevé
+ *
+ * La plateforme de chaque ligne est lue dans le fichier, les relevés de
+ * distributeur couvrant toutes les plateformes d'un coup. Si le fichier n'en
+ * indique aucune, elle est choisie à la main avant validation.
+ */
+const importOpen = ref(false)
 const importPreview = ref<ParsedRow[]>([])
 const importProblems = ref<string[]>([])
+const importNote = ref('')
 const csvInput = ref<HTMLInputElement | null>(null)
+const dragOver = ref(false)
+/** Plateforme choisie à la main quand le fichier n'en indique aucune. */
+const manualPlatform = ref('')
 
-function openImport(platform: string) {
-  importTarget.value = platform
+const knownPlatforms = Object.keys(platformColors)
+const importTitle = 'Importer un relevé'
+
+/** Vrai si le fichier chargé ne précise pas de plateforme. */
+const needsPlatform = computed(
+  () => importPreview.value.length > 0 && !importPreview.value[0].platform,
+)
+
+/** Récapitulatif par plateforme de l'aperçu. */
+const previewPlatforms = computed(() => {
+  const counts = new Map<string, number>()
+  importPreview.value.forEach((r) => {
+    if (r.platform) counts.set(r.platform, (counts.get(r.platform) ?? 0) + 1)
+  })
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([name, count]) => ({ name, count, color: platformColor(name) }))
+})
+
+function openImport() {
   importPreview.value = []
   importProblems.value = []
+  importNote.value = ''
+  manualPlatform.value = ''
+  dragOver.value = false
+  importOpen.value = true
 }
 function closeImport() {
-  importTarget.value = ''
+  importOpen.value = false
   importPreview.value = []
   importProblems.value = []
+  importNote.value = ''
+  manualPlatform.value = ''
+  dragOver.value = false
+}
+
+/**
+ * Regroupe les lignes visant la même plateforme et la même période en
+ * additionnant streams et revenus.
+ *
+ * Indispensable : un relevé de distributeur détaille souvent plusieurs lignes
+ * pour une même plateforme (streaming et téléchargement, ou déclinaisons
+ * régionales). Sans cette somme, l'enregistrement ne garderait que la dernière
+ * ligne et perdrait les montants des précédentes.
+ */
+function aggregateRows(rows: ParsedRow[]): ParsedRow[] {
+  const merged = new Map<string, ParsedRow>()
+  rows.forEach((row) => {
+    const platform = row.platform ?? ''
+    const key = `${platform}\u0000${row.period}`
+    const found = merged.get(key)
+    if (found) {
+      found.streams += row.streams
+      found.amount += row.amount
+    } else {
+      merged.set(key, { ...row, platform: platform || undefined })
+    }
+  })
+  return [...merged.values()].sort(
+    (a, b) =>
+      (a.platform ?? '').localeCompare(b.platform ?? '') || a.period.localeCompare(b.period),
+  )
+}
+
+async function readCsv(file: File) {
+  try {
+    const text = await file.text()
+    const { rows, problems } = parseRoyaltyCsv(text)
+
+    const merged = aggregateRows(rows)
+    importNote.value =
+      merged.length < rows.length
+        ? `${rows.length} lignes du fichier ont été regroupées en ${merged.length} : ` +
+          `celles visant la même plateforme sur la même période sont additionnées.`
+        : ''
+    importPreview.value = merged
+    importProblems.value = problems
+  } catch {
+    importPreview.value = []
+    importNote.value = ''
+    importProblems.value = ['Ce fichier n’a pas pu être lu.']
+  }
 }
 
 async function onCsvSelected(event: Event) {
   const input = event.target as HTMLInputElement
   const file = input.files?.[0]
   input.value = ''
-  if (!file) return
+  if (file) await readCsv(file)
+}
 
-  try {
-    const text = await file.text()
-    const { rows, problems } = parseRoyaltyCsv(text)
-    importPreview.value = rows
-    importProblems.value = problems
-  } catch {
-    importPreview.value = []
-    importProblems.value = ['Ce fichier n’a pas pu être lu.']
-  }
+async function onDrop(event: DragEvent) {
+  dragOver.value = false
+  const file = event.dataTransfer?.files?.[0]
+  if (file) await readCsv(file)
 }
 
 function confirmImport() {
-  const platform = importTarget.value
+  const touched = new Set<string>()
+
   importPreview.value.forEach((row) => {
+    const platform = row.platform || manualPlatform.value
+    if (!platform) return
+    touched.add(platform)
+
     const existing = store.royalties.find(
       (r) => r.platform === platform && r.period === row.period,
     )
@@ -405,14 +429,6 @@ function confirmImport() {
       amount: row.amount,
       color: platformColor(platform),
     })
-  })
-
-  const current = getLink(platform)
-  saveLink({
-    platform,
-    account: current?.account ?? '',
-    lastImport: new Date().toISOString().slice(0, 10),
-    lastImportCount: importPreview.value.length,
   })
 
   if (!periods.value.includes(selectedPeriod.value)) {
@@ -499,6 +515,37 @@ function confirmDelete() {
   padding: 1px 6px;
   border-radius: 5px;
   font-size: 12px;
+}
+
+.dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 30px 20px;
+  border: 2px dashed var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.15s, background 0.15s;
+}
+.dropzone:hover {
+  border-color: var(--violet-400);
+  background: var(--violet-50);
+}
+.dropzone--over {
+  border-color: var(--violet-600);
+  background: var(--violet-100);
+}
+.dropzone svg {
+  width: 30px;
+  height: 30px;
+  color: var(--violet-600);
+  margin-bottom: 4px;
+}
+.dropzone span {
+  font-size: 13px;
 }
 
 .import-problems {
