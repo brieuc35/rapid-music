@@ -53,6 +53,16 @@
           <span>{{ item.title }}</span>
           <span v-if="item.badge" class="nav__badge">{{ item.badge }}</span>
         </RouterLink>
+
+        <!-- Mis en avant sous les deux catégories -->
+        <RouterLink
+          to="/reseau"
+          class="nav__item nav__item--highlight"
+          @click="menuOpen = false"
+        >
+          <Icon name="network" />
+          <span>Réseau</span>
+        </RouterLink>
       </nav>
 
       <div class="nav__foot">
@@ -117,7 +127,6 @@ const topNav = computed(() => [
   { path: '/concerts', title: 'Concerts', icon: 'concert', badge: upcomingConcerts.value },
   { path: '/sorties', title: 'Sorties', icon: 'release', badge: store.releases.length },
   { path: '/royalties', title: 'Royalties', icon: 'money', badge: 0 },
-  { path: '/reseau', title: 'Réseau', icon: 'network', badge: 0 },
 ])
 
 const bottomNav = computed(() => [

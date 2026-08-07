@@ -290,6 +290,34 @@ textarea {
   padding: 1px 8px;
 }
 
+/* Entrée mise en avant, détachée des deux catégories */
+.nav__item--highlight {
+  margin-top: 18px;
+  color: #fff;
+  font-weight: 600;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(236, 72, 153, 0.3));
+  border: 1px solid rgba(167, 139, 250, 0.45);
+}
+.nav__item--highlight svg {
+  opacity: 1;
+  color: var(--violet-400);
+}
+.nav__item--highlight:hover {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.45), rgba(236, 72, 153, 0.45));
+  border-color: rgba(167, 139, 250, 0.7);
+}
+.nav__item--highlight.router-link-active {
+  background: var(--brand-gradient);
+  border-color: transparent;
+  box-shadow: 0 6px 18px rgba(124, 58, 237, 0.35);
+}
+.nav__item--highlight.router-link-active svg {
+  color: #fff;
+}
+.nav__item--highlight.router-link-active::before {
+  display: none;
+}
+
 .nav__foot {
   padding: 12px;
   margin-top: 8px;
