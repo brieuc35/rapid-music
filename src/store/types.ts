@@ -5,7 +5,7 @@ export interface Contract {
   title: string
   party: string // co-contractant (label, éditeur, manager…)
   type: 'Enregistrement' | 'Édition' | 'Distribution' | 'Management' | 'Booking' | 'Licence' | 'Autre'
-  status: 'Actif' | 'En négociation' | 'En attente signature' | 'Expiré'
+  status: 'Actif' | 'En attente' | 'Expiré'
   startDate: string
   endDate: string
   value: number // montant / avance en €
