@@ -54,7 +54,8 @@
         >
           <Icon name="globe" />
           <span>Réseau</span>
-          <span v-if="unreadPosts.length" class="nav__badge">{{ unreadPosts.length }}</span>
+          <span v-if="!isPro" class="nav__pro">Pro</span>
+          <span v-else-if="unreadPosts.length" class="nav__badge">{{ unreadPosts.length }}</span>
         </RouterLink>
       </nav>
 
@@ -63,7 +64,7 @@
           <span class="upsell__ico"><Icon name="star" /></span>
           <div class="upsell__text">
             <b>Passer à Pro</b>
-            <span>Revenus, contrats, annonces</span>
+            <span>Revenus, contrats, réseau</span>
           </div>
         </RouterLink>
 

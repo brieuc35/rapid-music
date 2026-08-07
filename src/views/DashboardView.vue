@@ -50,8 +50,16 @@
         <div class="stat__val mono">{{ unreadPosts.length }}</div>
         <div class="stat__label">Notifications réseau</div>
         <div class="stat__delta stat__delta--up">
-          <Icon name="globe" style="width: 14px; height: 14px" />
-          {{ unreadPosts.length ? 'Voir le fil' : 'Fil à jour' }}
+          <!-- Le nombre reste visible : c'est le signal qu'il se passe quelque
+               chose. Ce qui change, c'est la promesse d'y accéder. -->
+          <template v-if="isPro">
+            <Icon name="globe" style="width: 14px; height: 14px" />
+            {{ unreadPosts.length ? 'Voir le fil' : 'Fil à jour' }}
+          </template>
+          <template v-else>
+            <Icon name="star" style="width: 14px; height: 14px" />
+            Réservé à Pro
+          </template>
         </div>
       </RouterLink>
     </div>
