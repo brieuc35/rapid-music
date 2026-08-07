@@ -52,6 +52,7 @@
         >
           <Icon name="globe" />
           <span>Réseau</span>
+          <span v-if="unreadPosts.length" class="nav__badge">{{ unreadPosts.length }}</span>
         </RouterLink>
       </nav>
 
@@ -104,7 +105,7 @@ import Icon from './components/Icon.vue'
 import Avatar from './components/Avatar.vue'
 import BrandMark from './components/BrandMark.vue'
 import LoginView from './views/LoginView.vue'
-import { store, isLoggedIn } from './store'
+import { store, isLoggedIn, unreadPosts } from './store'
 import { daysFromNow } from './utils/format'
 
 const menuOpen = ref(false)

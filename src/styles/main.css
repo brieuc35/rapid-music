@@ -317,6 +317,12 @@ textarea {
 .nav__item--highlight.router-link-active::before {
   display: none;
 }
+/* Sur le fond dégradé, un badge translucide se lirait mal : il passe en blanc
+   plein, ce qui convient aussi mieux à un compteur de notifications. */
+.nav__item--highlight .nav__badge {
+  background: #fff;
+  color: var(--violet-700);
+}
 
 .nav__foot {
   padding: 12px;
