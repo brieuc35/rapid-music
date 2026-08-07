@@ -339,7 +339,8 @@ textarea {
 }
 /* Sur le fond dégradé, un badge translucide se lirait mal : il passe en blanc
    plein, ce qui convient aussi mieux à un compteur de notifications. */
-.nav__item--highlight .nav__badge {
+.nav__item--highlight .nav__badge,
+.nav__item--highlight .nav__pro {
   background: #fff;
   color: var(--violet-700);
 }

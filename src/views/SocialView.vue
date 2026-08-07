@@ -2,14 +2,29 @@
   <div class="page">
     <PageHeader title="Réseau" subtitle="Le réseau professionnel de l'univers musical.">
       <template #actions>
-        <button v-if="tab === 'annonces' && isPro" class="btn btn--primary" @click="showOppForm = true">
-          <Icon name="plus" /> Publier une annonce
-        </button>
-        <button v-else class="btn btn--primary" @click="showCompose = true">
-          <Icon name="plus" /> Publier
-        </button>
+        <template v-if="isPro">
+          <button v-if="tab === 'annonces'" class="btn btn--primary" @click="showOppForm = true">
+            <Icon name="plus" /> Publier une annonce
+          </button>
+          <button v-else class="btn btn--primary" @click="showCompose = true">
+            <Icon name="plus" /> Publier
+          </button>
+        </template>
       </template>
     </PageHeader>
+
+    <!-- L'onglet Réseau est réservé aux abonnés : sous-navigation comprise. -->
+    <ProGate
+      title="Le réseau professionnel de la musique"
+      lead="Certifications, interviews, sorties, opportunités : l'actualité du milieu et les gens qui le font, réunis en un seul endroit."
+      :features="[
+        'Le fil du milieu : SNEP, SACEM, labels, journalistes, salles, distributeurs',
+        'L\'annuaire des membres, par métier, avec leurs spécialités',
+        'Les annonces : premières parties, sessions studio, mixage, programmations',
+        'Vos propres publications et recherches de collaborateurs',
+        'Mise de côté des publications et des annonces qui vous intéressent',
+      ]"
+    >
 
     <!-- Sous-navigation -->
     <div class="tabs">
@@ -174,17 +189,7 @@
     </div>
 
     <!-- ================= ANNONCES ================= -->
-    <ProGate
-      v-else
-      title="Les opportunités du milieu, au même endroit"
-      lead="Premières parties, sessions studio, créneaux de mixage, programmations : les annonces réservées aux abonnés Pro."
-      :features="[
-        'Toutes les annonces du réseau, filtrables par nature et par métier',
-        'Profil recherché, lieu et date limite pour chaque offre',
-        'Mise de côté des annonces qui vous intéressent',
-        'Publication de vos propres recherches de collaborateurs',
-      ]"
-    >
+    <div v-else>
       <div class="toolbar">
         <div class="search">
           <Icon name="search" />
@@ -226,6 +231,8 @@
           <Icon name="plus" /> Publier une annonce
         </button>
       </EmptyState>
+    </div>
+
     </ProGate>
 
     <!-- Profil d'un membre -->
@@ -402,7 +409,11 @@ const tabs = computed(() => [
 ])
 
 // Ouvrir le réseau vaut consultation : le compteur du tableau de bord se vide.
-onMounted(markNetworkSeen)
+// Hors abonnement, la page n'affiche pas les publications : le compteur doit
+// rester intact, sinon on efface des nouveautés que l'artiste n'a pas vues.
+onMounted(() => {
+  if (isPro.value) markNetworkSeen()
+})
 
 function excerpt(text: string, max: number): string {
   return text.length > max ? text.slice(0, max).trimEnd() + '…' : text

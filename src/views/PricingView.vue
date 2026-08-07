@@ -105,8 +105,8 @@
     <!-- Activation -->
     <Modal :open="showActivate" title="Activer RapidMusic Pro" @close="showActivate = false">
       <p style="margin: 0 0 14px; color: var(--text-soft); line-height: 1.6">
-        Pro donne accès aux revenus, aux contrats, aux annonces du réseau et aux montants
-        de vos concerts, pour {{ money(PRO_PRICE, true) }} par mois.
+        Pro donne accès aux revenus, aux contrats, à tout l'onglet Réseau et aux
+        montants de vos concerts, pour {{ money(PRO_PRICE, true) }} par mois.
       </p>
       <div class="notice notice--sm">
         <Icon name="bell" />
@@ -127,7 +127,7 @@
     <!-- Résiliation -->
     <Modal :open="showCancel" title="Résilier Pro" @close="showCancel = false">
       <p style="margin: 0; color: var(--text-soft); line-height: 1.6">
-        Vous repasserez à la formule gratuite. Les onglets Revenus, Contrats et Annonces
+        Vous repasserez à la formule gratuite. Les onglets Revenus, Contrats et Réseau
         seront de nouveau verrouillés, mais
         <b style="color: var(--text)">aucune donnée ne sera supprimée</b> : tout sera
         retrouvé en cas de réactivation.
@@ -154,7 +154,6 @@ const freeFeatures = [
   'Catalogue des sorties',
   'Dates de concerts et billetterie',
   'Carnet de contacts',
-  'Fil du réseau et annuaire des membres',
   'Profil artiste et fiche label',
 ]
 
@@ -163,7 +162,7 @@ const proFeatures = [
   'Revenus et royalties : suivi par plateforme et historique',
   'Import des relevés de distributeur en un fichier',
   'Contrats : suivi des statuts, avances et taux',
-  'Annonces du réseau : consulter, répondre, publier',
+  'Réseau : le fil du milieu, l’annuaire des membres et les annonces',
   'Cachets de vos concerts et total à venir',
 ]
 
@@ -172,13 +171,12 @@ const comparison = [
   { label: 'Agenda', detail: 'Évènements et calendrier', free: true },
   { label: 'Sorties', detail: 'Catalogue des titres', free: true },
   { label: 'Contacts', detail: 'Carnet d’adresses', free: true },
-  { label: 'Réseau — Fil', detail: 'Actualité du milieu', free: true },
-  { label: 'Réseau — Relations', detail: 'Annuaire et profils', free: true },
+  { label: 'Profil et Label', detail: 'Votre fiche et celle de votre label', free: true },
   { label: 'Concerts — dates', detail: 'Salle, ville, horaires, billetterie', free: true },
   { label: 'Concerts — cachets', detail: 'Montants négociés et total à venir', free: false },
   { label: 'Royalties & Revenus', detail: 'Suivi, graphiques, import de relevés', free: false },
   { label: 'Contrats', detail: 'Statuts, avances, taux artiste', free: false },
-  { label: 'Réseau — Annonces', detail: 'Opportunités et candidatures', free: false },
+  { label: 'Réseau', detail: 'Fil du milieu, annuaire des membres, annonces', free: false },
 ]
 
 const showActivate = ref(false)
