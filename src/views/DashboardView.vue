@@ -7,7 +7,7 @@
 
     <!-- Stats -->
     <div class="grid grid--stats" style="margin-bottom: 26px">
-      <div class="stat">
+      <RouterLink to="/contrats" class="stat stat--link">
         <div class="stat__ico" style="background: var(--amber-bg); color: var(--amber)">
           <Icon name="contract" />
         </div>
@@ -17,9 +17,9 @@
           <Icon name="check" style="width: 14px; height: 14px" />
           {{ activeContracts }} actifs
         </div>
-      </div>
+      </RouterLink>
 
-      <div class="stat">
+      <RouterLink to="/sorties" class="stat stat--link">
         <div class="stat__ico" style="background: var(--blue-bg); color: var(--blue)">
           <Icon name="release" />
         </div>
@@ -29,9 +29,9 @@
           <Icon name="music" style="width: 14px; height: 14px" />
           {{ store.releases.length }} sorties au catalogue
         </div>
-      </div>
+      </RouterLink>
 
-      <div class="stat">
+      <RouterLink to="/concerts" class="stat stat--link">
         <div class="stat__ico" style="background: var(--violet-100); color: var(--violet-600)">
           <Icon name="concert" />
         </div>
@@ -41,7 +41,7 @@
           <Icon name="ticket" style="width: 14px; height: 14px" />
           {{ number(totalTickets) }} billets vendus
         </div>
-      </div>
+      </RouterLink>
 
       <RouterLink to="/reseau" class="stat stat--link">
         <div class="stat__ico" style="background: rgba(236, 72, 153, 0.12); color: var(--pink-500)">
