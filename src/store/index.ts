@@ -1,6 +1,7 @@
 import { computed, reactive, ref, watch } from 'vue'
 import type {
   AppData,
+  ArtistProfile,
   Contract,
   Concert,
   Release,
@@ -12,7 +13,7 @@ import type {
   PostCategory,
   Opportunity,
 } from './types'
-import { seedData } from './seed'
+import { emptyData, seedData } from './seed'
 import { Syncer, clearMirror } from './sync'
 import { auth } from '@/firebase'
 import {
@@ -60,6 +61,10 @@ function withDefaults(saved: Partial<AppData>): AppData {
   return {
     ...base,
     ...saved,
+    // Des données déjà enregistrées valent pour un profil fait : l'écran
+    // d'accueil est arrivé après elles, et le présenter à quelqu'un qui utilise
+    // l'application depuis des mois serait absurde.
+    onboarded: saved.onboarded ?? true,
     contracts,
     artist: { ...base.artist, ...addedFields, ...(saved.artist ?? {}) },
     subscription: saved.subscription ?? base.subscription,
@@ -286,6 +291,34 @@ export const authReady = ref(false)
 
 export const isLoggedIn = computed(() => currentUser.value !== null)
 
+/* -------------------------------------------------------------------------- */
+/*  Accueil d'un nouveau compte                                               */
+/* -------------------------------------------------------------------------- */
+
+/** Vrai quand l'artiste doit encore remplir son profil avant d'entrer. */
+export const needsOnboarding = computed(() => isLoggedIn.value && !store.onboarded)
+
+/**
+ * Enregistre le profil saisi à l'accueil et ouvre l'application.
+ * `withDemo` remplit l'espace avec le catalogue de démonstration, en gardant
+ * le profil saisi : utile pour découvrir l'outil rempli plutôt que vide.
+ */
+export function completeOnboarding(
+  profile: Pick<ArtistProfile, 'stageName' | 'genre' | 'city' | 'photo' | 'bio'>,
+  withDemo: boolean,
+): void {
+  if (withDemo) {
+    const demo = seedData()
+    Object.assign(store, {
+      ...demo,
+      // Le profil saisi prime sur celui de la démonstration.
+      artist: { ...demo.artist, ...profile, realName: '', email: '', phone: '' },
+    })
+  }
+  Object.assign(store.artist, profile)
+  store.onboarded = true
+}
+
 onAuthStateChanged(auth, async (user) => {
   if (syncer) {
     void syncer.flush()
@@ -297,7 +330,10 @@ onAuthStateChanged(auth, async (user) => {
   if (user) {
     syncer = new Syncer(user.uid, apply)
     const legacy = readLegacy()
-    const data = await syncer.start(withDefaults(legacy ?? {}))
+    // Sans données locales à reprendre, un compte neuf démarre sur un espace
+    // vierge : les concerts et contrats de la démonstration appartiennent à
+    // une autre artiste, ils n'ont rien à faire dans le compte de celui-ci.
+    const data = await syncer.start(legacy ? withDefaults(legacy) : emptyData())
     apply(data)
     if (legacy) markLegacyTaken(user.uid)
   } else {
