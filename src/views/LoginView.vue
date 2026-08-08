@@ -54,7 +54,15 @@
               <Icon :name="visible ? 'eye-off' : 'eye'" />
             </button>
           </div>
-          <p v-if="mode === 'signup'" class="field-help">Six caractères au minimum.</p>
+          <!-- À l'inscription seulement : les règles s'affichent et se cochent
+               à la saisie. À la connexion, aucune exigence n'est rappelée — un
+               mot de passe créé avant cette règle doit continuer à fonctionner. -->
+          <ul v-if="mode === 'signup'" class="rules">
+            <li v-for="r in rules" :key="r.label" :class="{ 'rules--ok': r.ok }">
+              <Icon :name="r.ok ? 'check' : 'close'" />
+              {{ r.label }}
+            </li>
+          </ul>
         </div>
 
         <p v-if="error" class="alert alert--error">{{ error }}</p>
@@ -93,7 +101,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import BrandMark from '@/components/BrandMark.vue'
 import Icon from '@/components/Icon.vue'
 import { login, signUp, resetPassword } from '@/store'
@@ -108,6 +116,21 @@ const error = ref('')
 const notice = ref('')
 const busy = ref(false)
 
+/*  Est « spécial » tout ce qui n'est ni une lettre ni un chiffre : ponctuation,
+ *  symboles, tiret, espace. Les lettres accentuées restent des lettres, sans
+ *  quoi « é » passerait pour un caractère spécial. */
+const SPECIAL = /[^\p{L}\p{N}]/u
+
+const rules = computed(() => [
+  { label: 'Six caractères au minimum', ok: password.value.length >= 6 },
+  {
+    label: 'Au moins un caractère spécial (! ? # @ …)',
+    ok: SPECIAL.test(password.value),
+  },
+])
+
+const passwordOk = computed(() => rules.value.every((r) => r.ok))
+
 function switchTo(m: Mode) {
   mode.value = m
   error.value = ''
@@ -119,6 +142,12 @@ function switchTo(m: Mode) {
 async function submit() {
   error.value = ''
   notice.value = ''
+  // Vérifié avant d'appeler Firebase : inutile d'envoyer une demande vouée à
+  // l'échec, et le message reste le nôtre plutôt qu'un code traduit.
+  if (mode.value === 'signup' && !passwordOk.value) {
+    error.value = 'Mot de passe trop simple : ' + rules.value.filter((r) => !r.ok).map((r) => r.label.toLowerCase()).join(', ') + '.'
+    return
+  }
   busy.value = true
   try {
     if (mode.value === 'signup') {
@@ -198,6 +227,34 @@ async function submit() {
 }
 .login__card .field {
   text-align: left;
+}
+
+.rules {
+  list-style: none;
+  margin: 9px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.rules li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+.rules svg {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+}
+/* Sélecteur volontairement aussi spécifique que « .rules li » : avec la seule
+   classe, la règle grise ci-dessus l'emporterait et la validation ne se
+   verrait pas. */
+.rules li.rules--ok {
+  color: var(--green);
 }
 
 .pwd {
