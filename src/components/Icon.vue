@@ -38,6 +38,10 @@ const icons: Record<string, string> = {
   plus: '<path d="M12 5v14"/><path d="M5 12h14"/>',
   search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
   close: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+  // Afficher / masquer un mot de passe.
+  eye: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>',
+  'eye-off':
+    '<path d="M10.6 6.2A9.9 9.9 0 0 1 12 6c6.4 0 10 6 10 6a18 18 0 0 1-2.4 3.1"/><path d="M6.2 6.9A17.6 17.6 0 0 0 2 12s3.6 7 10 7a9.8 9.8 0 0 0 4.2-.9"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/><path d="m3 3 18 18"/>',
   menu: '<path d="M3 12h18"/><path d="M3 6h18"/><path d="M3 18h18"/>',
   calendar:
     '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/>',
