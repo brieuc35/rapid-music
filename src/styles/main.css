@@ -951,12 +951,18 @@ textarea {
   border-color: var(--violet-400);
   box-shadow: 0 0 0 3px var(--violet-100);
 }
+/* Deux champs côte à côte. « min-width: 0 » est indispensable : sans lui, un
+   champ de saisie refuse de descendre sous sa largeur intrinsèque et déborde
+   sur les écrans étroits. Le passage à la ligne prend le relais en dessous de
+   deux fois 150 px. */
 .field--row {
   display: flex;
   gap: 14px;
+  flex-wrap: wrap;
 }
 .field--row > * {
-  flex: 1;
+  flex: 1 1 150px;
+  min-width: 0;
 }
 
 /* ==========================================================================

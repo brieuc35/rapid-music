@@ -190,6 +190,12 @@ export interface Subscription {
 }
 
 export interface AppData {
+  /**
+   * Faux tant que l'artiste n'a pas rempli son profil d'accueil. Les données
+   * déjà enregistrées avant l'arrivée de cet écran valent pour un profil fait :
+   * on ne renvoie pas quelqu'un remplir ce qu'il a déjà.
+   */
+  onboarded: boolean
   artist: ArtistProfile
   subscription: Subscription
   label: LabelInfo

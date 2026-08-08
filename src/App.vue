@@ -7,6 +7,9 @@
 
   <LoginView v-else-if="!isLoggedIn" />
 
+  <!-- Compte tout neuf : le profil se crée avant d'entrer dans l'application. -->
+  <OnboardingView v-else-if="needsOnboarding" />
+
   <div v-else class="app-shell">
     <!-- Mobile scrim -->
     <div class="scrim" :class="{ 'scrim--show': menuOpen }" @click="menuOpen = false" />
@@ -127,7 +130,8 @@ import Icon from './components/Icon.vue'
 import Avatar from './components/Avatar.vue'
 import BrandMark from './components/BrandMark.vue'
 import LoginView from './views/LoginView.vue'
-import { store, isLoggedIn, authReady, unreadPosts, isPro } from './store'
+import OnboardingView from './views/OnboardingView.vue'
+import { store, isLoggedIn, authReady, needsOnboarding, unreadPosts, isPro } from './store'
 import { syncState, syncMessage } from './store/sync'
 import { daysFromNow } from './utils/format'
 

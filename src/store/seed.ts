@@ -7,6 +7,7 @@ function hoursAgo(h: number): string {
 
 export function seedData(): AppData {
   return {
+    onboarded: true,
     artist: {
       stageName: 'NOVA',
       realName: 'Léa Moreau',
@@ -598,5 +599,48 @@ export function seedData(): AppData {
     // Une journée en arrière : les publications récentes apparaissent comme
     // non lues au premier lancement.
     networkLastSeen: hoursAgo(24),
+  }
+}
+
+/**
+ * Espace vierge pour un artiste qui démarre : son profil et tout ce qui le
+ * concerne sont vides, mais le Réseau garde son contenu de démonstration —
+ * un annuaire et un fil déserts donneraient l'impression d'une panne.
+ */
+export function emptyData(): AppData {
+  const base = seedData()
+  return {
+    ...base,
+    onboarded: false,
+    artist: {
+      stageName: '',
+      realName: '',
+      genre: '',
+      city: '',
+      photo: '',
+      bio: '',
+      email: '',
+      phone: '',
+      instagram: '',
+      spotify: '',
+      website: '',
+    },
+    label: {
+      name: '',
+      tagline: '',
+      founded: '',
+      location: '',
+      email: '',
+      website: '',
+      distribution: '',
+      publishing: '',
+      roster: [],
+    },
+    contracts: [],
+    concerts: [],
+    releases: [],
+    royalties: [],
+    studio: [],
+    contacts: [],
   }
 }
