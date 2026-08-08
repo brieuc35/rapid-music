@@ -284,9 +284,10 @@ function externalUrl(site: string): string {
 }
 
 const showLogout = ref(false)
-function doLogout() {
+async function doLogout() {
   showLogout.value = false
-  logout()
+  // Attendu : la déconnexion enregistre d'abord ce qui n'était pas encore parti.
+  await logout()
 }
 </script>
 

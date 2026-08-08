@@ -9,9 +9,10 @@
       <Icon name="bell" />
       <div>
         <b>Aucun paiement n'est encaissé.</b>
-        RapidMusic fonctionne sans serveur ni prestataire de paiement : le bouton ci-dessous
+        RapidMusic n'est relié à aucun prestataire de paiement : le bouton ci-dessous
         active Pro en démonstration, pour que vous puissiez juger l'offre. Une facturation
-        réelle exigerait un serveur et un prestataire tel que Stripe.
+        réelle exigerait un prestataire tel que Stripe, et une vérification du paiement
+        côté serveur — cette bascule-ci se fait dans le navigateur.
       </div>
     </div>
 
