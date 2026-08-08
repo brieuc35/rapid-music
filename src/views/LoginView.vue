@@ -54,15 +54,12 @@
               <Icon :name="visible ? 'eye-off' : 'eye'" />
             </button>
           </div>
-          <!-- À l'inscription seulement : les règles s'affichent et se cochent
-               à la saisie. À la connexion, aucune exigence n'est rappelée — un
-               mot de passe créé avant cette règle doit continuer à fonctionner. -->
-          <ul v-if="mode === 'signup'" class="rules">
-            <li v-for="r in rules" :key="r.label" :class="{ 'rules--ok': r.ok }">
-              <Icon :name="r.ok ? 'check' : 'close'" />
-              {{ r.label }}
-            </li>
-          </ul>
+          <!-- À l'inscription seulement : à la connexion, aucune exigence n'est
+               rappelée, puisqu'on saisit un mot de passe déjà existant. -->
+          <p v-if="mode === 'signup'" class="rule" :class="{ 'rule--ok': longEnough }">
+            <Icon :name="longEnough ? 'check' : 'close'" />
+            Six caractères au minimum
+          </p>
         </div>
 
         <p v-if="error" class="alert alert--error">{{ error }}</p>
@@ -116,20 +113,9 @@ const error = ref('')
 const notice = ref('')
 const busy = ref(false)
 
-/*  Est « spécial » tout ce qui n'est ni une lettre ni un chiffre : ponctuation,
- *  symboles, tiret, espace. Les lettres accentuées restent des lettres, sans
- *  quoi « é » passerait pour un caractère spécial. */
-const SPECIAL = /[^\p{L}\p{N}]/u
-
-const rules = computed(() => [
-  { label: 'Six caractères au minimum', ok: password.value.length >= 6 },
-  {
-    label: 'Au moins un caractère spécial (! ? # @ …)',
-    ok: SPECIAL.test(password.value),
-  },
-])
-
-const passwordOk = computed(() => rules.value.every((r) => r.ok))
+/*  Six caractères : c'est aussi le minimum imposé par Firebase, la règle
+ *  affichée correspond donc exactement à ce que le serveur acceptera. */
+const longEnough = computed(() => password.value.length >= 6)
 
 function switchTo(m: Mode) {
   mode.value = m
@@ -144,8 +130,8 @@ async function submit() {
   notice.value = ''
   // Vérifié avant d'appeler Firebase : inutile d'envoyer une demande vouée à
   // l'échec, et le message reste le nôtre plutôt qu'un code traduit.
-  if (mode.value === 'signup' && !passwordOk.value) {
-    error.value = 'Mot de passe trop simple : ' + rules.value.filter((r) => !r.ok).map((r) => r.label.toLowerCase()).join(', ') + '.'
+  if (mode.value === 'signup' && !longEnough.value) {
+    error.value = 'Le mot de passe doit compter au moins six caractères.'
     return
   }
   busy.value = true
@@ -229,31 +215,23 @@ async function submit() {
   text-align: left;
 }
 
-.rules {
-  list-style: none;
-  margin: 9px 0 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-.rules li {
+.rule {
   display: flex;
   align-items: center;
   gap: 7px;
+  margin-top: 9px;
   font-size: 12.5px;
   line-height: 1.4;
-  color: var(--text-muted);
+  color: var(--text-soft);
 }
-.rules svg {
+.rule svg {
   width: 13px;
   height: 13px;
   flex-shrink: 0;
 }
-/* Sélecteur volontairement aussi spécifique que « .rules li » : avec la seule
-   classe, la règle grise ci-dessus l'emporterait et la validation ne se
-   verrait pas. */
-.rules li.rules--ok {
+/* Même nombre de classes que la règle ci-dessus, sinon l'ordre de déclaration
+   suffirait mais toute réorganisation du fichier casserait la couleur. */
+.rule.rule--ok {
   color: var(--green);
 }
 
