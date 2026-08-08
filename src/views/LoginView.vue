@@ -8,40 +8,119 @@
         <div class="login__title">Rapid<b>Music</b></div>
       </div>
 
-      <p class="login__lead">Vous êtes déconnecté. Reprenez là où vous en étiez.</p>
+      <p class="login__lead">
+        {{
+          mode === 'signup'
+            ? 'Créez votre compte : vos données vous suivront d’un appareil à l’autre.'
+            : mode === 'reset'
+              ? 'Indiquez votre adresse : vous recevrez un lien pour choisir un nouveau mot de passe.'
+              : 'Connectez-vous pour retrouver votre carrière.'
+        }}
+      </p>
 
-      <button class="profile-btn" @click="login">
-        <Avatar
-          :name="store.artist.stageName"
-          :photo="store.artist.photo"
-          :size="52"
-          radius="16px"
-          :font="18"
-        />
-        <div class="profile-btn__text">
-          <div class="profile-btn__name">{{ store.artist.stageName }}</div>
-          <div class="profile-btn__sub">{{ store.artist.genre || 'Artiste' }}</div>
+      <form class="vstack" style="gap: 14px" @submit.prevent="submit">
+        <div class="field">
+          <label for="email">Adresse e-mail</label>
+          <input
+            id="email"
+            v-model="email"
+            type="email"
+            autocomplete="email"
+            placeholder="vous@exemple.fr"
+            required
+          />
         </div>
-        <Icon name="up" class="profile-btn__chevron" />
-      </button>
 
-      <button class="btn btn--primary btn--block" @click="login">
-        <Icon name="check" /> Se connecter
-      </button>
+        <div v-if="mode !== 'reset'" class="field">
+          <label for="password">Mot de passe</label>
+          <input
+            id="password"
+            v-model="password"
+            type="password"
+            :autocomplete="mode === 'signup' ? 'new-password' : 'current-password'"
+            placeholder="••••••••"
+            required
+          />
+          <p v-if="mode === 'signup'" class="field-help">Six caractères au minimum.</p>
+        </div>
+
+        <p v-if="error" class="alert alert--error">{{ error }}</p>
+        <p v-if="notice" class="alert alert--ok">{{ notice }}</p>
+
+        <button class="btn btn--primary btn--block" type="submit" :disabled="busy">
+          <Icon :name="busy ? 'clock' : 'check'" />
+          {{
+            busy
+              ? 'Un instant…'
+              : mode === 'signup'
+                ? 'Créer mon compte'
+                : mode === 'reset'
+                  ? 'Envoyer le lien'
+                  : 'Se connecter'
+          }}
+        </button>
+      </form>
+
+      <div class="login__links">
+        <template v-if="mode === 'login'">
+          <button class="link" @click="switchTo('signup')">Créer un compte</button>
+          <button class="link" @click="switchTo('reset')">Mot de passe oublié</button>
+        </template>
+        <button v-else class="link" @click="switchTo('login')">
+          Revenir à la connexion
+        </button>
+      </div>
 
       <p class="login__note">
-        RapidMusic fonctionne hors ligne : vos données sont enregistrées dans ce navigateur,
-        sans compte ni mot de passe.
+        Vos données sont enregistrées sur votre compte, dans un centre de données européen.
+        Elles restent consultables hors connexion et repartent dès que le réseau revient.
       </p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import Avatar from '@/components/Avatar.vue'
+import { ref } from 'vue'
 import BrandMark from '@/components/BrandMark.vue'
 import Icon from '@/components/Icon.vue'
-import { store, login } from '@/store'
+import { login, signUp, resetPassword } from '@/store'
+
+type Mode = 'login' | 'signup' | 'reset'
+
+const mode = ref<Mode>('login')
+const email = ref('')
+const password = ref('')
+const error = ref('')
+const notice = ref('')
+const busy = ref(false)
+
+function switchTo(m: Mode) {
+  mode.value = m
+  error.value = ''
+  notice.value = ''
+}
+
+async function submit() {
+  error.value = ''
+  notice.value = ''
+  busy.value = true
+  try {
+    if (mode.value === 'signup') {
+      await signUp(email.value, password.value)
+    } else if (mode.value === 'reset') {
+      await resetPassword(email.value)
+      notice.value = 'Message envoyé. Consultez votre boîte de réception.'
+      mode.value = 'login'
+    } else {
+      await login(email.value, password.value)
+    }
+    password.value = ''
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : 'Une erreur est survenue.'
+  } finally {
+    busy.value = false
+  }
+}
 </script>
 
 <style scoped>
@@ -97,46 +176,46 @@ import { store, login } from '@/store'
 .login__lead {
   color: var(--text-soft);
   font-size: 14.5px;
+  line-height: 1.55;
   margin-bottom: 22px;
 }
-
-.profile-btn {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  width: 100%;
-  padding: 12px;
-  border-radius: 15px;
-  border: 1px solid var(--border-strong);
-  background: var(--surface-2);
+.login__card .field {
   text-align: left;
-  margin-bottom: 14px;
-  transition: border-color 0.15s, background 0.15s;
 }
-.profile-btn:hover {
-  border-color: var(--violet-400);
-  background: var(--violet-50);
+.alert {
+  font-size: 13.5px;
+  line-height: 1.5;
+  border-radius: var(--radius-sm);
+  padding: 10px 13px;
+  margin: 0;
+  text-align: left;
 }
-.profile-btn__text {
-  flex: 1;
-  min-width: 0;
+.alert--error {
+  background: var(--red-bg);
+  color: var(--red);
 }
-.profile-btn__name {
-  font-weight: 700;
-  font-size: 15.5px;
+.alert--ok {
+  background: var(--green-bg);
+  color: var(--green);
 }
-.profile-btn__sub {
-  color: var(--text-muted);
-  font-size: 13px;
+.login__links {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  margin-top: 16px;
+  flex-wrap: wrap;
 }
-.profile-btn__chevron {
-  width: 18px;
-  height: 18px;
-  color: var(--text-muted);
-  transform: rotate(90deg);
-  flex-shrink: 0;
+.link {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--violet-600);
 }
-
+.link:hover {
+  text-decoration: underline;
+}
 .login__note {
   color: var(--text-muted);
   font-size: 12.5px;

@@ -13,9 +13,19 @@ import type {
   Opportunity,
 } from './types'
 import { seedData } from './seed'
+import { Syncer, clearMirror } from './sync'
+import { auth } from '@/firebase'
+import {
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
+  sendPasswordResetEmail,
+  signInWithEmailAndPassword,
+  signOut,
+  type User,
+} from 'firebase/auth'
 
 const STORAGE_KEY = 'rapidmusic:data:v1'
-const SESSION_KEY = 'rapidmusic:session:v1'
+const MIGRATED_KEY = 'rapidmusic:reprise:v1'
 
 /**
  * Complète les données enregistrées avec les valeurs par défaut manquantes.
@@ -66,26 +76,53 @@ function withDefaults(saved: Partial<AppData>): AppData {
   }
 }
 
-function load(): AppData {
+/**
+ * Données laissées par les versions sans compte, quand tout vivait dans le
+ * navigateur. Elles servent à garnir un compte tout neuf : personne ne doit
+ * perdre ses contrats en créant son identifiant. Le fichier d'origine n'est
+ * jamais supprimé — on note seulement qu'il a déjà été repris, pour ne pas
+ * réinjecter les mêmes données dans un second compte.
+ */
+function readLegacy(): Partial<AppData> | null {
   try {
+    if (localStorage.getItem(MIGRATED_KEY)) return null
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) return withDefaults(JSON.parse(raw) as Partial<AppData>)
+    return raw ? (JSON.parse(raw) as Partial<AppData>) : null
   } catch {
-    /* ignore corrupted storage */
+    return null
   }
-  return seedData()
 }
 
-export const store = reactive<AppData>(load())
+function markLegacyTaken(uid: string): void {
+  try {
+    localStorage.setItem(MIGRATED_KEY, uid)
+  } catch {
+    /* sans importance : au pire les données locales seront reprises deux fois */
+  }
+}
+
+export const store = reactive<AppData>(seedData())
+
+/*  Vrai le temps de recopier des données venues d'ailleurs (premier
+ *  chargement, reprise d'une révision distante). La première notification du
+ *  observateur est alors ignorée, sans quoi on renverrait aussitôt au serveur
+ *  ce qu'on vient d'en recevoir. */
+let applying = false
+let syncer: Syncer | null = null
+
+function apply(data: Partial<AppData>): void {
+  applying = true
+  Object.assign(store, withDefaults(data))
+}
 
 watch(
   () => store,
   (val) => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(val))
-    } catch {
-      /* storage full or unavailable */
+    if (applying) {
+      applying = false
+      return
     }
+    syncer?.schedule(val)
   },
   { deep: true },
 )
@@ -214,9 +251,10 @@ export function addPost(content: string, category: PostCategory, tags: string[])
 /* -------------------------------------------------------------------------- */
 /*  Abonnement                                                                */
 /*                                                                            */
-/*  Aucun paiement n'est encaissé : sans serveur ni prestataire, l'activation  */
-/*  reste une bascule locale servant à présenter l'offre. Une facturation      */
-/*  réelle demanderait un back-end et un prestataire de paiement.              */
+/*  Aucun paiement n'est encaissé : faute de prestataire, l'activation reste   */
+/*  une bascule décidée par le navigateur, servant à présenter l'offre. Une    */
+/*  facturation réelle demanderait Stripe, et surtout une écriture côté        */
+/*  serveur — c'est précisément ce qu'un client ne doit pas pouvoir décider.    */
 /* -------------------------------------------------------------------------- */
 
 export const PRO_PRICE = 9.99
@@ -232,38 +270,119 @@ export function cancelPro(): void {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Session locale                                                            */
+/*  Compte et session                                                         */
 /*                                                                            */
-/*  L'application n'a pas de serveur ni d'authentification : la « session »    */
-/*  est un simple indicateur local qui permet de verrouiller l'interface.      */
-/*  Les données de l'artiste restent enregistrées après déconnexion.           */
+/*  L'authentification est celle de Firebase : le mot de passe n'est ni stocké */
+/*  ni vu par l'application. La session survit à la fermeture du navigateur,   */
+/*  et c'est elle qui détermine quelles données sont chargées.                 */
 /* -------------------------------------------------------------------------- */
 
-function loadSession(): boolean {
-  try {
-    // Par défaut connecté, pour ne pas verrouiller les utilisateurs existants.
-    return localStorage.getItem(SESSION_KEY) !== 'out'
-  } catch {
-    return true
-  }
-}
+export const currentUser = ref<User | null>(null)
 
-export const isLoggedIn = ref<boolean>(loadSession())
+/*  Faux jusqu'à ce que Firebase ait fini de rétablir la session enregistrée.
+ *  Sans cette attente, l'écran de connexion s'afficherait une fraction de
+ *  seconde à chaque ouverture, alors que l'artiste est déjà connecté. */
+export const authReady = ref(false)
 
-watch(isLoggedIn, (v) => {
-  try {
-    localStorage.setItem(SESSION_KEY, v ? 'in' : 'out')
-  } catch {
-    /* storage unavailable */
+export const isLoggedIn = computed(() => currentUser.value !== null)
+
+onAuthStateChanged(auth, async (user) => {
+  if (syncer) {
+    void syncer.flush()
+    syncer.stop()
+    syncer = null
   }
+  currentUser.value = user
+
+  if (user) {
+    syncer = new Syncer(user.uid, apply)
+    const legacy = readLegacy()
+    const data = await syncer.start(withDefaults(legacy ?? {}))
+    apply(data)
+    if (legacy) markLegacyTaken(user.uid)
+  } else {
+    // Ne pas laisser à l'écran les données du compte qui vient de partir.
+    apply({})
+  }
+
+  authReady.value = true
 })
 
-export function logout(): void {
-  isLoggedIn.value = false
+/*  Fermeture de l'onglet : la copie locale est déjà à jour, on tente en plus
+ *  l'envoi immédiat de ce qui attendait encore. */
+window.addEventListener('beforeunload', () => {
+  void syncer?.flush()
+})
+
+/*  Retour de la connexion : on renvoie ce qui n'avait pas pu partir. */
+window.addEventListener('online', () => {
+  void syncer?.flush()
+})
+
+/** Messages en clair : les codes de Firebase ne sont pas montrables. */
+function authMessage(code: string): string {
+  switch (code) {
+    case 'auth/invalid-email':
+      return "Cette adresse e-mail n'est pas valide."
+    case 'auth/missing-password':
+      return 'Saisissez votre mot de passe.'
+    case 'auth/weak-password':
+      return 'Le mot de passe doit compter au moins 6 caractères.'
+    case 'auth/email-already-in-use':
+      return 'Un compte existe déjà avec cette adresse. Connectez-vous.'
+    case 'auth/invalid-credential':
+    case 'auth/wrong-password':
+    case 'auth/user-not-found':
+      return 'Adresse e-mail ou mot de passe incorrect.'
+    case 'auth/too-many-requests':
+      return 'Trop de tentatives. Patientez quelques minutes.'
+    case 'auth/network-request-failed':
+      return 'Connexion impossible. Vérifiez votre accès à internet.'
+    case 'auth/operation-not-allowed':
+      return "La connexion par e-mail n'est pas activée sur le projet Firebase."
+    default:
+      return "La connexion a échoué. Réessayez dans un instant."
+  }
 }
 
-export function login(): void {
-  isLoggedIn.value = true
+function toMessage(e: unknown): string {
+  const code = (e as { code?: string })?.code ?? ''
+  return authMessage(code)
+}
+
+export async function signUp(email: string, password: string): Promise<void> {
+  try {
+    await createUserWithEmailAndPassword(auth, email.trim(), password)
+  } catch (e) {
+    throw new Error(toMessage(e))
+  }
+}
+
+export async function login(email: string, password: string): Promise<void> {
+  try {
+    await signInWithEmailAndPassword(auth, email.trim(), password)
+  } catch (e) {
+    throw new Error(toMessage(e))
+  }
+}
+
+export async function resetPassword(email: string): Promise<void> {
+  try {
+    await sendPasswordResetEmail(auth, email.trim())
+  } catch (e) {
+    throw new Error(toMessage(e))
+  }
+}
+
+export async function logout(): Promise<void> {
+  // Ce qui attendait encore doit partir avant de fermer la session, sinon la
+  // transaction se ferait sans droits d'écriture.
+  await syncer?.flush()
+  const uid = currentUser.value?.uid
+  await signOut(auth)
+  // La copie locale n'a plus de raison d'être : elle ne servirait qu'à laisser
+  // les données d'un compte sur un appareil dont on vient de se déconnecter.
+  if (uid) clearMirror(uid)
 }
 
 /* -------------------------------------------------------------------------- */

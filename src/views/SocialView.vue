@@ -44,10 +44,11 @@
     <div class="notice">
       <Icon name="bell" />
       <div>
-        <b>Ce réseau est local à votre appareil.</b>
-        RapidMusic fonctionne sans serveur : les profils, publications et annonces sont un
-        contenu de démonstration, et ce que vous publiez n'est visible que par vous.
-        Relier réellement les musiciens entre eux demanderait un serveur.
+        <b>Ce réseau n'est pas encore partagé.</b>
+        Les profils, publications et annonces sont un contenu de démonstration, et ce que
+        vous publiez reste sur votre seul compte : chaque artiste possède ses données,
+        elles ne circulent pas encore entre eux. Relier réellement les musiciens demandera
+        des publications communes, avec la modération qui va avec.
       </div>
     </div>
 

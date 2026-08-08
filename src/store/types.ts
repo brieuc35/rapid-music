@@ -105,8 +105,10 @@ export interface ArtistProfile {
 /* -------------------------------------------------------------------------- */
 /*  Réseau                                                                    */
 /*                                                                            */
-/*  Le fil est local : sans serveur, les publications ne circulent pas entre   */
-/*  utilisateurs. Les comptes fournis servent de contenu de démonstration.     */
+/*  Le fil appartient à un seul compte : les publications sont enregistrées    */
+/*  dans le document de l'artiste et ne circulent donc pas entre utilisateurs.  */
+/*  Un vrai réseau demanderait une collection commune, lisible par tous, avec   */
+/*  ses propres règles de sécurité. Les comptes fournis sont une démonstration. */
 /* -------------------------------------------------------------------------- */
 
 export type PostCategory =

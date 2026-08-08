@@ -10,6 +10,23 @@ export default defineConfig(({ mode }) => ({
   // servait donc les fichiers depuis la mauvaise racine.
   base: mode === 'production' ? '/rapid-music/' : '/',
   plugins: [vue()],
+  build: {
+    rollupOptions: {
+      output: {
+        // Firebase et Vue changent rarement, le code de l'appli souvent.
+        // Les séparer évite de faire retélécharger 100 Ko de bibliothèques à
+        // chaque correction d'un écran, et permet de les charger en parallèle.
+        manualChunks(id) {
+          if (id.includes('node_modules/firebase') || id.includes('node_modules/@firebase')) {
+            return 'firebase'
+          }
+          if (id.includes('node_modules/@vue') || id.includes('node_modules/vue')) {
+            return 'vue'
+          }
+        },
+      },
+    },
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

@@ -1,0 +1,56 @@
+rules_version = '2';
+
+// -----------------------------------------------------------------------------
+//  Règles de sécurité Firestore — RapidMusic
+//
+//  C'est ici, et nulle part ailleurs, que se joue la protection des données.
+//  La configuration du SDK (apiKey, projectId) est publique : n'importe qui
+//  peut écrire une page qui parle à ce projet. Ce sont ces règles qui décident
+//  ce que cette page a le droit de lire et d'écrire.
+//
+//  À reporter dans la console : Firestore Database → onglet Règles → Publier.
+//  Ce fichier en est la référence versionnée.
+// -----------------------------------------------------------------------------
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Les données d'un artiste : lisibles et modifiables par lui seul.
+    // L'identifiant du document est celui du compte, ce qui rend la règle
+    // impossible à contourner — on ne peut pas demander le document d'autrui.
+    match /artistes/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+
+      allow create: if request.auth != null
+                    && request.auth.uid == uid
+                    && valide();
+
+      allow update: if request.auth != null
+                    && request.auth.uid == uid
+                    && valide()
+                    // La révision ne peut qu'avancer : une écriture fondée sur
+                    // une version périmée est refusée par le serveur, et pas
+                    // seulement par l'application.
+                    && request.resource.data.rev > resource.data.rev;
+
+      // Rien ne justifie une suppression depuis le navigateur. Un artiste qui
+      // veut effacer son compte doit passer par une demande explicite, pour
+      // qu'une fausse manœuvre ne coûte pas toute une carrière.
+      allow delete: if false;
+    }
+
+    function valide() {
+      return request.resource.data.keys().hasOnly(['rev', 'data', 'updatedAt'])
+             && request.resource.data.rev is int
+             && request.resource.data.rev > 0
+             && request.resource.data.data is map;
+    }
+
+    // Tout le reste est fermé. Le jour où le Réseau deviendra réel, les
+    // publications partagées demanderont leurs propres règles — elles n'ont
+    // rien à voir avec celles-ci, puisqu'elles seront lisibles par tous.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,5 +1,11 @@
 <template>
-  <LoginView v-if="!isLoggedIn" />
+  <!-- Le temps que Firebase rétablisse la session : ni l'un ni l'autre écran,
+       pour ne pas faire apparaître la connexion à quelqu'un de déjà connecté. -->
+  <div v-if="!authReady" class="boot">
+    <span class="boot__mark"><BrandMark /></span>
+  </div>
+
+  <LoginView v-else-if="!isLoggedIn" />
 
   <div v-else class="app-shell">
     <!-- Mobile scrim -->
@@ -60,6 +66,11 @@
       </nav>
 
       <div class="nav__foot">
+        <div class="sync" :class="`sync--${syncState}`" :title="syncMessage || undefined">
+          <span class="sync__dot" />
+          {{ syncLabel }}
+        </div>
+
         <RouterLink v-if="!isPro" to="/abonnement" class="upsell">
           <span class="upsell__ico"><Icon name="star" /></span>
           <div class="upsell__text">
@@ -116,10 +127,26 @@ import Icon from './components/Icon.vue'
 import Avatar from './components/Avatar.vue'
 import BrandMark from './components/BrandMark.vue'
 import LoginView from './views/LoginView.vue'
-import { store, isLoggedIn, unreadPosts, isPro } from './store'
+import { store, isLoggedIn, authReady, unreadPosts, isPro } from './store'
+import { syncState, syncMessage } from './store/sync'
 import { daysFromNow } from './utils/format'
 
 const menuOpen = ref(false)
+
+const syncLabel = computed(() => {
+  switch (syncState.value) {
+    case 'saving':
+      return 'Enregistrement…'
+    case 'saved':
+      return 'Enregistré'
+    case 'offline':
+      return 'Hors connexion'
+    case 'error':
+      return "Échec de l'enregistrement"
+    default:
+      return 'Prêt'
+  }
+})
 
 const upcomingConcerts = computed(
   () => store.concerts.filter((c) => c.status !== 'Terminé' && daysFromNow(c.date) >= 0).length,
