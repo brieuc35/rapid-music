@@ -33,14 +33,27 @@
 
         <div v-if="mode !== 'reset'" class="field">
           <label for="password">Mot de passe</label>
-          <input
-            id="password"
-            v-model="password"
-            type="password"
-            :autocomplete="mode === 'signup' ? 'new-password' : 'current-password'"
-            placeholder="••••••••"
-            required
-          />
+          <div class="pwd">
+            <input
+              id="password"
+              v-model="password"
+              :type="visible ? 'text' : 'password'"
+              :autocomplete="mode === 'signup' ? 'new-password' : 'current-password'"
+              placeholder="••••••••"
+              required
+            />
+            <!-- type="button" : sans lui, le bouton validerait le formulaire. -->
+            <button
+              type="button"
+              class="pwd__eye"
+              :aria-label="visible ? 'Masquer le mot de passe' : 'Afficher le mot de passe'"
+              :aria-pressed="visible"
+              :title="visible ? 'Masquer le mot de passe' : 'Afficher le mot de passe'"
+              @click="visible = !visible"
+            >
+              <Icon :name="visible ? 'eye-off' : 'eye'" />
+            </button>
+          </div>
           <p v-if="mode === 'signup'" class="field-help">Six caractères au minimum.</p>
         </div>
 
@@ -90,6 +103,7 @@ type Mode = 'login' | 'signup' | 'reset'
 const mode = ref<Mode>('login')
 const email = ref('')
 const password = ref('')
+const visible = ref(false)
 const error = ref('')
 const notice = ref('')
 const busy = ref(false)
@@ -98,6 +112,8 @@ function switchTo(m: Mode) {
   mode.value = m
   error.value = ''
   notice.value = ''
+  // Ne pas laisser un mot de passe en clair d'un écran à l'autre.
+  visible.value = false
 }
 
 async function submit() {
@@ -115,6 +131,7 @@ async function submit() {
       await login(email.value, password.value)
     }
     password.value = ''
+    visible.value = false
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Une erreur est survenue.'
   } finally {
@@ -181,6 +198,41 @@ async function submit() {
 }
 .login__card .field {
   text-align: left;
+}
+
+.pwd {
+  position: relative;
+}
+/* Le texte saisi ne doit pas passer sous le bouton. */
+.pwd input {
+  padding-right: 44px;
+}
+.pwd__eye {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  color: var(--text-muted);
+  display: grid;
+  place-items: center;
+  transition: color 0.15s, background 0.15s;
+}
+.pwd__eye svg {
+  width: 18px;
+  height: 18px;
+}
+.pwd__eye:hover {
+  color: var(--violet-600);
+  background: var(--violet-50);
+}
+.pwd__eye:focus-visible {
+  outline: 2px solid var(--violet-400);
+  outline-offset: 1px;
 }
 .alert {
   font-size: 13.5px;
