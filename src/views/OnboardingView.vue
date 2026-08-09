@@ -46,9 +46,9 @@
 
         <div class="field--row">
           <div class="field">
-            <label for="onb-genre">Style de musique</label>
+            <label for="onb-genre">Style de musique <span class="req">*</span></label>
             <select id="onb-genre" v-model="genre">
-              <option value="">À préciser</option>
+              <option value="">Choisissez un style</option>
               <option v-for="g in GENRES" :key="g" :value="g">{{ g }}</option>
               <option value="__autre">Autre…</option>
             </select>
@@ -62,7 +62,7 @@
         <!-- Aucune liste ne couvre tous les styles : « Autre » ouvre un champ
              libre plutôt que de contraindre à un choix approchant. -->
         <div v-if="genre === '__autre'" class="field">
-          <label for="onb-genre-autre">Précisez votre style</label>
+          <label for="onb-genre-autre">Précisez votre style <span class="req">*</span></label>
           <input
             id="onb-genre-autre"
             v-model="genreAutre"
@@ -109,11 +109,11 @@
           </p>
         </fieldset>
 
-        <button class="btn btn--primary btn--block" type="submit" :disabled="!stageName.trim()">
+        <button class="btn btn--primary btn--block" type="submit" :disabled="!complet">
           <Icon name="check" /> Entrer dans RapidMusic
         </button>
-        <p v-if="!stageName.trim()" class="onb__hint" style="text-align: center">
-          Le nom de scène est nécessaire pour continuer.
+        <p v-if="!complet" class="onb__hint" style="text-align: center">
+          {{ manquant }}
         </p>
       </form>
     </div>
@@ -121,7 +121,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import Avatar from '@/components/Avatar.vue'
 import BrandMark from '@/components/BrandMark.vue'
 import Icon from '@/components/Icon.vue'
@@ -155,6 +155,24 @@ const planOptions = [
   },
 ]
 
+/*  Style retenu. « Autre… » n'est qu'un déclencheur de champ libre : choisi
+ *  sans rien saisir, il ne vaut pas un style. */
+const style = computed(() =>
+  genre.value === '__autre' ? genreAutre.value.trim() : genre.value,
+)
+
+const complet = computed(() => !!stageName.value.trim() && !!style.value)
+
+/** Ce qu'il reste à renseigner, nommé plutôt que laissé à deviner. */
+const manquant = computed(() => {
+  const reste: string[] = []
+  if (!stageName.value.trim()) reste.push('le nom de scène')
+  if (!style.value) {
+    reste.push(genre.value === '__autre' ? 'le style à préciser' : 'le style de musique')
+  }
+  return `Il reste à renseigner ${reste.join(' et ')}.`
+})
+
 async function pickPhoto(e: Event) {
   const input = e.target as HTMLInputElement
   const file = input.files?.[0]
@@ -172,15 +190,11 @@ async function pickPhoto(e: Event) {
 }
 
 function submit() {
-  const name = stageName.value.trim()
-  if (!name) return
-  // « Autre » n'est qu'un déclencheur de champ libre, il ne doit pas être
-  // enregistré comme un style.
-  const style = genre.value === '__autre' ? genreAutre.value.trim() : genre.value
+  if (!complet.value) return
   completeOnboarding(
     {
-      stageName: name,
-      genre: style,
+      stageName: stageName.value.trim(),
+      genre: style.value,
       city: city.value.trim(),
       bio: bio.value.trim(),
       photo: photo.value,
@@ -268,9 +282,6 @@ function submit() {
   color: var(--text-muted);
   font-size: 12px;
   line-height: 1.4;
-}
-.req {
-  color: var(--pink-500);
 }
 
 .onb__start {

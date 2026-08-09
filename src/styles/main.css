@@ -951,6 +951,11 @@ textarea {
   border-color: var(--violet-400);
   box-shadow: 0 0 0 3px var(--violet-100);
 }
+/* Marque les champs nécessaires, à côté de leur intitulé. */
+.req {
+  color: var(--pink-500);
+}
+
 /* Deux champs côte à côte. « min-width: 0 » est indispensable : sans lui, un
    champ de saisie refuse de descendre sous sa largeur intrinsèque et déborde
    sur les écrans étroits. Le passage à la ligne prend le relais en dessous de
