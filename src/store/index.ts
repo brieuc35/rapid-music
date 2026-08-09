@@ -30,12 +30,17 @@ const STORAGE_KEY = 'rapidmusic:data:v1'
 const MIGRATED_KEY = 'rapidmusic:reprise:v1'
 
 /**
- * Complète les données enregistrées avec les valeurs par défaut manquantes.
- * Nécessaire pour les données créées avant l'ajout de nouveaux champs
- * (profil artiste enrichi, etc.) : sans cela, les champs absents seraient
- * `undefined` et casseraient les formulaires.
+ * Complète les données enregistrées avec les valeurs par défaut manquantes,
+ * et reprend les valeurs dont le libellé a changé depuis leur enregistrement.
+ *
+ * Sans elle, les champs ajoutés après un enregistrement vaudraient `undefined`
+ * et casseraient les formulaires.
+ *
+ * Exportée pour être vérifiable : toutes les données venant du serveur ou d'une
+ * version antérieure passent ici, c'est donc l'endroit où une erreur se
+ * traduirait par une perte silencieuse.
  */
-function withDefaults(saved: Partial<AppData>): AppData {
+export function withDefaults(saved: Partial<AppData>): AppData {
   const base = seedData()
   // Champs de profil ajoutés après la première version : on les laisse vides
   // plutôt que de reprendre les valeurs de démonstration, qui n'auraient aucun
@@ -49,6 +54,14 @@ function withDefaults(saved: Partial<AppData>): AppData {
     spotify: '',
     website: '',
   }
+  // « Hip-hop / Rap » a été renommé « Rap / Hip-hop » : sans cette reprise, le
+  // style déjà enregistré ne figurerait plus dans la liste et basculerait en
+  // « Autre… » dans le formulaire de profil.
+  const renamedGenres: Record<string, string> = { 'Hip-hop / Rap': 'Rap / Hip-hop' }
+  const savedArtist = saved.artist ?? {}
+  const genre = savedArtist.genre
+  const artistGenre = genre && renamedGenres[genre] ? { genre: renamedGenres[genre] } : {}
+
   // « En négociation » et « En attente signature » ont fusionné en
   // « En attente » : sans cette reprise, les contrats enregistrés avant le
   // changement garderaient un statut que plus aucun filtre ne reconnaît.
@@ -67,7 +80,7 @@ function withDefaults(saved: Partial<AppData>): AppData {
     // l'application depuis des mois serait absurde.
     onboarded: saved.onboarded ?? true,
     contracts,
-    artist: { ...base.artist, ...addedFields, ...(saved.artist ?? {}) },
+    artist: { ...base.artist, ...addedFields, ...savedArtist, ...artistGenre },
     subscription: saved.subscription ?? base.subscription,
     label: { ...base.label, ...(saved.label ?? {}) },
     // Le réseau est arrivé après coup : les données déjà enregistrées reçoivent
