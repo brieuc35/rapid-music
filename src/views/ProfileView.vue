@@ -7,7 +7,7 @@
         </button>
         <template v-else>
           <button class="btn btn--subtle" @click="cancelEdit">Annuler</button>
-          <button class="btn btn--primary" :disabled="!draft.stageName.trim()" @click="saveEdit">
+          <button class="btn btn--primary" :disabled="!complet" @click="saveEdit">
             <Icon name="check" /> Enregistrer
           </button>
         </template>
@@ -62,7 +62,7 @@
         <template v-else>
           <div class="field--row">
             <div class="field">
-              <label>Nom de scène</label>
+              <label>Nom de scène <span class="req">*</span></label>
               <input v-model="draft.stageName" placeholder="Ex : NOVA" />
             </div>
             <div class="field">
@@ -72,9 +72,9 @@
           </div>
           <div class="field--row">
             <div class="field">
-              <label>Style de musique</label>
+              <label>Style de musique <span class="req">*</span></label>
               <select v-model="genreChoice">
-                <option value="">À préciser</option>
+                <option value="">Choisissez un style</option>
                 <option v-for="g in GENRES" :key="g" :value="g">{{ g }}</option>
                 <option value="__autre">Autre…</option>
               </select>
@@ -88,7 +88,7 @@
                tout seul quand le style déjà enregistré n'y figure pas : sans
                cela, ouvrir la modification suffirait à le perdre. -->
           <div v-if="genreChoice === '__autre'" class="field">
-            <label>Précisez votre style</label>
+            <label>Précisez votre style <span class="req">*</span></label>
             <input v-model="genreOther" maxlength="40" placeholder="Ex : Musique bretonne" />
           </div>
           <div class="field">
@@ -259,6 +259,10 @@ const genreEffectif = computed(() =>
   genreChoice.value === '__autre' ? genreOther.value.trim() : genreChoice.value,
 )
 
+/*  Nom de scène et style sont tous deux nécessaires : ils identifient l'artiste
+ *  partout dans l'application, du menu au Réseau. */
+const complet = computed(() => !!draft.value.stageName.trim() && !!genreEffectif.value)
+
 /** Aperçu live pendant l'édition, données enregistrées sinon. Le style vient du
  *  choix en cours et non de `draft`, où il n'est écrit qu'à l'enregistrement. */
 const displayed = computed(() =>
@@ -276,7 +280,7 @@ function cancelEdit() {
   editMode.value = false
 }
 function saveEdit() {
-  if (!draft.value.stageName.trim()) return
+  if (!complet.value) return
   // « Autre… » n'est qu'un déclencheur, il ne doit pas devenir un style.
   draft.value.genre = genreEffectif.value
   Object.assign(store.artist, draft.value)
