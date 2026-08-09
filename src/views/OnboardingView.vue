@@ -29,7 +29,6 @@
             <button v-if="photo" type="button" class="link link--muted" @click="photo = ''">
               Retirer
             </button>
-            <p v-else class="onb__hint">Facultatif — vos initiales seront affichées.</p>
           </div>
         </div>
         <p v-if="photoError" class="alert alert--error">{{ photoError }}</p>
@@ -48,12 +47,28 @@
         <div class="field--row">
           <div class="field">
             <label for="onb-genre">Style de musique</label>
-            <input id="onb-genre" v-model="genre" maxlength="40" placeholder="Ex : Rap, Électro" />
+            <select id="onb-genre" v-model="genre">
+              <option value="">À préciser</option>
+              <option v-for="g in GENRES" :key="g" :value="g">{{ g }}</option>
+              <option value="__autre">Autre…</option>
+            </select>
           </div>
           <div class="field">
             <label for="onb-city">Ville</label>
             <input id="onb-city" v-model="city" maxlength="40" placeholder="Ex : Rennes, FR" />
           </div>
+        </div>
+
+        <!-- Aucune liste ne couvre tous les styles : « Autre » ouvre un champ
+             libre plutôt que de contraindre à un choix approchant. -->
+        <div v-if="genre === '__autre'" class="field">
+          <label for="onb-genre-autre">Précisez votre style</label>
+          <input
+            id="onb-genre-autre"
+            v-model="genreAutre"
+            maxlength="40"
+            placeholder="Ex : Musique bretonne"
+          />
         </div>
 
         <div class="field">
@@ -68,16 +83,30 @@
           <p class="onb__hint">{{ bio.length }} / 300 — facultatif</p>
         </div>
 
-        <!-- Contenu de départ -->
+        <!-- Formule -->
         <fieldset class="onb__start">
           <legend>Pour commencer</legend>
-          <label v-for="o in startOptions" :key="o.value" class="onb__opt" :class="{ 'onb__opt--on': withDemo === o.value }">
-            <input v-model="withDemo" type="radio" :value="o.value" name="depart" />
+          <label
+            v-for="o in planOptions"
+            :key="o.value"
+            class="onb__opt"
+            :class="{ 'onb__opt--on': plan === o.value }"
+          >
+            <input v-model="plan" type="radio" :value="o.value" name="formule" />
             <span>
-              <b>{{ o.title }}</b>
+              <b>
+                {{ o.title }}
+                <em class="onb__price">{{ o.price }}</em>
+              </b>
               <small>{{ o.text }}</small>
             </span>
           </label>
+          <p v-if="plan === 'pro'" class="onb__notice">
+            <Icon name="bell" />
+            Aucun paiement n'est encaissé et aucune coordonnée bancaire n'est demandée :
+            l'accès Pro est activé en démonstration, et résiliable à tout moment depuis
+            l'onglet Abonnement.
+          </p>
         </fieldset>
 
         <button class="btn btn--primary btn--block" type="submit" :disabled="!stageName.trim()">
@@ -96,27 +125,33 @@ import { ref } from 'vue'
 import Avatar from '@/components/Avatar.vue'
 import BrandMark from '@/components/BrandMark.vue'
 import Icon from '@/components/Icon.vue'
-import { completeOnboarding } from '@/store'
+import { completeOnboarding, PRO_PRICE } from '@/store'
+import type { Plan } from '@/store/types'
+import { money } from '@/utils/format'
 import { fileToAvatarDataUrl, ImageError } from '@/utils/image'
+import { GENRES } from '@/utils/genres'
 
 const stageName = ref('')
 const genre = ref('')
+const genreAutre = ref('')
 const city = ref('')
 const bio = ref('')
 const photo = ref('')
 const photoError = ref('')
-const withDemo = ref(false)
+const plan = ref<Plan>('free')
 
-const startOptions = [
+const planOptions = [
   {
-    value: false,
-    title: 'Un espace vierge',
-    text: 'Vous ajoutez vos concerts, contrats et sorties au fur et à mesure.',
+    value: 'free' as Plan,
+    title: 'Version gratuite',
+    price: '0 €',
+    text: 'Tableau de bord, agenda, sorties, contacts, dates de concerts.',
   },
   {
-    value: true,
-    title: 'Avec des exemples',
-    text: 'Un catalogue de démonstration, pour voir l’outil rempli. Supprimable ensuite.',
+    value: 'pro' as Plan,
+    title: 'Version Pro',
+    price: money(PRO_PRICE, true) + ' / mois',
+    text: 'Accès au réseau des professionnels de la musique, à vos revenus, à vos contrats et aux cachets de vos concerts.',
   },
 ]
 
@@ -139,15 +174,18 @@ async function pickPhoto(e: Event) {
 function submit() {
   const name = stageName.value.trim()
   if (!name) return
+  // « Autre » n'est qu'un déclencheur de champ libre, il ne doit pas être
+  // enregistré comme un style.
+  const style = genre.value === '__autre' ? genreAutre.value.trim() : genre.value
   completeOnboarding(
     {
       stageName: name,
-      genre: genre.value.trim(),
+      genre: style,
       city: city.value.trim(),
       bio: bio.value.trim(),
       photo: photo.value,
     },
-    withDemo.value,
+    plan.value,
   )
 }
 </script>
@@ -269,8 +307,39 @@ function submit() {
   flex-shrink: 0;
 }
 .onb__opt b {
-  display: block;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
   font-size: 14px;
+}
+.onb__price {
+  font-style: normal;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--violet-600);
+  background: var(--brand-gradient-soft);
+  border-radius: 20px;
+  padding: 1px 9px;
+}
+.onb__notice {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  background: var(--amber-bg);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: #7a5410;
+}
+.onb__notice svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--amber);
 }
 .onb__opt small {
   color: var(--text-muted);
