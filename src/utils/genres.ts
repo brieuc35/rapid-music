@@ -10,9 +10,7 @@
  */
 export const GENRES = [
   'Afrobeats',
-  'Ambient',
   'Blues',
-  'Chanson française',
   'Classique',
   'Country',
   'Dancehall',
@@ -26,15 +24,12 @@ export const GENRES = [
   'Gospel',
   'Hard rock',
   'House',
-  'Indie',
   'Jazz',
   'K-pop',
   'Latino',
   'Metal',
   'Musique de film',
-  'Musique du monde',
   'Musique traditionnelle',
-  'Néo-soul',
   'Pop',
   'Punk',
   'R&B',
@@ -46,7 +41,6 @@ export const GENRES = [
   'Slam',
   'Soul',
   'Techno',
-  'Trap',
   'Variété française',
   'Zouk',
 ] as const
