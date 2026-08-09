@@ -12,8 +12,9 @@ import type {
   Post,
   PostCategory,
   Opportunity,
+  Plan,
 } from './types'
-import { emptyData, seedData } from './seed'
+import { seedData, starterData } from './seed'
 import { Syncer, clearMirror } from './sync'
 import { auth } from '@/firebase'
 import {
@@ -299,23 +300,18 @@ export const isLoggedIn = computed(() => currentUser.value !== null)
 export const needsOnboarding = computed(() => isLoggedIn.value && !store.onboarded)
 
 /**
- * Enregistre le profil saisi à l'accueil et ouvre l'application.
- * `withDemo` remplit l'espace avec le catalogue de démonstration, en gardant
- * le profil saisi : utile pour découvrir l'outil rempli plutôt que vide.
+ * Enregistre le profil saisi à l'accueil, retient la formule choisie et ouvre
+ * l'application.
+ *
+ * Choisir Pro ici active la même bascule que la page Abonnement : aucun
+ * paiement n'est encaissé, l'écran le dit explicitement.
  */
 export function completeOnboarding(
   profile: Pick<ArtistProfile, 'stageName' | 'genre' | 'city' | 'photo' | 'bio'>,
-  withDemo: boolean,
+  plan: Plan,
 ): void {
-  if (withDemo) {
-    const demo = seedData()
-    Object.assign(store, {
-      ...demo,
-      // Le profil saisi prime sur celui de la démonstration.
-      artist: { ...demo.artist, ...profile, realName: '', email: '', phone: '' },
-    })
-  }
   Object.assign(store.artist, profile)
+  if (plan === 'pro') activatePro()
   store.onboarded = true
 }
 
@@ -333,7 +329,7 @@ onAuthStateChanged(auth, async (user) => {
     // Sans données locales à reprendre, un compte neuf démarre sur un espace
     // vierge : les concerts et contrats de la démonstration appartiennent à
     // une autre artiste, ils n'ont rien à faire dans le compte de celui-ci.
-    const data = await syncer.start(legacy ? withDefaults(legacy) : emptyData())
+    const data = await syncer.start(legacy ? withDefaults(legacy) : starterData())
     apply(data)
     if (legacy) markLegacyTaken(user.uid)
   } else {

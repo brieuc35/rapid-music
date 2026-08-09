@@ -602,12 +602,23 @@ export function seedData(): AppData {
   }
 }
 
+/** Date ISO dans `j` jours, pour des exemples qui restent à venir. */
+function inDays(j: number): string {
+  return new Date(Date.now() + j * 86_400_000).toISOString().slice(0, 10)
+}
+
 /**
- * Espace vierge pour un artiste qui démarre : son profil et tout ce qui le
- * concerne sont vides, mais le Réseau garde son contenu de démonstration —
- * un annuaire et un fil déserts donneraient l'impression d'une panne.
+ * Point de départ d'un nouveau compte : un seul exemple par rubrique.
+ *
+ * Ni le catalogue de démonstration complet — les concerts d'une autre artiste
+ * n'ont rien à faire dans un compte personnel — ni des écrans entièrement
+ * vides, où l'on ne devine pas ce qu'une fiche est censée contenir. Chaque
+ * exemple est préfixé « Exemple » pour être reconnu et supprimé sans hésiter.
+ *
+ * Le Réseau garde son contenu : c'est le seul onglet dont les données ne sont
+ * pas censées venir de l'artiste.
  */
-export function emptyData(): AppData {
+export function starterData(): AppData {
   const base = seedData()
   return {
     ...base,
@@ -636,11 +647,77 @@ export function emptyData(): AppData {
       publishing: '',
       roster: [],
     },
-    contracts: [],
-    concerts: [],
-    releases: [],
+    contracts: [
+      {
+        id: 'ex-contrat',
+        title: 'Exemple — Contrat de cession',
+        party: 'Nom du partenaire',
+        type: 'Enregistrement',
+        status: 'En attente',
+        startDate: inDays(0),
+        endDate: inDays(365),
+        value: 0,
+        royaltyRate: 50,
+        notes: 'Exemple à modifier ou supprimer.',
+      },
+    ],
+    concerts: [
+      {
+        id: 'ex-concert',
+        venue: 'Exemple — Nom de la salle',
+        city: 'Ville',
+        country: 'France',
+        date: inDays(30),
+        time: '20:30',
+        status: 'Option',
+        capacity: 200,
+        ticketsSold: 0,
+        fee: 0,
+        promoter: '',
+        notes: 'Exemple à modifier ou supprimer.',
+      },
+    ],
+    releases: [
+      {
+        id: 'ex-sortie',
+        title: 'Exemple — Mon premier single',
+        type: 'Single',
+        date: inDays(60),
+        status: 'Planifié',
+        cover: '#8b5cf6',
+        streams: 0,
+        isrc: '',
+        featuring: '',
+        notes: 'Exemple à modifier ou supprimer.',
+      },
+    ],
     royalties: [],
-    studio: [],
-    contacts: [],
+    studio: [
+      {
+        id: 'ex-agenda',
+        title: 'Exemple — Répétition',
+        studio: 'Lieu',
+        date: inDays(7),
+        startTime: '14:00',
+        endTime: '18:00',
+        type: 'Répétition',
+        cost: 0,
+        engineer: '',
+        notes: 'Exemple à modifier ou supprimer.',
+      },
+    ],
+    contacts: [
+      {
+        id: 'ex-contact',
+        name: 'Exemple — Programmateur',
+        role: 'Programmation',
+        company: 'Structure',
+        category: 'Booking',
+        email: '',
+        phone: '',
+        favorite: false,
+        notes: 'Exemple à modifier ou supprimer.',
+      },
+    ],
   }
 }
