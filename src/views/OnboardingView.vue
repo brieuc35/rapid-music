@@ -85,7 +85,7 @@
 
         <!-- Formule -->
         <fieldset class="onb__start">
-          <legend>Pour commencer</legend>
+          <legend>Pour commencer <span class="req">*</span></legend>
           <label
             v-for="o in planOptions"
             :key="o.value"
@@ -138,7 +138,10 @@ const city = ref('')
 const bio = ref('')
 const photo = ref('')
 const photoError = ref('')
-const plan = ref<Plan>('free')
+/*  Volontairement sans choix par défaut : la formule doit résulter d'un clic.
+ *  Présélectionner le gratuit ferait passer pour un choix ce qui n'en est pas
+ *  un, et présélectionner Pro serait pire. */
+const plan = ref<Plan | ''>('')
 
 const planOptions = [
   {
@@ -161,7 +164,9 @@ const style = computed(() =>
   genre.value === '__autre' ? genreAutre.value.trim() : genre.value,
 )
 
-const complet = computed(() => !!stageName.value.trim() && !!style.value)
+const complet = computed(
+  () => !!stageName.value.trim() && !!style.value && plan.value !== '',
+)
 
 /** Ce qu'il reste à renseigner, nommé plutôt que laissé à deviner. */
 const manquant = computed(() => {
@@ -170,7 +175,10 @@ const manquant = computed(() => {
   if (!style.value) {
     reste.push(genre.value === '__autre' ? 'le style à préciser' : 'le style de musique')
   }
-  return `Il reste à renseigner ${reste.join(' et ')}.`
+  if (plan.value === '') reste.push('la formule')
+  const liste =
+    reste.length > 1 ? reste.slice(0, -1).join(', ') + ' et ' + reste[reste.length - 1] : reste[0]
+  return `Il reste à renseigner ${liste}.`
 })
 
 async function pickPhoto(e: Event) {
@@ -190,7 +198,7 @@ async function pickPhoto(e: Event) {
 }
 
 function submit() {
-  if (!complet.value) return
+  if (!complet.value || plan.value === '') return
   completeOnboarding(
     {
       stageName: stageName.value.trim(),
