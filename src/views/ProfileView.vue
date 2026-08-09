@@ -73,15 +73,23 @@
           <div class="field--row">
             <div class="field">
               <label>Style de musique</label>
-              <input v-model="draft.genre" list="genres" placeholder="Ex : Électro-pop" />
-              <datalist id="genres">
-                <option v-for="g in genreSuggestions" :key="g" :value="g" />
-              </datalist>
+              <select v-model="genreChoice">
+                <option value="">À préciser</option>
+                <option v-for="g in GENRES" :key="g" :value="g">{{ g }}</option>
+                <option value="__autre">Autre…</option>
+              </select>
             </div>
             <div class="field">
               <label>Ville</label>
               <input v-model="draft.city" placeholder="Ex : Paris, FR" />
             </div>
+          </div>
+          <!-- Champ libre pour tout style absent de la liste. Il apparaît aussi
+               tout seul quand le style déjà enregistré n'y figure pas : sans
+               cela, ouvrir la modification suffirait à le perdre. -->
+          <div v-if="genreChoice === '__autre'" class="field">
+            <label>Précisez votre style</label>
+            <input v-model="genreOther" maxlength="40" placeholder="Ex : Musique bretonne" />
           </div>
           <div class="field">
             <label>Biographie</label>
@@ -220,31 +228,46 @@ import Modal from '@/components/Modal.vue'
 import { store, logout } from '@/store'
 import type { ArtistProfile } from '@/store/types'
 import { fileToAvatarDataUrl, ImageError } from '@/utils/image'
-
-const genreSuggestions = [
-  'Électro-pop',
-  'Pop',
-  'Rap / Hip-hop',
-  'R&B',
-  'Rock',
-  'Indie',
-  'House',
-  'Techno',
-  'Jazz',
-  'Chanson française',
-  'Metal',
-  'Reggae',
-]
+import { GENRES } from '@/utils/genres'
 
 const editMode = ref(false)
 const draft = ref<ArtistProfile>({ ...store.artist })
 const photoError = ref('')
 
-/** Aperçu live pendant l'édition, données enregistrées sinon. */
-const displayed = computed(() => (editMode.value ? draft.value : store.artist))
+/*  Le style se choisit dans une liste, mais rien ne garantit que celui déjà
+ *  enregistré y figure — il peut venir d'une version antérieure ou du champ
+ *  libre. Deux variables séparées évitent de l'écraser : la liste retient
+ *  « Autre… » et le champ libre reçoit la valeur existante. */
+const genreChoice = ref('')
+const genreOther = ref('')
+
+function loadGenre(value: string) {
+  if (!value) {
+    genreChoice.value = ''
+    genreOther.value = ''
+  } else if ((GENRES as readonly string[]).includes(value)) {
+    genreChoice.value = value
+    genreOther.value = ''
+  } else {
+    genreChoice.value = '__autre'
+    genreOther.value = value
+  }
+}
+
+/** Style retenu, que la liste ou le champ libre le fournisse. */
+const genreEffectif = computed(() =>
+  genreChoice.value === '__autre' ? genreOther.value.trim() : genreChoice.value,
+)
+
+/** Aperçu live pendant l'édition, données enregistrées sinon. Le style vient du
+ *  choix en cours et non de `draft`, où il n'est écrit qu'à l'enregistrement. */
+const displayed = computed(() =>
+  editMode.value ? { ...draft.value, genre: genreEffectif.value } : store.artist,
+)
 
 function startEdit() {
   draft.value = { ...store.artist }
+  loadGenre(store.artist.genre)
   photoError.value = ''
   editMode.value = true
 }
@@ -254,6 +277,8 @@ function cancelEdit() {
 }
 function saveEdit() {
   if (!draft.value.stageName.trim()) return
+  // « Autre… » n'est qu'un déclencheur, il ne doit pas devenir un style.
+  draft.value.genre = genreEffectif.value
   Object.assign(store.artist, draft.value)
   editMode.value = false
 }
@@ -305,9 +330,12 @@ async function doLogout() {
   align-items: center;
   gap: 12px;
 }
+/* La largeur minimale sert à faire passer le corps sous la photo sur écran
+   moyen. Elle doit céder quand l'écran est plus étroit qu'elle : sinon elle
+   déborde au lieu de s'adapter. */
 .hero__body {
   flex: 1;
-  min-width: 280px;
+  min-width: min(280px, 100%);
 }
 .hero__name {
   font-size: 26px;
