@@ -1,4 +1,4 @@
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, nextTick, reactive, ref, watch } from 'vue'
 import type {
   AppData,
   ArtistProfile,
@@ -157,6 +157,32 @@ export function uid(): string {
 export function resetData(): void {
   const fresh = seedData()
   Object.assign(store, fresh)
+}
+
+/**
+ * Remplace les données par celles d'un fichier de sauvegarde.
+ *
+ * Passe par `withDefaults`, comme tout ce qui entre dans l'application : un
+ * fichier exporté il y a six mois n'a pas les champs ajoutés depuis, et sans
+ * cette reprise les formulaires afficheraient des cases vides non modifiables.
+ *
+ * Contrairement à `apply`, l'indicateur `applying` n'est pas levé : l'import est
+ * une modification voulue par l'artiste, elle doit repartir vers le serveur.
+ * Sans l'attente ci-dessous, l'envoi partirait avant que l'observateur ait vu le
+ * changement, et le fichier importé ne vivrait que sur cet appareil.
+ *
+ * Le compteur de révision n'est pas concerné : il vit dans l'enveloppe du
+ * document, pas dans les données. Un import est donc une modification comme une
+ * autre du point de vue de la synchronisation.
+ *
+ * L'abonnement fait partie des données restaurées : quelqu'un qui réinstalle sa
+ * sauvegarde doit retrouver son abonnement. Ce n'est pas une preuve de paiement
+ * pour autant — elle ne pourra venir que d'une vérification côté serveur.
+ */
+export async function importData(data: Partial<AppData>): Promise<void> {
+  Object.assign(store, withDefaults(data))
+  await nextTick()
+  await syncer?.flush()
 }
 
 /* -------------------------------------------------------------------------- */
