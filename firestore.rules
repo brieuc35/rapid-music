@@ -33,10 +33,12 @@ service cloud.firestore {
                     // seulement par l'application.
                     && request.resource.data.rev > resource.data.rev;
 
-      // Rien ne justifie une suppression depuis le navigateur. Un artiste qui
-      // veut effacer son compte doit passer par une demande explicite, pour
-      // qu'une fausse manœuvre ne coûte pas toute une carrière.
-      allow delete: if false;
+      // Suppression du compte : un artiste doit pouvoir effacer ses données,
+      // c'est un droit et non une option. Le garde-fou n'est pas ici mais dans
+      // l'application, qui redemande le mot de passe avant d'y procéder — un
+      // refus au niveau des règles empêcherait la suppression tout court et
+      // laisserait les données orphelines après la disparition du compte.
+      allow delete: if request.auth != null && request.auth.uid == uid;
     }
 
     function valide() {

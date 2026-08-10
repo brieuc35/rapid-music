@@ -21,7 +21,7 @@
 /* -------------------------------------------------------------------------- */
 
 import { ref } from 'vue'
-import { doc, getDoc, runTransaction, serverTimestamp } from 'firebase/firestore/lite'
+import { deleteDoc, doc, getDoc, runTransaction, serverTimestamp } from 'firebase/firestore/lite'
 import { db } from '@/firebase'
 import type { AppData } from './types'
 
@@ -93,6 +93,14 @@ export function clearMirror(uid: string): void {
   } catch {
     /* rien à faire */
   }
+}
+
+/**
+ * Efface le document d'un artiste. Appelé à la suppression du compte, et
+ * uniquement là : c'est le geste par lequel une carrière entière disparaît.
+ */
+export async function deleteRemote(uid: string): Promise<void> {
+  await deleteDoc(doc(db, 'artistes', uid))
 }
 
 /* -------------------------------------------------------------------------- */

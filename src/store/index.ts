@@ -15,11 +15,14 @@ import type {
   Plan,
 } from './types'
 import { seedData, starterData } from './seed'
-import { Syncer, clearMirror } from './sync'
+import { Syncer, clearMirror, deleteRemote } from './sync'
 import { auth } from '@/firebase'
 import {
   createUserWithEmailAndPassword,
+  deleteUser,
+  EmailAuthProvider,
   onAuthStateChanged,
+  reauthenticateWithCredential,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signOut,
@@ -428,6 +431,51 @@ export async function logout(): Promise<void> {
   // La copie locale n'a plus de raison d'être : elle ne servirait qu'à laisser
   // les données d'un compte sur un appareil dont on vient de se déconnecter.
   if (uid) clearMirror(uid)
+}
+
+/**
+ * Supprime définitivement le compte et tout ce qu'il contient.
+ *
+ * Le mot de passe est redemandé pour deux raisons : Firebase exige une
+ * authentification récente avant une suppression, et cette saisie vaut
+ * confirmation qu'on a bien devant soi le propriétaire du compte.
+ *
+ * L'ordre importe. Les données partent en premier : une fois le compte
+ * supprimé, plus aucun droit d'écriture ne permettrait de les effacer et elles
+ * resteraient orphelines sur le serveur — le pire résultat possible pour une
+ * demande de suppression.
+ */
+export async function deleteAccount(password: string): Promise<void> {
+  const user = auth.currentUser
+  if (!user?.email) throw new Error('Aucun compte connecté.')
+
+  try {
+    await reauthenticateWithCredential(
+      user,
+      EmailAuthProvider.credential(user.email, password),
+    )
+  } catch (e) {
+    throw new Error(toMessage(e))
+  }
+
+  // Plus rien ne doit être réenregistré pendant la suppression.
+  syncer?.stop()
+  syncer = null
+
+  try {
+    await deleteRemote(user.uid)
+  } catch {
+    throw new Error(
+      "Vos données n'ont pas pu être supprimées. Le compte est conservé, réessayez.",
+    )
+  }
+
+  clearMirror(user.uid)
+  try {
+    await deleteUser(user)
+  } catch (e) {
+    throw new Error(toMessage(e))
+  }
 }
 
 /* -------------------------------------------------------------------------- */

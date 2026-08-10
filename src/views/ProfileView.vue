@@ -203,17 +203,63 @@
           <Icon name="external" /> Déconnexion
         </button>
       </div>
+
+      <div class="account account--danger">
+        <div>
+          <div style="font-weight: 600; font-size: 14.5px">Supprimer mon compte</div>
+          <p class="muted" style="font-size: 13.5px; margin-top: 3px; line-height: 1.5">
+            Efface définitivement votre compte et toutes vos données : contrats, concerts,
+            sorties, revenus, agenda et contacts. Cette action est irréversible.
+          </p>
+        </div>
+        <button class="btn btn--danger" @click="openDelete">
+          <Icon name="trash" /> Supprimer
+        </button>
+      </div>
     </div>
 
     <Modal :open="showLogout" title="Se déconnecter" @close="showLogout = false">
       <p style="margin: 0; color: var(--text-soft); line-height: 1.6">
         Vous allez être déconnecté de RapidMusic sur cet appareil.
         <b style="color: var(--text)">Aucune donnée ne sera perdue</b> : contrats, concerts,
-        sorties et contacts restent enregistrés localement.
+        sorties et contacts sont enregistrés sur votre compte et vous seront rendus à la
+        prochaine connexion, ici ou ailleurs.
       </p>
       <template #footer>
         <button class="btn btn--subtle" @click="showLogout = false">Annuler</button>
         <button class="btn btn--danger" @click="doLogout"><Icon name="external" /> Se déconnecter</button>
+      </template>
+    </Modal>
+
+    <Modal :open="showDelete" title="Supprimer mon compte" @close="closeDelete">
+      <p style="margin: 0 0 14px; color: var(--text-soft); line-height: 1.6">
+        Vont être définitivement effacés : votre profil, votre fiche label, vos contrats,
+        concerts, sorties, revenus, évènements d'agenda, contacts et publications.
+        <b style="color: var(--red)">Rien ne pourra être récupéré</b>, ni par vous ni par
+        personne.
+      </p>
+      <div class="field" style="margin-bottom: 0">
+        <label for="del-pwd">Saisissez votre mot de passe pour confirmer</label>
+        <input
+          id="del-pwd"
+          v-model="deletePassword"
+          type="password"
+          autocomplete="current-password"
+          placeholder="••••••••"
+          @keyup.enter="doDelete"
+        />
+      </div>
+      <p v-if="deleteError" class="alert-err">{{ deleteError }}</p>
+      <template #footer>
+        <button class="btn btn--subtle" :disabled="deleting" @click="closeDelete">Annuler</button>
+        <button
+          class="btn btn--danger"
+          :disabled="!deletePassword || deleting"
+          @click="doDelete"
+        >
+          <Icon :name="deleting ? 'clock' : 'trash'" />
+          {{ deleting ? 'Suppression…' : 'Supprimer définitivement' }}
+        </button>
       </template>
     </Modal>
   </div>
@@ -225,7 +271,7 @@ import PageHeader from '@/components/PageHeader.vue'
 import Icon from '@/components/Icon.vue'
 import Avatar from '@/components/Avatar.vue'
 import Modal from '@/components/Modal.vue'
-import { store, logout } from '@/store'
+import { store, logout, deleteAccount } from '@/store'
 import type { ArtistProfile } from '@/store/types'
 import { fileToAvatarDataUrl, ImageError } from '@/utils/image'
 import { GENRES } from '@/utils/genres'
@@ -317,6 +363,38 @@ async function doLogout() {
   showLogout.value = false
   // Attendu : la déconnexion enregistre d'abord ce qui n'était pas encore parti.
   await logout()
+}
+
+const showDelete = ref(false)
+const deletePassword = ref('')
+const deleteError = ref('')
+const deleting = ref(false)
+
+function openDelete() {
+  deletePassword.value = ''
+  deleteError.value = ''
+  showDelete.value = true
+}
+function closeDelete() {
+  if (deleting.value) return
+  showDelete.value = false
+  deletePassword.value = ''
+  deleteError.value = ''
+}
+async function doDelete() {
+  if (!deletePassword.value || deleting.value) return
+  deleting.value = true
+  deleteError.value = ''
+  try {
+    await deleteAccount(deletePassword.value)
+    // La suppression du compte déclenche le retour à l'écran de connexion :
+    // rien à faire de plus ici.
+  } catch (e) {
+    deleteError.value = e instanceof Error ? e.message : 'La suppression a échoué.'
+  } finally {
+    deleting.value = false
+    deletePassword.value = ''
+  }
 }
 </script>
 
@@ -456,5 +534,20 @@ async function doLogout() {
 }
 .account p {
   max-width: 52ch;
+}
+/* Séparée par un trait : la suppression n'est pas un réglage de plus. */
+.account--danger {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+.alert-err {
+  background: var(--red-bg);
+  color: var(--red);
+  font-size: 13.5px;
+  line-height: 1.5;
+  border-radius: var(--radius-sm);
+  padding: 10px 13px;
+  margin: 14px 0 0;
 }
 </style>
