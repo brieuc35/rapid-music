@@ -623,14 +623,24 @@ textarea {
   transform: translateY(1px);
 }
 /* Le bouton porte une bordure transparente d'1 px, héritée de .btn pour que
-   toutes les variantes aient la même taille. Peint par défaut jusque sous cette
-   bordure, le dégradé y laisse dépasser un liseré d'1 px aux deux extrémités —
-   rose à gauche, violet à droite. On limite donc le fond à la zone intérieure.
-   L'ombre reçoit un écartement négatif pour rester sous le bouton au lieu de
-   former un halo coloré sur ses côtés. */
+   toutes les variantes aient la même taille. Deux réglages sont nécessaires
+   pour qu'elle ne se voie pas :
+
+   « background-origin » place le dégradé sur toute la bordure comprise. Par
+   défaut il est calé sur la zone intérieure et seulement *peint* jusqu'au bord,
+   ce qui étire ses couleurs extrêmes sur ce dernier pixel — d'où le liseré rose
+   à gauche et violet à droite constaté auparavant.
+
+   « background-clip » doit alors peindre jusqu'au bord lui aussi. Le limiter à
+   la zone intérieure supprimait bien le liseré coloré, mais laissait voir la
+   carte à travers la bordure : un liseré blanc à la place.
+
+   L'ombre garde un écartement négatif pour rester sous le bouton au lieu de
+   former un halo sur ses côtés. */
 .btn--primary {
   background: var(--brand-gradient);
-  background-clip: padding-box;
+  background-origin: border-box;
+  background-clip: border-box;
   color: #fff;
   box-shadow: 0 6px 16px -5px rgba(124, 58, 237, 0.5);
 }
