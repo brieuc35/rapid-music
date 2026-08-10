@@ -57,7 +57,7 @@
             {{ money(PRO_PRICE, true) }}<span>/mois</span>
           </div>
           <p class="plan__lead">
-            Vos revenus, vos contrats et les opportunités du milieu.
+            Vos revenus, vos contrats et les montants de vos concerts.
           </p>
         </div>
         <ul class="plan__list">
@@ -96,7 +96,10 @@
                 <Icon v-if="row.free" name="check" class="ico-yes" />
                 <span v-else class="ico-no">—</span>
               </td>
-              <td style="text-align: center"><Icon name="check" class="ico-yes" /></td>
+              <td style="text-align: center">
+                <span v-if="row.soon" class="ico-soon">Bientôt</span>
+                <Icon v-else name="check" class="ico-yes" />
+              </td>
             </tr>
           </tbody>
         </table>
@@ -106,8 +109,9 @@
     <!-- Activation -->
     <Modal :open="showActivate" title="Activer RapidMusic Pro" @close="showActivate = false">
       <p style="margin: 0 0 14px; color: var(--text-soft); line-height: 1.6">
-        Pro donne accès aux revenus, aux contrats, à tout l'onglet Réseau et aux
-        montants de vos concerts, pour {{ money(PRO_PRICE, true) }} par mois.
+        Pro donne accès aux revenus, aux contrats et aux montants de vos concerts,
+        pour {{ money(PRO_PRICE, true) }} par mois. Le Réseau des professionnels
+        s'y ajoutera à son ouverture, sans supplément.
       </p>
       <div class="notice notice--sm">
         <Icon name="bell" />
@@ -128,7 +132,7 @@
     <!-- Résiliation -->
     <Modal :open="showCancel" title="Résilier Pro" @close="showCancel = false">
       <p style="margin: 0; color: var(--text-soft); line-height: 1.6">
-        Vous repasserez à la formule gratuite. Les onglets Revenus, Contrats et Réseau
+        Vous repasserez à la formule gratuite. Les onglets Revenus et Contrats
         seront de nouveau verrouillés, mais
         <b style="color: var(--text)">aucune donnée ne sera supprimée</b> : tout sera
         retrouvé en cas de réactivation.
@@ -158,12 +162,15 @@ const freeFeatures = [
   'Profil artiste et fiche label',
 ]
 
+/*  Le Réseau n'y figure pas : il n'est pas encore ouvert, et une fonction
+ *  annoncée dans la liste de ce qu'on paie est une fonction promise. Il est
+ *  mentionné plus bas, comme ce qui viendra s'ajouter — pas comme une raison de
+ *  payer aujourd'hui. */
 const proFeatures = [
   'Tout le gratuit, sans limite',
   'Revenus et royalties : suivi par plateforme et historique',
   'Import des relevés de distributeur en un fichier',
   'Contrats : suivi des statuts, avances et taux',
-  'Réseau : le fil du milieu, l’annuaire des membres et les annonces',
   'Cachets de vos concerts et total à venir',
 ]
 
@@ -177,7 +184,15 @@ const comparison = [
   { label: 'Concerts — cachets', detail: 'Montants négociés et total à venir', free: false },
   { label: 'Royalties & Revenus', detail: 'Suivi, graphiques, import de relevés', free: false },
   { label: 'Contrats', detail: 'Statuts, avances, taux artiste', free: false },
-  { label: 'Réseau', detail: 'Fil du milieu, annuaire des membres, annonces', free: false },
+  {
+    label: 'Réseau',
+    detail: 'Fil du milieu, annuaire des membres, annonces',
+    free: false,
+    // Annoncé sans être compté : la colonne Pro dira « bientôt » et non une
+    // coche. Le retirer du tableau serait plus discret, mais on ne saurait plus
+    // que c'est prévu.
+    soon: true,
+  },
 ]
 
 const showActivate = ref(false)
@@ -328,5 +343,19 @@ function doCancel() {
 }
 .ico-no {
   color: var(--text-muted);
+}
+/* Ni coche ni tiret : un état à part, pour qu'on ne lise pas « compris dans
+   l'abonnement » là où c'est encore à venir. */
+.ico-soon {
+  display: inline-block;
+  background: var(--violet-50);
+  color: var(--violet-700);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  border-radius: 20px;
+  padding: 3px 9px;
+  white-space: nowrap;
 }
 </style>
