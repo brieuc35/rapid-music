@@ -188,6 +188,54 @@
       </div>
     </div>
 
+    <!-- Mes données -->
+    <div class="card card--pad" style="margin-top: 18px">
+      <div class="section-head"><span class="section-head__title">Mes données</span></div>
+      <div class="account">
+        <div>
+          <div style="font-weight: 600; font-size: 14.5px">Télécharger mes données</div>
+          <p class="muted" style="font-size: 13.5px; margin-top: 3px; line-height: 1.5">
+            Enregistre l'intégralité de votre espace — profil, label, contrats, concerts,
+            sorties, revenus, agenda et contacts — dans un fichier sur cet appareil.
+            Gardez-le de côté : il vous rendra tout, même si vous perdez l'accès à votre
+            compte.
+          </p>
+        </div>
+        <button class="btn btn--subtle" @click="doExport">
+          <Icon name="download" /> Télécharger
+        </button>
+      </div>
+
+      <div class="account account--sep">
+        <div>
+          <div style="font-weight: 600; font-size: 14.5px">Importer un fichier</div>
+          <p class="muted" style="font-size: 13.5px; margin-top: 3px; line-height: 1.5">
+            Restaure un fichier téléchargé précédemment. Le contenu du fichier vous sera
+            présenté avant tout remplacement.
+          </p>
+        </div>
+        <button class="btn btn--subtle" @click="pickBackup">
+          <Icon name="upload" /> Importer
+        </button>
+        <!-- Hors du flux : le sélecteur de fichiers du navigateur ne se met pas en
+             page, il s'ouvre depuis le bouton ci-dessus. -->
+        <input
+          ref="backupInput"
+          type="file"
+          accept="application/json,.json"
+          hidden
+          @change="onBackupSelected"
+        />
+      </div>
+
+      <p v-if="exportedName" class="alert-ok">
+        Fichier téléchargé : <b>{{ exportedName }}</b
+        >. Vous le trouverez avec vos téléchargements.
+      </p>
+      <p v-if="importError" class="alert-err">{{ importError }}</p>
+      <p v-if="importDone" class="alert-ok">Vos données ont été restaurées.</p>
+    </div>
+
     <!-- Compte -->
     <div class="card card--pad" style="margin-top: 18px">
       <div class="section-head"><span class="section-head__title">Compte</span></div>
@@ -217,6 +265,31 @@
         </button>
       </div>
     </div>
+
+    <Modal :open="!!pending" title="Importer ce fichier" @close="closeImport">
+      <p style="margin: 0 0 14px; color: var(--text-soft); line-height: 1.6">
+        Le fichier <b style="color: var(--text)">{{ pendingName }}</b> contient :
+      </p>
+      <ul class="recap">
+        <li v-for="ligne in pendingRecap" :key="ligne.label">
+          <b>{{ ligne.count }}</b> {{ ligne.label }}
+        </li>
+      </ul>
+      <p style="margin: 14px 0 0; color: var(--text-soft); line-height: 1.6">
+        Ce contenu va <b style="color: var(--red)">remplacer vos données actuelles</b>, sur
+        cet appareil comme sur votre compte. Si vous n'êtes pas sûr, annulez et téléchargez
+        d'abord vos données actuelles.
+      </p>
+      <template #footer>
+        <button class="btn btn--subtle" :disabled="importing" @click="closeImport">
+          Annuler
+        </button>
+        <button class="btn btn--primary" :disabled="importing" @click="confirmImport">
+          <Icon :name="importing ? 'clock' : 'upload'" />
+          {{ importing ? 'Restauration…' : 'Remplacer mes données' }}
+        </button>
+      </template>
+    </Modal>
 
     <Modal :open="showLogout" title="Se déconnecter" @close="showLogout = false">
       <p style="margin: 0; color: var(--text-soft); line-height: 1.6">
@@ -271,10 +344,11 @@ import PageHeader from '@/components/PageHeader.vue'
 import Icon from '@/components/Icon.vue'
 import Avatar from '@/components/Avatar.vue'
 import Modal from '@/components/Modal.vue'
-import { store, logout, deleteAccount } from '@/store'
-import type { ArtistProfile } from '@/store/types'
+import { store, logout, deleteAccount, importData } from '@/store'
+import type { AppData, ArtistProfile } from '@/store/types'
 import { fileToAvatarDataUrl, ImageError } from '@/utils/image'
 import { GENRES } from '@/utils/genres'
+import { BackupError, describeBackup, downloadBackup, parseBackup } from '@/utils/backup'
 
 const editMode = ref(false)
 const draft = ref<ArtistProfile>({ ...store.artist })
@@ -356,6 +430,91 @@ async function onPhotoSelected(event: Event) {
 
 function externalUrl(site: string): string {
   return /^https?:\/\//i.test(site) ? site : `https://${site}`
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Sauvegarde et restauration                                                */
+/* -------------------------------------------------------------------------- */
+
+const exportedName = ref('')
+const importError = ref('')
+const importDone = ref(false)
+
+function doExport() {
+  importError.value = ''
+  importDone.value = false
+  exportedName.value = downloadBackup(store)
+}
+
+const backupInput = ref<HTMLInputElement | null>(null)
+/*  Données lues et validées, en attente de confirmation. Rien n'est écrit dans
+ *  l'application tant que cet objet n'a pas été accepté explicitement. */
+const pending = ref<AppData | null>(null)
+const pendingName = ref('')
+const importing = ref(false)
+
+const pendingRecap = computed(() =>
+  // Les catégories vides sont montrées elles aussi : « 0 contrats » est une
+  // information, c'est ce que l'import va laisser à la place des contrats
+  // existants.
+  pending.value ? describeBackup(pending.value) : [],
+)
+
+function pickBackup() {
+  importError.value = ''
+  importDone.value = false
+  exportedName.value = ''
+  backupInput.value?.click()
+}
+
+async function onBackupSelected(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = '' // permet de re-sélectionner le même fichier
+  if (!file) return
+
+  // Le bouton nettoie déjà ces messages, mais un fichier peut arriver sans lui
+  // (glisser-déposer d'un navigateur, outil d'accessibilité) : sans cela, la
+  // confirmation d'un ancien téléchargement resterait affichée sous le résultat
+  // de l'import.
+  importError.value = ''
+  importDone.value = false
+  exportedName.value = ''
+  try {
+    pending.value = parseBackup(await file.text())
+    pendingName.value = file.name
+  } catch (e) {
+    pending.value = null
+    importError.value =
+      e instanceof BackupError ? e.message : "Ce fichier n'a pas pu être lu."
+  }
+}
+
+function closeImport() {
+  if (importing.value) return
+  pending.value = null
+  pendingName.value = ''
+}
+
+async function confirmImport() {
+  if (!pending.value || importing.value) return
+  importing.value = true
+  try {
+    await importData(pending.value)
+    pending.value = null
+    pendingName.value = ''
+    importDone.value = true
+    // Le profil affiché vient de changer sous nos pieds : une édition en cours
+    // porterait sur les anciennes valeurs.
+    editMode.value = false
+  } catch (e) {
+    importError.value =
+      e instanceof Error
+        ? `Les données ont été restaurées sur cet appareil, mais leur envoi a échoué : ${e.message}`
+        : 'La restauration a échoué.'
+  } finally {
+    importing.value = false
+  }
 }
 
 const showLogout = ref(false)
@@ -535,19 +694,46 @@ async function doDelete() {
 .account p {
   max-width: 52ch;
 }
-/* Séparée par un trait : la suppression n'est pas un réglage de plus. */
-.account--danger {
+/* Un trait entre deux actions d'une même carte : la suppression du compte, ou
+   l'import, n'est pas la suite de la ligne du dessus. */
+.account--danger,
+.account--sep {
   margin-top: 18px;
   padding-top: 18px;
   border-top: 1px solid var(--border);
 }
+
+/* Deux colonnes tant que la largeur le permet : les six catégories tiennent
+   alors sous les yeux sans faire défiler la fenêtre. */
+.recap {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 4px 18px;
+  margin: 0;
+  padding-left: 20px;
+  color: var(--text-soft);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.recap b {
+  color: var(--text);
+}
+
+.alert-ok,
 .alert-err {
-  background: var(--red-bg);
-  color: var(--red);
   font-size: 13.5px;
   line-height: 1.5;
   border-radius: var(--radius-sm);
   padding: 10px 13px;
   margin: 14px 0 0;
+  word-break: break-word;
+}
+.alert-err {
+  background: var(--red-bg);
+  color: var(--red);
+}
+.alert-ok {
+  background: var(--green-bg);
+  color: var(--green);
 }
 </style>
