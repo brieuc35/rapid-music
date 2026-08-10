@@ -8,13 +8,14 @@
         <div class="login__title">Rapid<b>Music</b></div>
       </div>
 
+      <!-- Une seule accroche pour la connexion et l'inscription. L'écran de mot
+           de passe oublié garde sa phrase, qui explique ce qui va se passer :
+           une accroche y remplacerait une information utile. -->
       <p class="login__lead">
         {{
-          mode === 'signup'
-            ? 'Créez votre compte : vos données vous suivront d’un appareil à l’autre.'
-            : mode === 'reset'
-              ? 'Indiquez votre adresse : vous recevrez un lien pour choisir un nouveau mot de passe.'
-              : 'Connectez-vous pour retrouver votre carrière.'
+          mode === 'reset'
+            ? 'Indiquez votre adresse : vous recevrez un lien pour choisir un nouveau mot de passe.'
+            : 'Tout votre univers, en une application.'
         }}
       </p>
 
