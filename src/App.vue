@@ -116,6 +116,28 @@
         </RouterLink>
       </header>
 
+      <!-- Adresse non confirmée : rappel visible mais qui ne bloque rien.
+           Exiger la confirmation pour entrer enfermerait dehors quiconque
+           n'aurait pas reçu le message. -->
+      <div v-if="!emailVerified && !verifDismissed" class="verif">
+        <Icon name="mail" />
+        <div class="verif__text">
+          <b>Confirmez votre adresse e-mail.</b>
+          Un lien vous a été envoyé à {{ currentUser?.email }}. Sans confirmation, vous ne
+          pourrez pas récupérer votre compte en cas de mot de passe oublié.
+        </div>
+        <div class="verif__actions">
+          <button class="btn btn--sm btn--ghost" :disabled="verifBusy" @click="doResend">
+            {{ verifBusy ? 'Envoi…' : 'Renvoyer le lien' }}
+          </button>
+          <button class="btn btn--sm btn--ghost" @click="doRefresh">C'est fait</button>
+          <button class="verif__close" aria-label="Masquer" @click="verifDismissed = true">
+            <Icon name="close" />
+          </button>
+        </div>
+      </div>
+      <p v-if="verifNote" class="verif__note">{{ verifNote }}</p>
+
       <RouterView v-slot="{ Component }">
         <component :is="Component" />
       </RouterView>
@@ -131,11 +153,60 @@ import Avatar from './components/Avatar.vue'
 import BrandMark from './components/BrandMark.vue'
 import LoginView from './views/LoginView.vue'
 import OnboardingView from './views/OnboardingView.vue'
-import { store, isLoggedIn, authReady, needsOnboarding, unreadPosts, isPro } from './store'
+import {
+  store,
+  isLoggedIn,
+  authReady,
+  needsOnboarding,
+  unreadPosts,
+  isPro,
+  emailVerified,
+  currentUser,
+  resendVerification,
+  refreshVerification,
+} from './store'
 import { syncState, syncMessage } from './store/sync'
 import { daysFromNow } from './utils/format'
 
 const menuOpen = ref(false)
+
+/* Bandeau de confirmation d'adresse. Masquable pour la session en cours : il
+ * informe, il n'a pas à s'imposer à chaque écran. */
+const verifDismissed = ref(false)
+const verifBusy = ref(false)
+const verifNote = ref('')
+
+async function doResend() {
+  verifBusy.value = true
+  verifNote.value = ''
+  try {
+    await resendVerification()
+    verifNote.value = 'Lien renvoyé. Pensez à regarder dans les indésirables.'
+  } catch (e) {
+    verifNote.value = e instanceof Error ? e.message : "L'envoi a échoué."
+  } finally {
+    verifBusy.value = false
+  }
+}
+
+async function doRefresh() {
+  verifNote.value = ''
+  switch (await refreshVerification()) {
+    case 'confirmee':
+      verifNote.value = 'Adresse confirmée, merci.'
+      break
+    case 'en-attente':
+      verifNote.value =
+        "L'adresse n'est pas encore confirmée. Ouvrez le lien reçu par e-mail, puis réessayez."
+      break
+    case 'injoignable':
+      verifNote.value = 'Vérification impossible : contrôlez votre connexion.'
+      break
+    case 'sans-session':
+      verifNote.value = 'Votre session a expiré. Reconnectez-vous.'
+      break
+  }
+}
 
 const syncLabel = computed(() => {
   switch (syncState.value) {
