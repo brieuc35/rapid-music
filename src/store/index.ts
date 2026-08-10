@@ -23,6 +23,7 @@ import {
   EmailAuthProvider,
   onAuthStateChanged,
   reauthenticateWithCredential,
+  sendEmailVerification,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signOut,
@@ -338,6 +339,7 @@ onAuthStateChanged(auth, async (user) => {
     syncer = null
   }
   currentUser.value = user
+  readVerified(user)
 
   if (user) {
     syncer = new Syncer(user.uid, apply)
@@ -400,10 +402,70 @@ function toMessage(e: unknown): string {
 
 export async function signUp(email: string, password: string): Promise<void> {
   try {
-    await createUserWithEmailAndPassword(auth, email.trim(), password)
+    const cred = await createUserWithEmailAndPassword(auth, email.trim(), password)
+    // L'envoi ne conditionne pas la création du compte : une panne du service de
+    // messagerie ne doit pas empêcher d'entrer. Le bandeau permettra de
+    // redemander le lien.
+    try {
+      await sendEmailVerification(cred.user)
+    } catch {
+      /* silencieux : l'artiste pourra relancer l'envoi depuis le bandeau */
+    }
   } catch (e) {
     throw new Error(toMessage(e))
   }
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Vérification de l'adresse e-mail                                          */
+/*                                                                            */
+/*  Sans elle, une adresse saisie de travers passe inaperçue — et le jour où   */
+/*  le mot de passe est oublié, le lien de réinitialisation part chez          */
+/*  personne : le compte devient définitivement inaccessible.                 */
+/*                                                                            */
+/*  L'application reste utilisable sans vérification. Exiger la confirmation   */
+/*  pour entrer enfermerait dehors quiconque n'aurait pas reçu le message.     */
+/* -------------------------------------------------------------------------- */
+
+export const emailVerified = ref(true)
+
+function readVerified(user: User | null): void {
+  // Vrai par défaut hors session : le bandeau ne concerne que les connectés.
+  emailVerified.value = user ? user.emailVerified : true
+}
+
+/** Renvoie le lien de confirmation. */
+export async function resendVerification(): Promise<void> {
+  const user = auth.currentUser
+  if (!user) throw new Error('Aucun compte connecté.')
+  try {
+    await sendEmailVerification(user)
+  } catch (e) {
+    throw new Error(toMessage(e))
+  }
+}
+
+/**
+ * Redemande au serveur l'état de l'adresse. Le jeton local garde la valeur
+ * qu'il avait à la connexion : sans ce rafraîchissement, le bandeau resterait
+ * affiché après un clic sur le lien, jusqu'à la prochaine ouverture de session.
+ *
+ * Renvoie trois cas distincts plutôt qu'un booléen : l'absence de session ne
+ * doit pas se confondre avec une adresse confirmée, sous peine d'annoncer une
+ * confirmation qui n'a pas eu lieu.
+ */
+export type VerificationState = 'confirmee' | 'en-attente' | 'sans-session' | 'injoignable'
+
+export async function refreshVerification(): Promise<VerificationState> {
+  const user = auth.currentUser
+  if (!user) return 'sans-session'
+  try {
+    await user.reload()
+  } catch {
+    return 'injoignable'
+  }
+  emailVerified.value = user.emailVerified
+  return user.emailVerified ? 'confirmee' : 'en-attente'
 }
 
 export async function login(email: string, password: string): Promise<void> {

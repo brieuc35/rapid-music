@@ -956,6 +956,73 @@ textarea {
   color: var(--pink-500);
 }
 
+/* ==========================================================================
+   Bandeau de confirmation d'adresse
+   ========================================================================== */
+
+.verif {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 18px 40px 0;
+  padding: 13px 16px;
+  background: var(--amber-bg);
+  border: 1px solid #f8e3bb;
+  border-radius: var(--radius);
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: #7a5410;
+}
+.verif > svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--amber);
+}
+.verif__text {
+  flex: 1;
+  min-width: min(240px, 100%);
+}
+.verif__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.verif__close {
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: #7a5410;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.verif__close svg {
+  width: 15px;
+  height: 15px;
+}
+.verif__close:hover {
+  background: rgba(122, 84, 16, 0.1);
+}
+.verif__note {
+  margin: 10px 40px 0;
+  font-size: 13px;
+  color: var(--text-soft);
+}
+@media (max-width: 900px) {
+  .verif {
+    margin: 14px 18px 0;
+    flex-wrap: wrap;
+  }
+  .verif__note {
+    margin: 10px 18px 0;
+  }
+}
+
 /* Deux champs côte à côte. « min-width: 0 » est indispensable : sans lui, un
    champ de saisie refuse de descendre sous sa largeur intrinsèque et déborde
    sur les écrans étroits. Le passage à la ligne prend le relais en dessous de
