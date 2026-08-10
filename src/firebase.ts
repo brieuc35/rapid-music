@@ -32,6 +32,16 @@ const app = initializeApp({
 
 export const auth = getAuth(app)
 
+/*  Langue des messages envoyés par Firebase — confirmation d'adresse,
+ *  réinitialisation de mot de passe. Sans ce réglage ils partent en anglais,
+ *  quelle que soit la langue de l'application.
+ *
+ *  C'est ici que ça se décide, et non dans les modèles de la console : ceux-ci
+ *  ne permettent de retoucher qu'un seul texte à la fois, alors que Firebase
+ *  possède déjà ses propres traductions. Fixée à « fr » plutôt que déduite du
+ *  navigateur : l'application est en français, ses e-mails aussi. */
+auth.languageCode = 'fr'
+
 export const db = getFirestore(app)
 
 /*  Analytics est délibérément absent. En France, la mesure d'audience Google
