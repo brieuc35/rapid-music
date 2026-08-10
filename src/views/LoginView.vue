@@ -92,7 +92,6 @@
 
       <p class="login__note">
         Vos données sont enregistrées sur votre compte, dans un centre de données européen.
-        Elles restent consultables hors connexion et repartent dès que le réseau revient.
       </p>
     </div>
   </div>
