@@ -43,25 +43,20 @@
         </div>
       </RouterLink>
 
-      <RouterLink to="/reseau" class="stat stat--link">
+      <!-- La case garde sa place pour annoncer ce qui vient. Plus de compteur :
+           il comptait l'activité d'un fil qui n'est pas ouvert, et un nombre
+           affiché ici se lirait comme des messages qui attendent. -->
+      <div class="stat stat--soon">
         <div class="stat__ico" style="background: rgba(236, 72, 153, 0.12); color: var(--pink-500)">
-          <Icon name="bell" />
+          <Icon name="globe" />
         </div>
-        <div class="stat__val mono">{{ unreadPosts.length }}</div>
-        <div class="stat__label">Notifications réseau</div>
-        <div class="stat__delta stat__delta--up">
-          <!-- Le nombre reste visible : c'est le signal qu'il se passe quelque
-               chose. Ce qui change, c'est la promesse d'y accéder. -->
-          <template v-if="isPro">
-            <Icon name="globe" style="width: 14px; height: 14px" />
-            {{ unreadPosts.length ? 'Voir le fil' : 'Fil à jour' }}
-          </template>
-          <template v-else>
-            <Icon name="star" style="width: 14px; height: 14px" />
-            Réservé à Pro
-          </template>
+        <div class="stat__soon">Bientôt</div>
+        <div class="stat__label">Réseau des professionnels</div>
+        <div class="stat__delta">
+          <Icon name="clock" style="width: 14px; height: 14px" />
+          Pas encore ouvert
         </div>
-      </RouterLink>
+      </div>
     </div>
 
     <div class="grid grid--2">
@@ -183,7 +178,7 @@ import { RouterLink } from 'vue-router'
 import PageHeader from '@/components/PageHeader.vue'
 import Icon from '@/components/Icon.vue'
 import EmptyState from '@/components/EmptyState.vue'
-import { store, unreadPosts, isPro } from '@/store'
+import { store, isPro } from '@/store'
 import {
   money,
   number,
@@ -265,6 +260,23 @@ function coverGradient(hex: string): string {
 }
 .stat--link:active {
   transform: translateY(1px);
+}
+/* Une case annoncée, pas encore ouverte : même gabarit que les autres pour ne
+   pas trouer la rangée, mais sans le poids visuel d'un chiffre — il n'y a rien
+   à consulter. */
+.stat--soon {
+  border-style: dashed;
+  box-shadow: none;
+}
+.stat__soon {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.36;
+  color: var(--text-muted);
+}
+.stat--soon .stat__delta {
+  color: var(--text-muted);
 }
 .masked {
   color: var(--text-muted);

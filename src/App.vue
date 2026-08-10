@@ -55,17 +55,15 @@
           <span v-else-if="item.badge" class="nav__badge">{{ item.badge }}</span>
         </RouterLink>
 
-        <!-- Mis en avant sous les deux catégories -->
-        <RouterLink
-          to="/reseau"
-          class="nav__item nav__item--highlight"
-          @click="menuOpen = false"
-        >
+        <!-- Le Réseau garde sa place, mais n'ouvre rien : il n'est pas encore
+             ouvert. Un lien qui mènerait à un fil de démonstration promettrait
+             un service qui n'existe pas. L'entrée reste visible pour annoncer
+             ce qui vient. -->
+        <div class="nav__item nav__item--highlight nav__item--soon" aria-disabled="true">
           <Icon name="globe" />
           <span>Réseau</span>
-          <span v-if="!isPro" class="nav__pro">Pro</span>
-          <span v-else-if="unreadPosts.length" class="nav__badge">{{ unreadPosts.length }}</span>
-        </RouterLink>
+          <span class="nav__soon">Bientôt</span>
+        </div>
       </nav>
 
       <div class="nav__foot">
@@ -78,7 +76,7 @@
           <span class="upsell__ico"><Icon name="star" /></span>
           <div class="upsell__text">
             <b>Passer à Pro</b>
-            <span>Revenus, contrats, réseau</span>
+            <span>Revenus, contrats, cachets</span>
           </div>
         </RouterLink>
 
@@ -158,7 +156,6 @@ import {
   isLoggedIn,
   authReady,
   needsOnboarding,
-  unreadPosts,
   isPro,
   emailVerified,
   currentUser,

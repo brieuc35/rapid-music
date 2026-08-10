@@ -154,7 +154,10 @@ const planOptions = [
     value: 'pro' as Plan,
     title: 'Version Pro',
     price: money(PRO_PRICE, true) + ' / mois',
-    text: 'Accès au réseau des professionnels de la musique, à vos revenus, à vos contrats et aux cachets de vos concerts.',
+    /*  Le réseau des professionnels ouvrait cette phrase ; il n'est pas encore
+     *  ouvert. C'est ici qu'on choisit de payer : ce qui y est écrit doit être
+     *  disponible le jour même. */
+    text: 'Accès à vos revenus, à vos contrats et aux cachets de vos concerts. Le réseau des professionnels s’y ajoutera à son ouverture.',
   },
 ]
 

@@ -51,12 +51,11 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/LabelView.vue'),
     meta: { title: 'Label', icon: 'label' },
   },
-  {
-    path: '/reseau',
-    name: 'social',
-    component: () => import('@/views/SocialView.vue'),
-    meta: { title: 'Réseau', icon: 'globe' },
-  },
+  /*  Le Réseau n'est pas encore ouvert. La vue existe toujours (SocialView),
+   *  mais elle n'est plus reliée : une adresse encore accessible ferait entrer
+   *  dans un fil de démonstration quiconque a gardé un signet, et laisserait
+   *  croire à un service ouvert. À rebrancher quand il le sera vraiment. */
+  { path: '/reseau', redirect: '/tableau-de-bord' },
   {
     path: '/mon-profil',
     name: 'profile',
