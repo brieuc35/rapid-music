@@ -16,6 +16,12 @@ import type {
 } from './types'
 import { seedData, starterData } from './seed'
 import { Syncer, clearMirror, deleteRemote } from './sync'
+import {
+  abonnementDetail,
+  abonnementPro,
+  clearSubscription,
+  readSubscription,
+} from './subscription'
 import { auth } from '@/firebase'
 import {
   createUserWithEmailAndPassword,
@@ -300,20 +306,51 @@ export function addPost(content: string, category: PostCategory, tags: string[])
 /* -------------------------------------------------------------------------- */
 /*  Abonnement                                                                */
 /*                                                                            */
-/*  Aucun paiement n'est encaissé : faute de prestataire, l'activation reste   */
-/*  une bascule décidée par le navigateur, servant à présenter l'offre. Une    */
-/*  facturation réelle demanderait Stripe, et surtout une écriture côté        */
-/*  serveur — c'est précisément ce qu'un client ne doit pas pouvoir décider.    */
+/*  Deux choses différentes, à ne surtout pas confondre :                      */
+/*                                                                            */
+/*  — l'abonnement payant, lu dans abonnements/{uid}, que l'application ne     */
+/*    peut pas écrire (voir store/subscription.ts et firestore.rules). C'est   */
+/*    la seule source qui pourra faire foi le jour où de l'argent circulera.   */
+/*                                                                            */
+/*  — la démonstration, gardée dans les données de l'artiste, donc modifiable  */
+/*    par lui. Elle n'est pas une faille mais une porte ouverte volontairement : */
+/*    tant qu'aucun paiement n'est encaissé, elle sert à juger l'offre. Elle    */
+/*    disparaîtra en supprimant `demoPro` ci-dessous, le jour de la mise en    */
+/*    service du paiement — et ce jour-là, rien d'autre ne bougera.            */
 /* -------------------------------------------------------------------------- */
 
 export const PRO_PRICE = 9.99
 
-export const isPro = computed(() => store.subscription.plan === 'pro')
+/** Démonstration locale, décidée par le navigateur. Sans valeur probante. */
+const demoPro = computed(() => store.subscription.plan === 'pro')
 
+/**
+ * Abonnement payant constaté sur le serveur.
+ *
+ * Réexporté depuis store/subscription.ts pour que les écrans n'aient qu'un
+ * endroit à interroger, et pour distinguer partout « il a payé » de « il essaie ».
+ */
+export const isPaidPro = abonnementPro
+
+/** Détail de l'abonnement payant, à afficher. Nul en démonstration. */
+export const paidSubscription = abonnementDetail
+
+/** Accès aux fonctions payantes, par l'une ou l'autre voie. */
+export const isPro = computed(() => abonnementPro.value || demoPro.value)
+
+/**
+ * Ouvre la démonstration. Sans effet sur l'abonnement payant, qui ne se décide
+ * pas ici : c'est justement ce qui change par rapport à la version précédente.
+ */
 export function activatePro(): void {
   store.subscription = { plan: 'pro', since: new Date().toISOString().slice(0, 10) }
 }
 
+/**
+ * Ferme la démonstration. Ne résilie rien chez un prestataire de paiement — un
+ * abonnement réellement payé ne s'arrête pas depuis le navigateur, et l'écran
+ * d'abonnement le dit plutôt que de faire semblant.
+ */
 export function cancelPro(): void {
   store.subscription = { plan: 'free', since: '' }
 }
@@ -370,15 +407,25 @@ onAuthStateChanged(auth, async (user) => {
   if (user) {
     syncer = new Syncer(user.uid, apply)
     const legacy = readLegacy()
-    // Sans données locales à reprendre, un compte neuf démarre sur un espace
-    // vierge : les concerts et contrats de la démonstration appartiennent à
-    // une autre artiste, ils n'ont rien à faire dans le compte de celui-ci.
-    const data = await syncer.start(legacy ? withDefaults(legacy) : starterData())
+    /*  Les deux lectures en parallèle : l'abonnement ne dépend pas des données
+     *  et rien ne l'attend, l'enchaîner ne ferait que retarder l'ouverture.
+     *  `readSubscription` ne lève jamais — un compte sans abonnement est le cas
+     *  normal, et un refus de droits ne doit pas empêcher d'entrer. */
+    const [data] = await Promise.all([
+      // Sans données locales à reprendre, un compte neuf démarre sur un espace
+      // vierge : les concerts et contrats de la démonstration appartiennent à
+      // une autre artiste, ils n'ont rien à faire dans le compte de celui-ci.
+      syncer.start(legacy ? withDefaults(legacy) : starterData()),
+      readSubscription(user.uid),
+    ])
     apply(data)
     if (legacy) markLegacyTaken(user.uid)
   } else {
     // Ne pas laisser à l'écran les données du compte qui vient de partir.
     apply({})
+    // Ni le statut d'abonnement du compte précédent, qui resterait sinon en
+    // mémoire jusqu'au rechargement de la page.
+    clearSubscription()
   }
 
   authReady.value = true

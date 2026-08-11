@@ -41,6 +41,29 @@ service cloud.firestore {
       allow delete: if request.auth != null && request.auth.uid == uid;
     }
 
+    // L'abonnement payant : lisible par son propriétaire, écrivable par
+    // personne.
+    //
+    // C'est la seule façon, dans une application sans serveur, qu'une
+    // information ne soit pas auto-attribuable. Tout ce que l'artiste écrit
+    // lui-même — y compris dans /artistes/{uid} ci-dessus — est par nature
+    // sous son contrôle : le navigateur écrit directement dans la base, et
+    // aucune vérification faite dans l'application ne s'impose à qui la
+    // contourne. Un statut payant rangé là serait donc offert à qui sait
+    // ouvrir une console.
+    //
+    // Ici, « write: if false » ferme la porte pour tout le monde, sans
+    // exception. Les écritures ne peuvent venir que de ce qui passe au-dessus
+    // des règles : la console Firebase, ou plus tard une fonction serveur qui
+    // aura vérifié l'encaissement auprès du prestataire de paiement.
+    //
+    // Le nom du document est l'identifiant du compte : on ne peut donc pas
+    // demander l'abonnement de quelqu'un d'autre.
+    match /abonnements/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+    }
+
     function valide() {
       return request.resource.data.keys().hasOnly(['rev', 'data', 'updatedAt'])
              && request.resource.data.rev is int

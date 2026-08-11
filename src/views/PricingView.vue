@@ -5,7 +5,10 @@
       subtitle="Deux formules : l'essentiel gratuit, la carrière en Pro."
     />
 
-    <div class="notice">
+    <!-- Sans objet pour qui a un abonnement enregistré sur le serveur : ce
+         bandeau explique le bouton de démonstration, qui ne lui est pas
+         proposé. -->
+    <div v-if="!isPaidPro" class="notice">
       <Icon name="bell" />
       <div>
         <b>Aucun paiement n'est encaissé.</b>
@@ -16,18 +19,44 @@
       </div>
     </div>
 
-    <!-- État de l'abonnement en cours -->
-    <div v-if="isPro" class="card card--pad current">
+    <!-- État de l'abonnement en cours.
+         Un abonnement réellement payé et une démonstration ne se présentent pas
+         de la même façon : le premier ne s'arrête pas depuis le navigateur, et
+         proposer « Résilier » sur un bouton qui ne résilie rien serait la pire
+         des réponses à quelqu'un qui veut arrêter de payer. -->
+    <div v-if="isPaidPro" class="card card--pad current">
       <div class="hstack" style="gap: 14px">
         <span class="current__ico"><Icon name="star" /></span>
         <div class="row__main">
           <b style="font-size: 15.5px">Vous êtes abonné à RapidMusic Pro</b>
           <div class="muted" style="font-size: 13.5px; margin-top: 2px">
-            Actif depuis le {{ formatDate(store.subscription.since) }} ·
+            Actif depuis le {{ formatDate(paidSubscription?.depuis || '') }} ·
             {{ money(PRO_PRICE, true) }} par mois
+            <template v-if="paidSubscription?.jusqua">
+              · payé jusqu'au {{ formatDate(paidSubscription.jusqua) }}
+            </template>
           </div>
         </div>
-        <button class="btn btn--ghost" @click="showCancel = true">Résilier</button>
+      </div>
+      <p class="current__note">
+        <Icon name="mail" />
+        Pour changer de moyen de paiement ou mettre fin à votre abonnement,
+        écrivez-nous : la résiliation se fait auprès du prestataire de paiement et non
+        depuis cette page.
+      </p>
+    </div>
+
+    <div v-else-if="isPro" class="card card--pad current current--demo">
+      <div class="hstack" style="gap: 14px">
+        <span class="current__ico"><Icon name="star" /></span>
+        <div class="row__main">
+          <b style="font-size: 15.5px">Démonstration Pro en cours</b>
+          <div class="muted" style="font-size: 13.5px; margin-top: 2px">
+            Ouverte le {{ formatDate(store.subscription.since) }} · aucun montant
+            n'a été prélevé
+          </div>
+        </div>
+        <button class="btn btn--ghost" @click="showCancel = true">Arrêter</button>
       </div>
     </div>
 
@@ -130,7 +159,7 @@
     </Modal>
 
     <!-- Résiliation -->
-    <Modal :open="showCancel" title="Résilier Pro" @close="showCancel = false">
+    <Modal :open="showCancel" title="Arrêter la démonstration" @close="showCancel = false">
       <p style="margin: 0; color: var(--text-soft); line-height: 1.6">
         Vous repasserez à la formule gratuite. Les onglets Revenus et Contrats
         seront de nouveau verrouillés, mais
@@ -139,7 +168,7 @@
       </p>
       <template #footer>
         <button class="btn btn--subtle" @click="showCancel = false">Annuler</button>
-        <button class="btn btn--danger" @click="doCancel">Résilier</button>
+        <button class="btn btn--danger" @click="doCancel">Arrêter</button>
       </template>
     </Modal>
   </div>
@@ -150,7 +179,7 @@ import { ref } from 'vue'
 import PageHeader from '@/components/PageHeader.vue'
 import Icon from '@/components/Icon.vue'
 import Modal from '@/components/Modal.vue'
-import { store, isPro, activatePro, cancelPro, PRO_PRICE } from '@/store'
+import { store, isPro, isPaidPro, paidSubscription, activatePro, cancelPro, PRO_PRICE } from '@/store'
 import { money, formatDate } from '@/utils/format'
 
 const freeFeatures = [
@@ -237,6 +266,30 @@ function doCancel() {
 .current {
   margin-bottom: 20px;
   border-color: var(--violet-200);
+}
+/* Une démonstration se distingue d'un abonnement payé jusque dans le cadre :
+   les pointillés disent partout dans l'application « annoncé, pas acquis ». */
+.current--demo {
+  border-style: dashed;
+  border-color: var(--border-strong);
+}
+.current__note {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  margin: 14px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  color: var(--text-soft);
+  font-size: 13px;
+  line-height: 1.55;
+}
+.current__note svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--violet-600);
 }
 .current__ico {
   width: 42px;
