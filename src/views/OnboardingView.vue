@@ -90,22 +90,37 @@
             v-for="o in planOptions"
             :key="o.value"
             class="onb__opt"
-            :class="{ 'onb__opt--on': plan === o.value }"
+            :class="{ 'onb__opt--on': plan === o.value, 'onb__opt--soon': o.soon }"
           >
-            <input v-model="plan" type="radio" :value="o.value" name="formule" />
+            <input
+              v-model="plan"
+              type="radio"
+              :value="o.value"
+              name="formule"
+              :disabled="o.soon"
+            />
             <span>
               <b>
                 {{ o.title }}
+                <!-- Le prix reste affiché à côté de « Bientôt » : il dit ce que
+                     coûtera la formule, la pastille dit qu'elle n'est pas encore
+                     ouverte. Le cacher laisserait la question en suspens. -->
                 <em class="onb__price">{{ o.price }}</em>
+                <em v-if="o.soon" class="onb__soon">Bientôt</em>
               </b>
               <small>{{ o.text }}</small>
             </span>
           </label>
-          <p v-if="plan === 'pro'" class="onb__notice">
+          <!-- Visible d'emblée, et non après avoir cliqué sur Pro : c'est
+               justement parce qu'on ne peut pas la choisir qu'il faut le dire.
+               La deuxième phrase décrit ce que l'onglet Abonnement permet
+               réellement aujourd'hui — promettre une ouverture prochaine alors
+               qu'un bouton y active déjà les fonctions serait se contredire. -->
+          <p class="onb__notice">
             <Icon name="bell" />
-            Aucun paiement n'est encaissé et aucune coordonnée bancaire n'est demandée :
-            l'accès Pro est activé en démonstration, et résiliable à tout moment depuis
-            l'onglet Abonnement.
+            La version Pro n'est pas encore ouverte : vous commencez en version gratuite,
+            sans paiement ni coordonnée bancaire. L'onglet Abonnement vous permet d'essayer
+            les fonctions Pro en démonstration, sans engagement.
           </p>
         </fieldset>
 
@@ -158,6 +173,10 @@ const planOptions = [
      *  ouvert. C'est ici qu'on choisit de payer : ce qui y est écrit doit être
      *  disponible le jour même. */
     text: 'Accès à vos revenus, à vos contrats et aux cachets de vos concerts. Le réseau des professionnels s’y ajoutera à son ouverture.',
+    /*  Annoncée, pas encore proposée : la case reste visible pour dire ce qui
+     *  vient, mais ne se choisit pas. La laisser cochable ferait souscrire à une
+     *  formule que l'écran présente lui-même comme indisponible. */
+    soon: true,
   },
 ]
 
@@ -322,6 +341,28 @@ function submit() {
 .onb__opt--on {
   border-color: var(--violet-500);
   background: var(--violet-50);
+}
+
+/* Une formule annoncée, pas encore proposée : visible, en retrait, et sans
+   réaction au survol — l'aspect doit dire qu'il n'y a rien à cocher. */
+.onb__opt--soon {
+  border-style: dashed;
+  cursor: default;
+}
+.onb__opt--soon small,
+.onb__opt--soon b {
+  opacity: 0.75;
+}
+.onb__soon {
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+  background: var(--border);
+  border-radius: 20px;
+  padding: 2px 9px;
 }
 .onb__opt input {
   margin-top: 3px;
