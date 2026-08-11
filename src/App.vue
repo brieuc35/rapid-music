@@ -157,6 +157,7 @@ import {
   authReady,
   needsOnboarding,
   isPro,
+  openTasks,
   emailVerified,
   currentUser,
   resendVerification,
@@ -239,6 +240,10 @@ const topNav = computed(() => [
 
 const bottomNav = computed(() => [
   { path: '/studio', title: 'Agenda', icon: 'calendar', badge: upcomingSessions.value },
+  /*  Juste après l'Agenda : les deux répondent à la même question, ce que j'ai à
+   *  faire. Le compteur montre les tâches ouvertes, comme les autres entrées
+   *  montrent ce qui attend. */
+  { path: '/taches', title: 'Tâches', icon: 'check', badge: openTasks.value.length },
   { path: '/contrats', title: 'Contrats', icon: 'contract', badge: pendingContracts.value, pro: true },
   { path: '/contacts', title: 'Contacts', icon: 'contacts', badge: 0 },
   { path: '/label', title: 'Label', icon: 'label', badge: 0 },

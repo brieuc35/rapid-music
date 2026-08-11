@@ -75,6 +75,40 @@ export interface Contact {
   notes: string
 }
 
+export type TaskPriority = 'Haute' | 'Normale' | 'Basse'
+
+/*  Les mêmes domaines que les onglets de l'application : une tâche naît presque
+ *  toujours de quelque chose qui existe déjà — un contrat à relancer, une sortie
+ *  à préparer. Ranger la tâche du même vocabulaire évite d'avoir à réexpliquer
+ *  de quoi il s'agit. */
+export type TaskCategory =
+  | 'Concert'
+  | 'Sortie'
+  | 'Contrat'
+  | 'Studio'
+  | 'Promotion'
+  | 'Administratif'
+  | 'Autre'
+
+export interface Task {
+  id: ID
+  title: string
+  done: boolean
+  /** Date ISO d'échéance, vide si la tâche n'a pas de date. */
+  due: string
+  priority: TaskPriority
+  category: TaskCategory
+  notes: string
+  /**
+   * Date ISO du moment où la tâche a été cochée, vide sinon.
+   *
+   * Sert à ranger les tâches faites de la plus récente à la plus ancienne, ce
+   * que ni la date de création ni l'échéance ne permettent : on veut retrouver
+   * ce qu'on vient de terminer, pas ce qui était dû en premier.
+   */
+  doneAt: string
+}
+
 export interface LabelInfo {
   name: string
   tagline: string
@@ -205,6 +239,7 @@ export interface AppData {
   royalties: RoyaltyEntry[]
   studio: StudioSession[]
   contacts: Contact[]
+  tasks: Task[]
   accounts: SocialAccount[]
   posts: Post[]
   opportunities: Opportunity[]

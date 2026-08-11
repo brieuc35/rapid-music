@@ -8,6 +8,7 @@ import type {
   RoyaltyEntry,
   StudioSession,
   Contact,
+  Task,
   SocialAccount,
   Post,
   PostCategory,
@@ -93,6 +94,11 @@ export function withDefaults(saved: Partial<AppData>): AppData {
     artist: { ...base.artist, ...addedFields, ...savedArtist, ...artistGenre },
     subscription: saved.subscription ?? base.subscription,
     label: { ...base.label, ...(saved.label ?? {}) },
+    // Les tâches sont arrivées après coup. Une liste vide, et non celle de la
+    // démonstration : voir surgir sept tâches qu'on n'a pas écrites, au nom
+    // d'une autre artiste, serait pire qu'un onglet vide — l'écran d'accueil de
+    // l'onglet explique quoi en faire.
+    tasks: saved.tasks ?? [],
     // Le réseau est arrivé après coup : les données déjà enregistrées reçoivent
     // le fil de démonstration plutôt qu'un onglet vide.
     // Les comptes se sont enrichis (métier, structure, compétences) : on reprend
@@ -190,6 +196,37 @@ export async function importData(data: Partial<AppData>): Promise<void> {
   await nextTick()
   await syncer?.flush()
 }
+
+/* -------------------------------------------------------------------------- */
+/*  Tâches                                                                    */
+/* -------------------------------------------------------------------------- */
+
+/** Aujourd'hui au format ISO court, la forme utilisée par les échéances. */
+function today(): string {
+  return new Date().toISOString().slice(0, 10)
+}
+
+/**
+ * Coche ou décoche une tâche, en retenant le moment où elle a été faite.
+ *
+ * Décocher effface cette date : une tâche remise en cours n'a pas de date
+ * d'achèvement, et la garder ferait remonter une tâche à faire dans la liste des
+ * tâches faites.
+ */
+export function toggleTask(t: Task): void {
+  upsert('tasks', { ...t, done: !t.done, doneAt: t.done ? '' : today() })
+}
+
+/**
+ * Tâches à faire dont l'échéance est passée. Le jour même n'est pas en retard :
+ * on a jusqu'au soir.
+ */
+export const overdueTasks = computed(() =>
+  store.tasks.filter((t) => !t.done && t.due && t.due < today()),
+)
+
+/** Tâches restant à faire, pour le compteur du menu. */
+export const openTasks = computed(() => store.tasks.filter((t) => !t.done))
 
 /* -------------------------------------------------------------------------- */
 /*  Réseau                                                                    */
@@ -624,6 +661,7 @@ type Collections = {
   royalties: RoyaltyEntry
   studio: StudioSession
   contacts: Contact
+  tasks: Task
 }
 
 export function upsert<K extends keyof Collections>(key: K, item: Collections[K]): void {

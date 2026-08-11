@@ -133,5 +133,6 @@ export function describeBackup(data: AppData): { label: string; count: number }[
     { label: 'relevés de revenus', count: data.royalties?.length ?? 0 },
     { label: "évènements d'agenda", count: data.studio?.length ?? 0 },
     { label: 'contacts', count: data.contacts?.length ?? 0 },
+    { label: 'tâches', count: data.tasks?.length ?? 0 },
   ]
 }
