@@ -351,6 +351,81 @@ export function seedData(): AppData {
         notes: 'Coordination générale de carrière.',
       },
     ],
+    /*  Les dates sont relatives au jour d'ouverture, comme le reste de la
+     *  démonstration : une échéance figée finirait par être toujours dépassée,
+     *  et la liste ne montrerait plus qu'un mur de retards. */
+    tasks: [
+      {
+        id: 't1',
+        title: 'Relancer Halo Records sur l’avenant',
+        done: false,
+        due: inDays(2),
+        priority: 'Haute',
+        category: 'Contrat',
+        notes: 'Point hebdo du lundi avec Sophie.',
+        doneAt: '',
+      },
+      {
+        id: 't2',
+        title: 'Envoyer le dossier de presse aux radios',
+        done: false,
+        due: inDays(5),
+        priority: 'Haute',
+        category: 'Promotion',
+        notes: '',
+        doneAt: '',
+      },
+      {
+        id: 't3',
+        title: 'Valider le mastering de « Gravité »',
+        done: false,
+        due: inDays(9),
+        priority: 'Normale',
+        category: 'Studio',
+        notes: '',
+        doneAt: '',
+      },
+      {
+        id: 't4',
+        title: 'Réserver les billets de train pour Bruxelles',
+        done: false,
+        due: inDays(21),
+        priority: 'Normale',
+        category: 'Concert',
+        notes: 'Concert de l’AB Club.',
+        doneAt: '',
+      },
+      {
+        id: 't5',
+        title: 'Déclarer les cachets du trimestre',
+        done: false,
+        due: inDays(30),
+        priority: 'Basse',
+        category: 'Administratif',
+        notes: '',
+        doneAt: '',
+      },
+      {
+        id: 't6',
+        title: 'Déposer les titres à la SACEM',
+        done: true,
+        due: inDays(-6),
+        priority: 'Haute',
+        category: 'Administratif',
+        notes: '',
+        doneAt: inDays(-4),
+      },
+      {
+        id: 't7',
+        title: 'Commander les visuels du single',
+        done: true,
+        due: inDays(-12),
+        priority: 'Normale',
+        category: 'Sortie',
+        notes: '',
+        doneAt: inDays(-10),
+      },
+    ],
     accounts: [
       {
         id: 'a1', name: 'SNEP', handle: '@snep', role: 'Syndicat', verified: true, color: '#1d4ed8',
@@ -602,7 +677,10 @@ export function seedData(): AppData {
   }
 }
 
-/** Date ISO dans `j` jours, pour des exemples qui restent à venir. */
+/**
+ * Date ISO dans `j` jours. Négatif pour une date passée — les tâches déjà
+ * faites en ont besoin, sans quoi elles paraîtraient cochées d'avance.
+ */
 function inDays(j: number): string {
   return new Date(Date.now() + j * 86_400_000).toISOString().slice(0, 10)
 }
@@ -717,6 +795,18 @@ export function starterData(): AppData {
         phone: '',
         favorite: false,
         notes: 'Exemple à modifier ou supprimer.',
+      },
+    ],
+    tasks: [
+      {
+        id: 'ex-task',
+        title: 'Exemple — préparer le dossier de presse',
+        done: false,
+        due: inDays(7),
+        priority: 'Normale',
+        category: 'Promotion',
+        notes: 'Exemple à modifier ou supprimer.',
+        doneAt: '',
       },
     ],
   }

@@ -40,6 +40,12 @@ const routes: RouteRecordRaw[] = [
     meta: { title: 'Agenda', icon: 'calendar' },
   },
   {
+    path: '/taches',
+    name: 'tasks',
+    component: () => import('@/views/TasksView.vue'),
+    meta: { title: 'Tâches', icon: 'check' },
+  },
+  {
     path: '/contacts',
     name: 'contacts',
     component: () => import('@/views/ContactsView.vue'),

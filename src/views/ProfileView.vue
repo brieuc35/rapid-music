@@ -196,7 +196,7 @@
           <div style="font-weight: 600; font-size: 14.5px">Télécharger mes données</div>
           <p class="muted" style="font-size: 13.5px; margin-top: 3px; line-height: 1.5">
             Enregistre l'intégralité de votre espace — profil, label, contrats, concerts,
-            sorties, revenus, agenda et contacts — dans un fichier sur cet appareil.
+            sorties, revenus, agenda, contacts et tâches — dans un fichier sur cet appareil.
             Gardez-le de côté : il vous rendra tout, même si vous perdez l'accès à votre
             compte.
           </p>
@@ -257,7 +257,7 @@
           <div style="font-weight: 600; font-size: 14.5px">Supprimer mon compte</div>
           <p class="muted" style="font-size: 13.5px; margin-top: 3px; line-height: 1.5">
             Efface définitivement votre compte et toutes vos données : contrats, concerts,
-            sorties, revenus, agenda et contacts. Cette action est irréversible.
+            sorties, revenus, agenda, contacts et tâches. Cette action est irréversible.
           </p>
         </div>
         <button class="btn btn--danger" @click="openDelete">
@@ -307,7 +307,7 @@
     <Modal :open="showDelete" title="Supprimer mon compte" @close="closeDelete">
       <p style="margin: 0 0 14px; color: var(--text-soft); line-height: 1.6">
         Vont être définitivement effacés : votre profil, votre fiche label, vos contrats,
-        concerts, sorties, revenus, évènements d'agenda, contacts et publications.
+        concerts, sorties, revenus, évènements d'agenda, contacts, tâches et publications.
         <b style="color: var(--red)">Rien ne pourra être récupéré</b>, ni par vous ni par
         personne.
       </p>
