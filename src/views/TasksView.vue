@@ -1,37 +1,12 @@
 <template>
   <div class="page">
-    <PageHeader title="Tâches" subtitle="Ce qu'il reste à faire, et ce qui est déjà réglé." />
-
-    <!-- Saisie rapide. Une liste de tâches ne sert que si l'on peut y jeter une
-         idée en trois secondes : ouvrir une fenêtre, remplir six champs et
-         valider, c'est déjà trop pour « rappeler Sophie ». Le reste des détails
-         s'ajoute ensuite, en modifiant la tâche. -->
-    <form class="card card--pad quick" @submit.prevent="quickAdd">
-      <input
-        ref="quickInput"
-        v-model="quickTitle"
-        class="quick__input"
-        placeholder="Ajouter une tâche…"
-        maxlength="140"
-        aria-label="Nouvelle tâche"
-      />
-      <!-- Étiquettes visibles, et non seulement lues par les lecteurs d'écran :
-           un champ de date seul n'annonce pas de quelle date il s'agit, et son
-           format est celui du navigateur, pas le nôtre. -->
-      <label class="quick__side">
-        <span>Catégorie</span>
-        <select v-model="quickCategory">
-          <option v-for="c in CATEGORIES" :key="c">{{ c }}</option>
-        </select>
-      </label>
-      <label class="quick__side">
-        <span>Échéance</span>
-        <input v-model="quickDue" type="date" />
-      </label>
-      <button class="btn btn--primary" type="submit" :disabled="!quickTitle.trim()">
-        <Icon name="plus" /> Ajouter
-      </button>
-    </form>
+    <PageHeader title="Tâches" subtitle="Ce qu'il reste à faire, et ce qui est déjà réglé.">
+      <template #actions>
+        <button class="btn btn--primary" @click="openNew">
+          <Icon name="plus" /> Nouvelle tâche
+        </button>
+      </template>
+    </PageHeader>
 
     <!-- Compteurs. Le retard est la seule information qui mérite d'alerter :
          le nombre de tâches ouvertes ne dit rien de l'urgence. -->
@@ -115,10 +90,10 @@
       v-else
       icon="check"
       title="Aucune tâche"
-      text="Notez ce qu'il y a à faire : une relance, un dossier à envoyer, une déclaration. Le champ du haut suffit."
+      text="Notez ce qu'il y a à faire : une relance, un dossier à envoyer, une déclaration."
     >
-      <button class="btn btn--primary" @click="focusQuick">
-        <Icon name="plus" /> Ajouter une tâche
+      <button class="btn btn--primary" @click="openNew">
+        <Icon name="plus" /> Nouvelle tâche
       </button>
     </EmptyState>
 
@@ -198,39 +173,6 @@ const today = () => new Date().toISOString().slice(0, 10)
 const isLate = (t: Task) => !t.done && !!t.due && t.due < today()
 
 /* -------------------------------------------------------------------------- */
-/*  Saisie rapide                                                            */
-/* -------------------------------------------------------------------------- */
-
-const quickInput = ref<HTMLInputElement | null>(null)
-const quickTitle = ref('')
-const quickCategory = ref<TaskCategory>('Autre')
-const quickDue = ref('')
-
-function focusQuick() {
-  quickInput.value?.focus()
-}
-
-function quickAdd() {
-  const titre = quickTitle.value.trim()
-  if (!titre) return
-  upsert('tasks', {
-    id: uid(),
-    title: titre,
-    done: false,
-    due: quickDue.value,
-    priority: 'Normale',
-    category: quickCategory.value,
-    notes: '',
-    doneAt: '',
-  })
-  quickTitle.value = ''
-  /*  La catégorie et l'échéance sont conservées : on ajoute presque toujours
-   *  plusieurs tâches du même sujet à la suite, et les réinitialiser obligerait
-   *  à les resaisir à chaque ligne. */
-  focusQuick()
-}
-
-/* -------------------------------------------------------------------------- */
 /*  Tri et filtres                                                           */
 /* -------------------------------------------------------------------------- */
 
@@ -292,7 +234,7 @@ function slug(v: string): string {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Formulaire complet                                                       */
+/*  Formulaire                                                               */
 /* -------------------------------------------------------------------------- */
 
 const emptyTask = (): Task => ({
@@ -308,6 +250,10 @@ const emptyTask = (): Task => ({
 const editing = reactive<Task>(emptyTask())
 const showForm = ref(false)
 
+function openNew() {
+  Object.assign(editing, emptyTask())
+  showForm.value = true
+}
 function openEdit(t: Task) {
   Object.assign(editing, JSON.parse(JSON.stringify(t)))
   showForm.value = true
@@ -328,38 +274,6 @@ function confirmDelete() {
 </script>
 
 <style scoped>
-.quick {
-  display: flex;
-  gap: 10px;
-  align-items: flex-end;
-  flex-wrap: wrap;
-  margin-bottom: 18px;
-}
-/* Le champ d'intitulé prend la place restante, mais cède avant de déborder. */
-.quick__input {
-  flex: 1 1 220px;
-  min-width: 0;
-}
-/*  Étiquette au-dessus du champ, pour ne pas allonger la ligne. */
-.quick__side {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  flex: 0 1 auto;
-  min-width: 0;
-}
-.quick__side > span {
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--text-muted);
-}
-.quick__side select,
-.quick__side input {
-  min-width: 0;
-}
-
 .tallies {
   display: flex;
   align-items: center;
