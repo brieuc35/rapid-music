@@ -1,6 +1,6 @@
 <template>
   <div class="page">
-    <PageHeader title="Label" subtitle="Les informations de votre label et de votre roster.">
+    <PageHeader title="Label" subtitle="Les informations de votre label et de vos partenaires.">
       <template #actions>
         <button v-if="!editMode" class="btn btn--ghost" @click="startEdit"><Icon name="edit" /> Modifier</button>
         <template v-else>
@@ -18,20 +18,14 @@
       <div class="label-hero__body">
         <template v-if="!editMode">
           <h2 class="label-hero__name">{{ store.label.name }}</h2>
-          <p class="label-hero__tag">{{ store.label.tagline }}</p>
           <div class="label-hero__meta">
             <span><Icon name="pin" /> {{ store.label.location }}</span>
-            <span><Icon name="calendar" /> Depuis {{ store.label.founded }}</span>
             <a :href="`https://${store.label.website}`" target="_blank" rel="noopener"><Icon name="globe" /> {{ store.label.website }}</a>
             <a :href="`mailto:${store.label.email}`"><Icon name="mail" /> {{ store.label.email }}</a>
           </div>
         </template>
         <template v-else>
-          <div class="field--row">
-            <div class="field"><label>Nom du label</label><input v-model="draft.name" /></div>
-            <div class="field"><label>Fondé en</label><input v-model="draft.founded" /></div>
-          </div>
-          <div class="field"><label>Slogan</label><input v-model="draft.tagline" /></div>
+          <div class="field"><label>Nom du label</label><input v-model="draft.name" /></div>
           <div class="field--row">
             <div class="field"><label>Localisation</label><input v-model="draft.location" /></div>
             <div class="field"><label>Site web</label><input v-model="draft.website" /></div>
@@ -41,78 +35,24 @@
       </div>
     </div>
 
-    <div class="grid grid--2" style="margin-top: 18px">
-      <!-- Partners -->
-      <div class="card card--pad">
-        <div class="section-head"><span class="section-head__title">Partenaires clés</span></div>
-        <div class="vstack" style="gap: 12px">
-          <div class="partner">
-            <div class="partner__ico" style="background: var(--blue-bg); color: var(--blue)"><Icon name="globe" /></div>
-            <div class="row__main">
-              <div class="muted micro">Distribution</div>
-              <input v-if="editMode" v-model="draft.distribution" class="inline-input" />
-              <div v-else class="row__title">{{ store.label.distribution }}</div>
-            </div>
-          </div>
-          <div class="partner">
-            <div class="partner__ico" style="background: var(--violet-100); color: var(--violet-600)"><Icon name="doc" /></div>
-            <div class="row__main">
-              <div class="muted micro">Édition / Publishing</div>
-              <input v-if="editMode" v-model="draft.publishing" class="inline-input" />
-              <div v-else class="row__title">{{ store.label.publishing }}</div>
-            </div>
+    <!-- Partners -->
+    <div class="card card--pad" style="margin-top: 18px">
+      <div class="section-head"><span class="section-head__title">Partenaires clés</span></div>
+      <div class="vstack" style="gap: 12px">
+        <div class="partner">
+          <div class="partner__ico" style="background: var(--blue-bg); color: var(--blue)"><Icon name="globe" /></div>
+          <div class="row__main">
+            <div class="muted micro">Distribution</div>
+            <input v-if="editMode" v-model="draft.distribution" class="inline-input" />
+            <div v-else class="row__title">{{ store.label.distribution }}</div>
           </div>
         </div>
-
-        <div class="section-head" style="margin-top: 24px"><span class="section-head__title">Profil artiste</span></div>
-        <div class="vstack" style="gap: 12px">
-          <div class="partner">
-            <Avatar
-              :name="store.artist.stageName"
-              :photo="store.artist.photo"
-              :size="42"
-              radius="12px"
-              :font="14"
-            />
-            <div class="row__main" v-if="!editMode">
-              <div class="row__title">{{ store.artist.stageName }}</div>
-              <div class="row__sub">{{ store.artist.realName }} · {{ store.artist.genre }} · {{ store.artist.city }}</div>
-            </div>
-            <div class="row__main" v-else style="display: grid; gap: 8px">
-              <div class="field--row" style="margin: 0">
-                <div class="field" style="margin: 0"><label>Nom de scène</label><input v-model="draftArtist.stageName" /></div>
-                <div class="field" style="margin: 0"><label>Nom réel</label><input v-model="draftArtist.realName" /></div>
-              </div>
-              <div class="field--row" style="margin: 0">
-                <div class="field" style="margin: 0"><label>Genre</label><input v-model="draftArtist.genre" /></div>
-                <div class="field" style="margin: 0"><label>Ville</label><input v-model="draftArtist.city" /></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Roster -->
-      <div class="card card--pad">
-        <div class="section-head">
-          <span class="section-head__title">Roster ({{ roster.length }})</span>
-          <button v-if="editMode" class="btn btn--ghost btn--sm" @click="addRosterRow"><Icon name="plus" /> Ajouter</button>
-        </div>
-        <div class="vstack" style="gap: 10px">
-          <div v-for="(a, i) in roster" :key="i" class="roster-row">
-            <div class="roster-avatar">{{ initials(a.name || '?') }}</div>
-            <template v-if="!editMode">
-              <div class="row__main">
-                <div class="row__title">{{ a.name }}</div>
-                <div class="row__sub">{{ a.genre }}</div>
-              </div>
-              <span v-if="a.name === store.artist.stageName" class="badge badge--violet">Vous</span>
-            </template>
-            <template v-else>
-              <input v-model="a.name" class="inline-input" placeholder="Nom" style="flex: 1" />
-              <input v-model="a.genre" class="inline-input" placeholder="Genre" style="flex: 1" />
-              <button class="icon-sm icon-sm--danger" @click="roster.splice(i, 1)"><Icon name="trash" /></button>
-            </template>
+        <div class="partner">
+          <div class="partner__ico" style="background: var(--violet-100); color: var(--violet-600)"><Icon name="doc" /></div>
+          <div class="row__main">
+            <div class="muted micro">Édition / Publishing</div>
+            <input v-if="editMode" v-model="draft.publishing" class="inline-input" />
+            <div v-else class="row__title">{{ store.label.publishing }}</div>
           </div>
         </div>
       </div>
@@ -148,41 +88,32 @@ import { ref } from 'vue'
 import PageHeader from '@/components/PageHeader.vue'
 import Icon from '@/components/Icon.vue'
 import Modal from '@/components/Modal.vue'
-import Avatar from '@/components/Avatar.vue'
 import { store, resetData } from '@/store'
-import type { LabelInfo, ArtistProfile } from '@/store/types'
-import { initials } from '@/utils/format'
+import type { LabelInfo } from '@/store/types'
 
 const editMode = ref(false)
-const draft = ref<LabelInfo>({ ...store.label, roster: [] })
-const draftArtist = ref<ArtistProfile>({ ...store.artist })
-const roster = ref<{ name: string; genre: string }[]>(JSON.parse(JSON.stringify(store.label.roster)))
+/*  Copie complète du label, et pas seulement des champs du formulaire : ce qui
+ *  n'est plus modifiable ici est ainsi réenregistré tel quel, sans rien perdre
+ *  de ce qui avait été saisi avant. */
+const copie = (): LabelInfo => JSON.parse(JSON.stringify(store.label))
+
+const draft = ref<LabelInfo>(copie())
 
 function startEdit() {
-  draft.value = { ...store.label, roster: [] }
-  draftArtist.value = { ...store.artist }
-  roster.value = JSON.parse(JSON.stringify(store.label.roster))
+  draft.value = copie()
   editMode.value = true
 }
 function cancelEdit() {
   editMode.value = false
 }
-function addRosterRow() {
-  roster.value.push({ name: '', genre: '' })
-}
 function saveEdit() {
-  Object.assign(store.label, {
-    ...draft.value,
-    roster: roster.value.filter((r) => r.name.trim()),
-  })
-  Object.assign(store.artist, draftArtist.value)
+  Object.assign(store.label, draft.value)
   editMode.value = false
 }
 
 const showReset = ref(false)
 function doReset() {
   resetData()
-  roster.value = JSON.parse(JSON.stringify(store.label.roster))
   showReset.value = false
   editMode.value = false
 }
@@ -218,17 +149,15 @@ function doReset() {
 }
 .label-hero__body {
   flex: 1;
-  min-width: 260px;
+  /*  260 px suffisent pour tenir à côté du logo ; en dessous le bloc passe à la
+   *  ligne. Le `min()` évite qu'il déborde de la carte sur les écrans les plus
+   *  étroits, où même la largeur disponible seule est inférieure à 260 px. */
+  min-width: min(260px, 100%);
 }
 .label-hero__name {
   font-size: 27px;
   font-weight: 800;
   letter-spacing: -0.02em;
-}
-.label-hero__tag {
-  color: rgba(255, 255, 255, 0.72);
-  margin-top: 4px;
-  font-size: 14.5px;
 }
 .label-hero__meta {
   display: flex;
@@ -287,26 +216,6 @@ function doReset() {
   margin-bottom: 2px;
 }
 
-.roster-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-}
-.roster-avatar {
-  width: 38px;
-  height: 38px;
-  border-radius: 11px;
-  background: var(--brand-gradient-soft);
-  color: var(--violet-700);
-  display: grid;
-  place-items: center;
-  font-weight: 700;
-  font-size: 13px;
-  flex-shrink: 0;
-}
 .inline-input {
   width: 100%;
   padding: 8px 11px;
@@ -319,25 +228,5 @@ function doReset() {
 }
 .inline-input:focus {
   border-color: var(--violet-400);
-}
-.icon-sm {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  border: 1px solid var(--border-strong);
-  background: var(--surface);
-  color: var(--text-soft);
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-}
-.icon-sm svg {
-  width: 15px;
-  height: 15px;
-}
-.icon-sm--danger:hover {
-  background: var(--red-bg);
-  color: var(--red);
-  border-color: var(--red-bg);
 }
 </style>
