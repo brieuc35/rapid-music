@@ -99,7 +99,19 @@ import { RouterLink } from 'vue-router'
 import { store, upsert, remove, uid, isPro, canAddContact, FREE_CONTACTS } from '@/store'
 import type { Contact } from '@/store/types'
 
-const categories: Contact['category'][] = ['Label', 'Booking', 'Média', 'Studio', 'Management', 'Juridique', 'Autre']
+/*  L'ordre sert à la fois la liste du formulaire et les filtres. « Équipe » est
+ *  placée après « Management » : ce sont les deux catégories des personnes qui
+ *  entourent l'artiste, et « Autre » reste en dernier. */
+const categories: Contact['category'][] = [
+  'Label',
+  'Booking',
+  'Média',
+  'Studio',
+  'Management',
+  'Équipe',
+  'Juridique',
+  'Autre',
+]
 const filters = ['Tous', ...categories]
 
 const q = ref('')

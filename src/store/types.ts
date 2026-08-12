@@ -68,7 +68,18 @@ export interface Contact {
   name: string
   role: string
   company: string
-  category: 'Label' | 'Booking' | 'Média' | 'Studio' | 'Management' | 'Juridique' | 'Autre'
+  /*  Ajouter une valeur ne demande aucune reprise des données existantes : les
+   *  catégories déjà enregistrées figurent toujours dans la liste. C'est un
+   *  renommage qui en demanderait une, comme pour les styles de musique. */
+  category:
+    | 'Label'
+    | 'Booking'
+    | 'Média'
+    | 'Studio'
+    | 'Management'
+    | 'Équipe'
+    | 'Juridique'
+    | 'Autre'
   email: string
   phone: string
   favorite: boolean
