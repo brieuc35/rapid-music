@@ -2,9 +2,33 @@
   <div class="page">
     <PageHeader title="Contacts" subtitle="Votre carnet d'adresses professionnel.">
       <template #actions>
-        <button class="btn btn--primary" @click="openNew"><Icon name="plus" /> Nouveau contact</button>
+        <!-- Au-delà de la limite, le bouton mène à l'abonnement plutôt que d'ouvrir
+             un formulaire qu'on ne pourrait pas enregistrer : faire remplir six
+             champs pour refuser à la fin serait la pire des façons de l'annoncer. -->
+        <button v-if="canAddContact" class="btn btn--primary" @click="openNew">
+          <Icon name="plus" /> Nouveau contact
+        </button>
+        <RouterLink v-else to="/abonnement" class="btn btn--primary">
+          <Icon name="star" /> Passer à Pro
+        </RouterLink>
       </template>
     </PageHeader>
+
+    <!-- Le décompte, avant le mur et non au moment de s'y cogner : on doit savoir
+         où l'on en est en ouvrant l'onglet. Rien pour les abonnés, qui n'ont
+         aucune limite à surveiller. -->
+    <p v-if="!isPro && store.contacts.length" class="quota" :class="{ 'quota--full': !canAddContact }">
+      <Icon :name="canAddContact ? 'contacts' : 'star'" />
+      <span v-if="canAddContact">
+        {{ store.contacts.length }} contact{{ store.contacts.length > 1 ? 's' : '' }}
+        sur {{ FREE_CONTACTS }} — la formule gratuite en permet {{ FREE_CONTACTS }}.
+      </span>
+      <span v-else>
+        Vous avez atteint les {{ FREE_CONTACTS }} contacts de la formule gratuite.
+        <RouterLink to="/abonnement">Passez à Pro</RouterLink> pour un carnet sans
+        limite. Vos contacts actuels restent modifiables.
+      </span>
+    </p>
 
     <div class="toolbar">
       <div class="search">
@@ -71,7 +95,8 @@ import Modal from '@/components/Modal.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import ContactCard from '@/components/ContactCard.vue'
-import { store, upsert, remove, uid } from '@/store'
+import { RouterLink } from 'vue-router'
+import { store, upsert, remove, uid, isPro, canAddContact, FREE_CONTACTS } from '@/store'
 import type { Contact } from '@/store/types'
 
 const categories: Contact['category'][] = ['Label', 'Booking', 'Média', 'Studio', 'Management', 'Juridique', 'Autre']
@@ -109,6 +134,7 @@ const emptyContact = (): Contact => ({
 const editing = reactive<Contact>(emptyContact())
 
 function openNew() {
+  if (!canAddContact.value) return
   Object.assign(editing, emptyContact())
   showForm.value = true
 }
@@ -117,6 +143,14 @@ function openEdit(c: Contact) {
   showForm.value = true
 }
 function save() {
+  /*  Vérifié ici aussi, et pas seulement sur le bouton : un formulaire resté
+   *  ouvert pendant qu'un autre appareil ajoutait des contacts arriverait sinon
+   *  à enregistrer au-delà de la limite. La modification d'un contact existant
+   *  n'est jamais concernée — elle n'en crée pas un de plus. */
+  if (!editing.id && !canAddContact.value) {
+    showForm.value = false
+    return
+  }
   if (!editing.id) editing.id = uid()
   upsert('contacts', JSON.parse(JSON.stringify(editing)))
   showForm.value = false
@@ -136,6 +170,44 @@ function confirmDelete() {
 </script>
 
 <style scoped>
+/* Un rappel, pas une alarme, tant qu'il reste de la place. */
+.quota {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 11px 14px;
+  margin: 0 0 16px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--text-soft);
+}
+.quota svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--text-muted);
+}
+/* Limite atteinte : on passe aux couleurs de l'offre, puisque c'est d'elle
+   qu'il s'agit — pas au rouge, il n'y a rien de cassé. */
+.quota--full {
+  background: var(--violet-50);
+  border-color: var(--violet-200);
+  color: var(--violet-700);
+}
+.quota--full svg {
+  color: var(--violet-600);
+  fill: var(--violet-600);
+}
+.quota a {
+  color: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
 .check {
   display: flex;
   align-items: center;

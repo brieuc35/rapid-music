@@ -133,7 +133,7 @@ import { computed, ref } from 'vue'
 import Avatar from '@/components/Avatar.vue'
 import BrandMark from '@/components/BrandMark.vue'
 import Icon from '@/components/Icon.vue'
-import { completeOnboarding, PRO_PRICE } from '@/store'
+import { completeOnboarding, PRO_PRICE, FREE_CONTACTS } from '@/store'
 import type { Plan } from '@/store/types'
 import { money } from '@/utils/format'
 import { fileToAvatarDataUrl, ImageError } from '@/utils/image'
@@ -156,7 +156,10 @@ const planOptions = [
     value: 'free' as Plan,
     title: 'Version gratuite',
     price: '0 €',
-    text: 'Tableau de bord, agenda, sorties, contacts, dates de concerts.',
+    /*  Le nombre de contacts est chiffré ici : c'est l'écran où l'on choisit sa
+     *  formule, une liste qui dirait seulement « contacts » laisserait croire à
+     *  un carnet sans limite. */
+    text: `Tableau de bord, agenda, sorties, dates de concerts, ${FREE_CONTACTS} contacts.`,
   },
   {
     value: 'pro' as Plan,
