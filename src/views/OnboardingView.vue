@@ -90,37 +90,30 @@
             v-for="o in planOptions"
             :key="o.value"
             class="onb__opt"
-            :class="{ 'onb__opt--on': plan === o.value, 'onb__opt--soon': o.soon }"
+            :class="{ 'onb__opt--on': plan === o.value }"
           >
-            <input
-              v-model="plan"
-              type="radio"
-              :value="o.value"
-              name="formule"
-              :disabled="o.soon"
-            />
+            <input v-model="plan" type="radio" :value="o.value" name="formule" />
             <span>
               <b>
                 {{ o.title }}
-                <!-- Le prix reste affiché à côté de « Bientôt » : il dit ce que
-                     coûtera la formule, la pastille dit qu'elle n'est pas encore
-                     ouverte. Le cacher laisserait la question en suspens. -->
                 <em class="onb__price">{{ o.price }}</em>
-                <em v-if="o.soon" class="onb__soon">Bientôt</em>
               </b>
               <small>{{ o.text }}</small>
+              <!-- La mention porte sur le réseau, pas sur la formule : c'est lui
+                   qui n'est pas encore ouvert, le reste de Pro l'est. Placée à
+                   côté de sa phrase, elle ne peut pas se lire comme un doute sur
+                   la formule entière. -->
+              <small v-if="o.later" class="onb__later">
+                <em class="onb__soon">Bientôt</em>
+                {{ o.later }}
+              </small>
             </span>
           </label>
-          <!-- Visible d'emblée, et non après avoir cliqué sur Pro : c'est
-               justement parce qu'on ne peut pas la choisir qu'il faut le dire.
-               La deuxième phrase décrit ce que l'onglet Abonnement permet
-               réellement aujourd'hui — promettre une ouverture prochaine alors
-               qu'un bouton y active déjà les fonctions serait se contredire. -->
-          <p class="onb__notice">
+          <p v-if="plan === 'pro'" class="onb__notice">
             <Icon name="bell" />
-            La version Pro n'est pas encore ouverte : vous commencez en version gratuite,
-            sans paiement ni coordonnée bancaire. L'onglet Abonnement vous permet d'essayer
-            les fonctions Pro en démonstration, sans engagement.
+            Aucun paiement n'est encaissé et aucune coordonnée bancaire n'est demandée :
+            l'accès Pro est activé en démonstration, et résiliable à tout moment depuis
+            l'onglet Abonnement.
           </p>
         </fieldset>
 
@@ -169,14 +162,14 @@ const planOptions = [
     value: 'pro' as Plan,
     title: 'Version Pro',
     price: money(PRO_PRICE, true) + ' / mois',
-    /*  Le réseau des professionnels ouvrait cette phrase ; il n'est pas encore
-     *  ouvert. C'est ici qu'on choisit de payer : ce qui y est écrit doit être
-     *  disponible le jour même. */
-    text: 'Accès à vos revenus, à vos contrats et aux cachets de vos concerts. Le réseau des professionnels s’y ajoutera à son ouverture.',
-    /*  Annoncée, pas encore proposée : la case reste visible pour dire ce qui
-     *  vient, mais ne se choisit pas. La laisser cochable ferait souscrire à une
-     *  formule que l'écran présente lui-même comme indisponible. */
-    soon: true,
+    /*  Ce qui est disponible le jour même de la souscription : c'est ici qu'on
+     *  choisit de payer, rien de ce qui figure sur cette ligne ne doit attendre. */
+    text: 'Accès à vos revenus, à vos contrats et aux cachets de vos concerts.',
+    /*  Ce qui viendra s'y ajouter, sur sa propre ligne et portant sa propre
+     *  mention. Mélangé à la phrase ci-dessus, le réseau se lirait comme
+     *  disponible ; annoncé à côté d'une pastille « Bientôt », il ne trompe
+     *  personne — et la mention ne jette plus de doute sur la formule entière. */
+    later: 'Le réseau des professionnels s’y ajoutera à son ouverture.',
   },
 ]
 
@@ -343,26 +336,28 @@ function submit() {
   background: var(--violet-50);
 }
 
-/* Une formule annoncée, pas encore proposée : visible, en retrait, et sans
-   réaction au survol — l'aspect doit dire qu'il n'y a rien à cocher. */
-.onb__opt--soon {
-  border-style: dashed;
-  cursor: default;
+/* Ce qui viendra s'ajouter à la formule, sur sa propre ligne et en retrait :
+   plus discret que ce qui est disponible tout de suite, sans être caché. */
+.onb__later {
+  display: block;
+  margin-top: 5px;
+  color: var(--text-muted);
 }
-.onb__opt--soon small,
-.onb__opt--soon b {
-  opacity: 0.75;
-}
+/* Petite mention, pas une pastille de premier plan : elle qualifie une ligne
+   secondaire, elle ne doit pas peser plus que le prix juste au-dessus. */
 .onb__soon {
   font-style: normal;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--text-soft);
-  background: var(--border);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
   border-radius: 20px;
-  padding: 2px 9px;
+  padding: 1px 7px;
+  margin-right: 3px;
+  white-space: nowrap;
 }
 .onb__opt input {
   margin-top: 3px;
