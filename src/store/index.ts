@@ -376,6 +376,32 @@ export const paidSubscription = abonnementDetail
 export const isPro = computed(() => abonnementPro.value || demoPro.value)
 
 /**
+ * Nombre de contacts que la formule gratuite permet d'enregistrer.
+ *
+ * Défini ici, et non dans la vue, pour que l'écran d'abonnement et l'écran
+ * d'accueil annoncent le même chiffre que celui réellement appliqué : une offre
+ * qui promet trois contacts et en accepte cinq est un mensonge dans un sens, et
+ * une déception dans l'autre.
+ */
+export const FREE_CONTACTS = 3
+
+/**
+ * Peut-on enregistrer un contact de plus ?
+ *
+ * La limite porte sur l'ajout, jamais sur ce qui existe déjà : quelqu'un qui
+ * arrive avec dix contacts — anciens, importés d'une sauvegarde, ou hérités
+ * d'un abonnement résilié — les garde, les consulte et les modifie. Verrouiller
+ * des données déjà saisies serait les confisquer.
+ *
+ * C'est une limite de produit, pas une barrière de sécurité : elle vit dans le
+ * navigateur et suit `isPro`, qui reste modifiable tant que le paiement n'est
+ * pas vérifié côté serveur.
+ */
+export const canAddContact = computed(
+  () => isPro.value || store.contacts.length < FREE_CONTACTS,
+)
+
+/**
  * Ouvre la démonstration. Sans effet sur l'abonnement payant, qui ne se décide
  * pas ici : c'est justement ce qui change par rapport à la version précédente.
  */

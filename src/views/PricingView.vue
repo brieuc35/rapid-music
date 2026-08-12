@@ -122,7 +122,10 @@
                 <div class="muted" style="font-size: 12.5px">{{ row.detail }}</div>
               </td>
               <td style="text-align: center">
-                <Icon v-if="row.free" name="check" class="ico-yes" />
+                <!-- Une limite chiffrée remplace la coche : une coche seule
+                     laisserait croire à un accès sans restriction. -->
+                <span v-if="row.freeLabel" class="ico-part">{{ row.freeLabel }}</span>
+                <Icon v-else-if="row.free" name="check" class="ico-yes" />
                 <span v-else class="ico-no">—</span>
               </td>
               <td style="text-align: center">
@@ -166,6 +169,12 @@
         <b style="color: var(--text)">aucune donnée ne sera supprimée</b> : tout sera
         retrouvé en cas de réactivation.
       </p>
+      <!-- La question que se pose quiconque a plus de trois contacts avant de
+           cliquer. Y répondre ici évite de la découvrir après coup. -->
+      <p style="margin: 12px 0 0; color: var(--text-soft); line-height: 1.6">
+        Vos contacts au-delà de {{ FREE_CONTACTS }} restent consultables et modifiables ;
+        seul l'ajout d'un nouveau contact demandera de repasser à Pro.
+      </p>
       <template #footer>
         <button class="btn btn--subtle" @click="showCancel = false">Annuler</button>
         <button class="btn btn--danger" @click="doCancel">Arrêter</button>
@@ -179,7 +188,16 @@ import { ref } from 'vue'
 import PageHeader from '@/components/PageHeader.vue'
 import Icon from '@/components/Icon.vue'
 import Modal from '@/components/Modal.vue'
-import { store, isPro, isPaidPro, paidSubscription, activatePro, cancelPro, PRO_PRICE } from '@/store'
+import {
+  store,
+  isPro,
+  isPaidPro,
+  paidSubscription,
+  activatePro,
+  cancelPro,
+  PRO_PRICE,
+  FREE_CONTACTS,
+} from '@/store'
 import { money, formatDate } from '@/utils/format'
 
 const freeFeatures = [
@@ -187,7 +205,7 @@ const freeFeatures = [
   'Agenda et évènements',
   'Catalogue des sorties',
   'Dates de concerts et billetterie',
-  'Carnet de contacts',
+  `Carnet de contacts (${FREE_CONTACTS} contacts)`,
   'Profil artiste et fiche label',
 ]
 
@@ -200,6 +218,7 @@ const proFeatures = [
   'Revenus et royalties : suivi par plateforme et historique',
   'Import des relevés de distributeur en un fichier',
   'Contrats : suivi des statuts, avances et taux',
+  'Carnet de contacts sans limite de nombre',
   'Cachets de vos concerts et total à venir',
 ]
 
@@ -207,7 +226,12 @@ const comparison = [
   { label: 'Tableau de bord', detail: 'Vue d’ensemble de la carrière', free: true },
   { label: 'Agenda', detail: 'Évènements et calendrier', free: true },
   { label: 'Sorties', detail: 'Catalogue des titres', free: true },
-  { label: 'Contacts', detail: 'Carnet d’adresses', free: true },
+  {
+    label: 'Contacts',
+    detail: 'Carnet d’adresses',
+    free: true,
+    freeLabel: `${FREE_CONTACTS} max`,
+  },
   { label: 'Profil et Label', detail: 'Votre fiche et celle de votre label', free: true },
   { label: 'Concerts — dates', detail: 'Salle, ville, horaires, billetterie', free: true },
   { label: 'Concerts — cachets', detail: 'Montants négociés et total à venir', free: false },
@@ -396,6 +420,18 @@ function doCancel() {
 }
 .ico-no {
   color: var(--text-muted);
+}
+/* Une limite chiffrée dans la colonne Gratuit : ni un oui franc, ni un non. */
+.ico-part {
+  display: inline-block;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-soft);
+  font-size: 11.5px;
+  font-weight: 700;
+  border-radius: 20px;
+  padding: 2px 9px;
+  white-space: nowrap;
 }
 /* Ni coche ni tiret : un état à part, pour qu'on ne lise pas « compris dans
    l'abonnement » là où c'est encore à venir. */
