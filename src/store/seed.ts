@@ -686,12 +686,15 @@ function inDays(j: number): string {
 }
 
 /**
- * Point de départ d'un nouveau compte : un seul exemple par rubrique.
+ * Point de départ d'un nouveau compte : un seul exemple par rubrique visible.
  *
  * Ni le catalogue de démonstration complet — les concerts d'une autre artiste
  * n'ont rien à faire dans un compte personnel — ni des écrans entièrement
  * vides, où l'on ne devine pas ce qu'une fiche est censée contenir. Chaque
  * exemple est préfixé « Exemple » pour être reconnu et supprimé sans hésiter.
+ *
+ * Les rubriques réservées à l'offre Pro n'en reçoivent pas : l'exemple y serait
+ * invisible, et son seul effet serait de gonfler un compteur.
  *
  * Le Réseau garde son contenu : c'est le seul onglet dont les données ne sont
  * pas censées venir de l'artiste.
@@ -725,20 +728,12 @@ export function starterData(): AppData {
       publishing: '',
       roster: [],
     },
-    contracts: [
-      {
-        id: 'ex-contrat',
-        title: 'Exemple — Contrat de cession',
-        party: 'Nom du partenaire',
-        type: 'Enregistrement',
-        status: 'En attente',
-        startDate: inDays(0),
-        endDate: inDays(365),
-        value: 0,
-        royaltyRate: 50,
-        notes: 'Exemple à modifier ou supprimer.',
-      },
-    ],
+    /*  Aucun exemple de contrat, contrairement aux autres rubriques : l'onglet
+     *  Contrats est réservé à l'offre Pro, l'exemple y resterait donc invisible
+     *  pour un compte gratuit. Il ne s'y montrait que par son compteur — un
+     *  « 1 contrat en attente » sur le tableau de bord et dans le menu, qu'il
+     *  était impossible de ramener à zéro sans s'abonner. */
+    contracts: [],
     concerts: [
       {
         id: 'ex-concert',

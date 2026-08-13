@@ -41,6 +41,34 @@ const STORAGE_KEY = 'rapidmusic:data:v1'
 const MIGRATED_KEY = 'rapidmusic:reprise:v1'
 
 /**
+ * Vrai pour le contrat d'exemple livré aux comptes neufs des premières
+ * versions, s'il n'a jamais été touché.
+ *
+ * Il comptait pour un contrat en attente sur le tableau de bord et dans le
+ * badge du menu, alors que l'onglet Contrats est réservé à l'offre Pro : un
+ * compte gratuit voyait un « 1 » qu'il ne pouvait pas ramener à zéro. Les
+ * comptes neufs n'en reçoivent plus, et celui déjà enregistré est retiré.
+ *
+ * Tous les champs stables sont comparés, et pas seulement l'identifiant : un
+ * seul d'entre eux modifié et le contrat est conservé, parce que ce n'est plus
+ * notre exemple mais celui de l'artiste. Les deux dates sont écartées de la
+ * comparaison — elles ont été calculées au jour de la création du compte, elles
+ * ne valent donc pas la même chose d'un compte à l'autre.
+ */
+function exempleContratIntact(c: Contract): boolean {
+  return (
+    c.id === 'ex-contrat' &&
+    c.title === 'Exemple — Contrat de cession' &&
+    c.party === 'Nom du partenaire' &&
+    c.type === 'Enregistrement' &&
+    c.status === 'En attente' &&
+    c.value === 0 &&
+    c.royaltyRate === 50 &&
+    c.notes === 'Exemple à modifier ou supprimer.'
+  )
+}
+
+/**
  * Complète les données enregistrées avec les valeurs par défaut manquantes,
  * et reprend les valeurs dont le libellé a changé depuis leur enregistrement.
  *
@@ -76,12 +104,14 @@ export function withDefaults(saved: Partial<AppData>): AppData {
   // « En négociation » et « En attente signature » ont fusionné en
   // « En attente » : sans cette reprise, les contrats enregistrés avant le
   // changement garderaient un statut que plus aucun filtre ne reconnaît.
-  const contracts = (saved.contracts ?? base.contracts).map((c) => {
-    const legacy = c.status as string
-    return legacy === 'En négociation' || legacy === 'En attente signature'
-      ? { ...c, status: 'En attente' as const }
-      : c
-  })
+  const contracts = (saved.contracts ?? base.contracts)
+    .map((c) => {
+      const legacy = c.status as string
+      return legacy === 'En négociation' || legacy === 'En attente signature'
+        ? { ...c, status: 'En attente' as const }
+        : c
+    })
+    .filter((c) => !exempleContratIntact(c))
 
   return {
     ...base,
