@@ -5,17 +5,19 @@
       subtitle="Voici l'essentiel de votre carrière aujourd'hui."
     />
 
-    <!-- Stats -->
+    <!--  Ordre voulu : ce qui approche d'abord (les concerts), puis le
+          catalogue, puis les contrats, et le Réseau en dernier puisqu'il n'est
+          pas encore ouvert. -->
     <div class="grid grid--stats" style="margin-bottom: 26px">
-      <RouterLink to="/contrats" class="stat stat--link">
-        <div class="stat__ico" style="background: var(--amber-bg); color: var(--amber)">
-          <Icon name="contract" />
+      <RouterLink to="/concerts" class="stat stat--link">
+        <div class="stat__ico" style="background: var(--violet-100); color: var(--violet-600)">
+          <Icon name="concert" />
         </div>
-        <div class="stat__val mono">{{ pendingContracts }}</div>
-        <div class="stat__label">Contrats en attente</div>
+        <div class="stat__val mono">{{ upcomingConcerts.length }}</div>
+        <div class="stat__label">Concerts à venir</div>
         <div class="stat__delta stat__delta--up">
-          <Icon name="check" style="width: 14px; height: 14px" />
-          {{ activeContracts }} actifs
+          <Icon name="ticket" style="width: 14px; height: 14px" />
+          {{ number(totalTickets) }} billets vendus
         </div>
       </RouterLink>
 
@@ -31,15 +33,15 @@
         </div>
       </RouterLink>
 
-      <RouterLink to="/concerts" class="stat stat--link">
-        <div class="stat__ico" style="background: var(--violet-100); color: var(--violet-600)">
-          <Icon name="concert" />
+      <RouterLink to="/contrats" class="stat stat--link">
+        <div class="stat__ico" style="background: var(--amber-bg); color: var(--amber)">
+          <Icon name="contract" />
         </div>
-        <div class="stat__val mono">{{ upcomingConcerts.length }}</div>
-        <div class="stat__label">Concerts à venir</div>
+        <div class="stat__val mono">{{ pendingContracts }}</div>
+        <div class="stat__label">Contrats en attente</div>
         <div class="stat__delta stat__delta--up">
-          <Icon name="ticket" style="width: 14px; height: 14px" />
-          {{ number(totalTickets) }} billets vendus
+          <Icon name="check" style="width: 14px; height: 14px" />
+          {{ activeContracts }} actifs
         </div>
       </RouterLink>
 
