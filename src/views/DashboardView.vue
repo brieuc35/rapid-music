@@ -25,11 +25,14 @@
         <div class="stat__ico" style="background: var(--blue-bg); color: var(--blue)">
           <Icon name="release" />
         </div>
-        <div class="stat__val mono">{{ compact(totalStreams) }}</div>
-        <div class="stat__label">Streams cumulés (sorties)</div>
-        <div class="stat__delta stat__delta--up">
+        <div class="stat__val mono">{{ compact(streamsDeLAnnee) }}</div>
+        <div class="stat__label">Streams des sorties de {{ anneeEnCours }}</div>
+        <!-- Vert seulement s'il y a eu une sortie : « 0 sortie » annoncé comme
+             une bonne nouvelle serait absurde. -->
+        <div class="stat__delta" :class="{ 'stat__delta--up': sortiesDeLAnnee.length > 0 }">
           <Icon name="music" style="width: 14px; height: 14px" />
-          {{ store.releases.length }} sorties au catalogue
+          {{ sortiesDeLAnnee.length }} sortie{{ sortiesDeLAnnee.length > 1 ? 's' : '' }}
+          en {{ anneeEnCours }}
         </div>
       </RouterLink>
 
@@ -205,7 +208,32 @@ const upcomingConcerts = computed(() =>
 )
 
 const totalTickets = computed(() => upcomingConcerts.value.reduce((s, c) => s + c.ticketsSold, 0))
-const totalStreams = computed(() => store.releases.reduce((s, r) => s + r.streams, 0))
+
+/* -------------------------------------------------------------------------- */
+/*  Streams de l'année                                                        */
+/*                                                                            */
+/*  Année civile en cours, et pas les douze derniers mois : c'est l'année      */
+/*  qu'on compare d'un bilan à l'autre, et celle qui figure sur les décomptes. */
+/*                                                                            */
+/*  Ce sont les streams des sorties de l'année, ce qui n'est pas la même chose */
+/*  que les streams écoutés pendant l'année : chaque sortie ne retient qu'un   */
+/*  total depuis sa parution, sans historique mois par mois. Un titre de 2025  */
+/*  continue d'être écouté en 2026, mais ses écoutes restent comptées avec     */
+/*  2025. Le libellé de la case dit donc « sorties de 2026 » et non            */
+/*  « streams en 2026 ». Le détail réel, mois par mois, n'existe que dans      */
+/*  l'onglet Royalties, où chaque relevé porte sa période.                     */
+/* -------------------------------------------------------------------------- */
+
+const anneeEnCours = computed(() => String(new Date().getFullYear()))
+
+const sortiesDeLAnnee = computed(() =>
+  // Une sortie sans date n'appartient à aucune année : `slice` renvoie une
+  // chaîne vide, qui ne correspond à aucune année, elle est donc écartée.
+  store.releases.filter((r) => r.date.slice(0, 4) === anneeEnCours.value),
+)
+const streamsDeLAnnee = computed(() =>
+  sortiesDeLAnnee.value.reduce((s, r) => s + r.streams, 0),
+)
 const activeContracts = computed(() => store.contracts.filter((c) => c.status === 'Actif').length)
 const pendingContracts = computed(
   () => store.contracts.filter((c) => c.status !== 'Actif' && c.status !== 'Expiré').length,
