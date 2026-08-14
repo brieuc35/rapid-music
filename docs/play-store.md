@@ -146,8 +146,13 @@ l'air d'un navigateur déguisé, et Google peut refuser la fiche. C'est la cause
 numéro un des rejets pour ce type d'application.
 
 Le fichier est déjà servi, à la bonne adresse :
-<https://rapidmusic.fr/.well-known/assetlinks.json> — il lui manque seulement
-l'empreinte de la clé de signature.
+<https://rapidmusic.fr/.well-known/assetlinks.json>.
+
+Il porte l'empreinte de **la clé d'envoi**, ce qui suffit à vérifier un paquet
+installé à la main, hors Play Store — de quoi essayer l'application sur un vrai
+téléphone avant toute publication. Il manque encore celle de Google, sans
+laquelle l'application installée **depuis le Store** afficherait une barre
+d'adresse. Les deux se listent côte à côte.
 
 **Quelle empreinte ?** Celle de la clé qui signe l'application **livrée aux
 téléphones**. Comme la signature par Google Play est obligatoire pour toute

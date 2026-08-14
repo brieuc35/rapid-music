@@ -1,10 +1,14 @@
 [
   {
-    "relation": ["delegate_permission/common.handle_all_urls"],
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
     "target": {
       "namespace": "android_app",
       "package_name": "fr.rapidmusic.app",
-      "sha256_cert_fingerprints": []
+      "sha256_cert_fingerprints": [
+        "33:9E:F2:56:7E:8B:D2:64:6B:41:F8:61:79:01:F9:E6:5D:CB:A8:20:EE:56:7F:DD:30:EC:48:65:37:76:D8:33"
+      ]
     }
   }
 ]
