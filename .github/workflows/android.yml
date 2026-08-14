@@ -126,15 +126,40 @@ jobs:
         id: cle
         env:
           KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          MDP: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
         run: |
-          if [ -n "$KEYSTORE" ]; then
-            printf '%s' "$KEYSTORE" | base64 -d > "$RUNNER_TEMP/upload.keystore"
-            echo "signe=oui" >> "$GITHUB_OUTPUT"
-            echo "Clé de signature trouvée : le paquet sera signé."
-          else
+          if [ -z "$KEYSTORE" ]; then
             echo "signe=non" >> "$GITHUB_OUTPUT"
             echo "Aucune clé de signature : le paquet ne sera pas signé."
+            exit 0
           fi
+
+          FICHIER="$RUNNER_TEMP/upload.keystore"
+
+          # Les espaces et retours à la ligne sont retirés avant le décodage :
+          # un presse-papier Windows en ajoute volontiers, et une copie depuis
+          # l'écran d'un terminal en insère à chaque coupure de ligne. Le
+          # décodeur les refuse, alors qu'ils ne changent rien au contenu.
+          if ! printf '%s' "$KEYSTORE" | tr -d '[:space:]' | base64 -d > "$FICHIER" 2>/dev/null; then
+            echo "::error::ANDROID_KEYSTORE_BASE64 n'est pas du base64 exploitable. Le secret doit contenir le magasin de clés encodé, et rien d'autre — ni en-tête « BEGIN CERTIFICATE », ni chemin de fichier."
+            exit 1
+          fi
+          if [ ! -s "$FICHIER" ]; then
+            echo "::error::ANDROID_KEYSTORE_BASE64 s'est décodé en un fichier vide."
+            exit 1
+          fi
+
+          # Vérifié maintenant, et non après soixante-dix secondes de
+          # compilation : un mot de passe ou un alias erroné se voit ici, avec
+          # un message qui dit lequel des quatre secrets revoir.
+          if ! keytool -list -keystore "$FICHIER" -storepass "$MDP" -alias "$ALIAS" > /dev/null 2>&1; then
+            echo "::error::Le magasin de clés a bien été décodé, mais il refuse ce mot de passe ou ne contient pas la clé « ${ALIAS:-(vide)} ». Revoir ANDROID_KEYSTORE_PASSWORD et ANDROID_KEY_ALIAS. « keytool -list -keystore upload.keystore » affiche les alias présents."
+            exit 1
+          fi
+
+          echo "signe=oui" >> "$GITHUB_OUTPUT"
+          echo "Clé de signature valide, alias « $ALIAS » : le paquet sera signé."
 
       # Génère le projet Android à partir de android/twa-manifest.json. Sans
       # « --skipVersionUpgrade », Bubblewrap demanderait un numéro de version.
