@@ -76,6 +76,25 @@ jobs:
           fi
           echo "JDK : $JAVA_HOME"
           echo "SDK : $SDK"
+
+          # Bubblewrap cherche sdkmanager sous « tools/bin » ou « bin », et
+          # refuse un SDK qui n'a ni l'un ni l'autre à sa racine. Le serveur le
+          # place sous « cmdline-tools/latest/bin ». Un lien règle les deux :
+          # la validation, et l'installation par Bubblewrap de ce qui lui
+          # manque. Le chemin du SDK, lui, doit rester la racine — il sert
+          # d'ANDROID_HOME et de base à build-tools.
+          if [ ! -e "$SDK/tools" ]; then
+            sudo ln -s "$SDK/cmdline-tools/latest" "$SDK/tools"
+          fi
+          test -x "$SDK/tools/bin/sdkmanager" || {
+            echo "sdkmanager introuvable sous $SDK/tools/bin." >&2
+            exit 1
+          }
+
+          # Licences acceptées d'avance : Bubblewrap télécharge lui-même les
+          # outils qui lui manquent, et ne saurait pas répondre à une question.
+          yes | "$SDK/tools/bin/sdkmanager" --licenses > /dev/null 2>&1 || true
+
           mkdir -p "$HOME/.bubblewrap"
           SDK="$SDK" node -e "
             const { writeFileSync } = require('node:fs')
