@@ -37,7 +37,7 @@ export default defineConfig({
         name: 'RapidMusic - carrière musicale',
         short_name: 'RapidMusic',
         description:
-          'Gestion de carrière musicale : concerts, sorties, contrats, contacts. Tout votre univers en une application.',
+          'Gestion de carrière musicale : concerts, sorties, contrats, contacts. Tout votre univers, au même endroit.',
         lang: 'fr',
         dir: 'ltr',
         start_url: '/',
