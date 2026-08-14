@@ -208,7 +208,7 @@ RapidMusic - carrière musicale
 **Description courte** — 80 caractères, celle qui s'affiche sous le titre :
 
 ```
-Concerts, sorties, contrats, contacts. Tout votre univers en une application.
+Concerts, sorties, contrats, contacts. Tout votre univers, au même endroit.
 ```
 
 77 caractères. Elle ne reprend pas « gestion de carrière musicale », déjà dans
@@ -219,7 +219,7 @@ autre chose.
 
 ```
 Gestion de carrière musicale : concerts, sorties, contrats, contacts.
-Tout votre univers en une application.
+Tout votre univers, au même endroit.
 ```
 
 Le titre et les descriptions se modifient à tout moment dans la Console, même

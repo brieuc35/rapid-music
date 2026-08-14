@@ -15,7 +15,7 @@
         {{
           mode === 'reset'
             ? 'Indiquez votre adresse : vous recevrez un lien pour choisir un nouveau mot de passe.'
-            : 'Tout votre univers, en une application.'
+            : 'Tout votre univers, au même endroit.'
         }}
       </p>
 
