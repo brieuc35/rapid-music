@@ -1576,24 +1576,3 @@ table.tbl tbody tr:hover {
   }
 }
 
-/* Les liens légaux au bas du menu : présents, jamais mis en avant. */
-.nav__legal {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  column-gap: 11px;
-  row-gap: 3px;
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  font-size: 11px;
-  line-height: 1.4;
-  color: rgba(255, 255, 255, 0.34);
-}
-.nav__legal a {
-  color: rgba(255, 255, 255, 0.5);
-}
-.nav__legal a:hover {
-  color: rgba(255, 255, 255, 0.85);
-  text-decoration: underline;
-}
