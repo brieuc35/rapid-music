@@ -18,7 +18,7 @@ figées dans `android/twa-manifest.json`.
 | --- | --- | --- |
 | Identifiant du paquet | `fr.rapidmusic.app` | **Irréversible.** Le changer imposerait de publier une autre application, sans les installations existantes. |
 | Nom affiché | RapidMusic | sous l'icône, 12 caractères maximum utiles |
-| Nom complet | RapidMusic - gestion de carrière musicale | nom de l'application dans le paquet Android, visible dans les réglages du téléphone |
+| Nom complet | RapidMusic - carrière musicale | nom dans le paquet Android, visible dans les réglages du téléphone. Identique au titre de la fiche, pour qu'un seul nom circule |
 | Barre d'état | `#14101F` | couleur de la barre de navigation de l'application |
 | Barre système du bas | `#F6F7FB` | fond des pages |
 | Écran de lancement | `#14101F` | enchaîne sans rupture sur l'écran d'attente de l'application |
@@ -152,19 +152,36 @@ Ces étapes ne dépendent pas du code ; le détail figure dans la réponse
 - fiche : icône 512×512 (`public/icon-512.png`), image de mise en avant
   1024×500, deux captures d'écran de téléphone au minimum.
 
-### Le titre de la fiche se saisit dans la Console
+### Les textes de la fiche, à recopier dans la Console
 
-Il ne vient pas du paquet : c'est un champ de la Play Console, **limité à
-30 caractères**. « RapidMusic - gestion de carrière musicale » en fait 41 et n'y
-entrera pas. Deux façons de faire :
+Ils ne viennent pas du paquet : ce sont des champs de la Play Console, chacun
+avec sa limite. À recopier tels quels.
 
-| Titre (≤ 30) | Description courte (≤ 80) |
-| --- | --- |
-| `RapidMusic` | `Gestion de carrière musicale : concerts, sorties, contrats, contacts.` |
-| `RapidMusic - carrière musicale` | `Concerts, sorties, contrats, agenda et contacts, au même endroit.` |
+**Titre** — 30 caractères, et il en fait exactement 30 :
 
-La première est la plus courante : un nom court se retient, et la phrase
-d'explication a sa place juste en dessous, où elle dispose de 80 caractères.
+```
+RapidMusic - carrière musicale
+```
+
+**Description courte** — 80 caractères, celle qui s'affiche sous le titre :
+
+```
+Concerts, sorties, contrats, contacts. Tout votre univers en une application.
+```
+
+77 caractères. Elle ne reprend pas « gestion de carrière musicale », déjà dans
+le titre juste au-dessus : mieux vaut employer ces caractères comptés à dire
+autre chose.
+
+**Description complète** — 4 000 caractères, aucune contrainte ici :
+
+```
+Gestion de carrière musicale : concerts, sorties, contrats, contacts.
+Tout votre univers en une application.
+```
+
+Le titre et les descriptions se modifient à tout moment dans la Console, même
+après publication — contrairement à l'identifiant du paquet.
 
 ## Rappel sur l'abonnement
 
