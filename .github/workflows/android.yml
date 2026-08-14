@@ -143,6 +143,18 @@ jobs:
           # décodeur les refuse, alors qu'ils ne changent rien au contenu.
           if ! printf '%s' "$KEYSTORE" | tr -d '[:space:]' | base64 -d > "$FICHIER" 2>/dev/null; then
             echo "::error::ANDROID_KEYSTORE_BASE64 n'est pas du base64 exploitable. Le secret doit contenir le magasin de clés encodé, et rien d'autre — ni en-tête « BEGIN CERTIFICATE », ni chemin de fichier."
+            # Décrire le contenu sans le divulguer : ces quelques mesures
+            # suffisent à dire ce qui s'est passé entre le presse-papier et le
+            # secret, alors qu'on ne peut pas relire un secret enregistré.
+            NETTOYE=$(printf '%s' "$KEYSTORE" | tr -d '[:space:]')
+            HORS=$(printf '%s' "$NETTOYE" | tr -d 'A-Za-z0-9+/=')
+            echo "Diagnostic — aucune valeur secrète n'est révélée :"
+            echo "  longueur telle quelle    : ${#KEYSTORE}"
+            echo "  longueur sans les blancs : ${#NETTOYE}   (attendu : un multiple de 4)"
+            echo "  reste modulo 4           : $(( ${#NETTOYE} % 4 ))"
+            echo "  douze premiers signes    : $(printf '%s' "$NETTOYE" | cut -c1-12)   (attendu : commence par MII)"
+            echo "  signes hors alphabet     : ${#HORS} en tout"
+            echo "  lesquels                 : $(printf '%s' "$HORS" | fold -w1 | sort -u | tr -d '\n' | cut -c1-60)"
             exit 1
           fi
           if [ ! -s "$FICHIER" ]; then
