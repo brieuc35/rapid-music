@@ -26,10 +26,50 @@ figées dans `android/twa-manifest.json`.
 
 ## Fabriquer le fichier `.aab`
 
-Google n'accepte que des fichiers `.aab` (_Android App Bundle_). Deux chemins ;
-le premier ne demande aucune installation.
+Google n'accepte que des fichiers `.aab` (_Android App Bundle_).
 
-### Chemin A — PWABuilder (recommandé)
+### Chemin A — le dépôt le fabrique lui-même (recommandé)
+
+Le workflow **« Application Android (.aab) »** s'en charge, sur les serveurs de
+GitHub, en moins de deux minutes. Rien à installer.
+
+1. Onglet **Actions** du dépôt → **Application Android (.aab)** → **Run
+   workflow**.
+2. Laisser les deux champs vides pour un premier essai.
+3. À la fin, télécharger l'archive déposée au bas de la page d'exécution.
+
+**Sans clé de signature, le paquet produit n'est pas signé** : il prouve que la
+fabrication aboutit, mais Google le refusera. Pour obtenir un paquet
+publiable, ajouter ces quatre secrets dans **Réglages → Secrets and variables →
+Actions** :
+
+| Secret | Contenu |
+| --- | --- |
+| `ANDROID_KEYSTORE_BASE64` | le magasin de clés encodé en base64 |
+| `ANDROID_KEYSTORE_PASSWORD` | son mot de passe |
+| `ANDROID_KEY_PASSWORD` | le mot de passe de la clé |
+| `ANDROID_KEY_ALIAS` | le nom de la clé dans le magasin |
+
+Le magasin se crée une fois pour toutes, avec le JDK :
+
+```sh
+keytool -genkeypair -v -keystore upload.keystore -alias upload \
+        -keyalg RSA -keysize 2048 -validity 10000
+base64 -w0 upload.keystore    # à coller dans ANDROID_KEYSTORE_BASE64
+```
+
+**Conserver ce fichier et son mot de passe hors de l'ordinateur** (gestionnaire
+de mots de passe, sauvegarde). Ne jamais les déposer dans le dépôt :
+`.gitignore` les refuse déjà, mais la vraie protection est de ne pas les y
+mettre.
+
+Le code de version suit le numéro d'exécution du workflow. Il doit dépasser
+celui de tout envoi précédent — le champ **versionCode** permet de le forcer.
+
+### Chemin B — PWABuilder, dans le navigateur
+
+Utile si l'on préfère une interface graphique, ou pour obtenir un magasin de
+clés sans ligne de commande — PWABuilder en génère un.
 
 1. Ouvrir <https://www.pwabuilder.com> et saisir `https://rapidmusic.fr`.
 2. Choisir l'empaquetage **Android**, puis les options du tableau ci-dessus —
@@ -46,7 +86,7 @@ le premier ne demande aucune installation.
 L'interface du site peut avoir changé de formulation ; les réglages, eux, sont
 ceux du tableau.
 
-### Chemin B — Bubblewrap en local
+### Chemin C — Bubblewrap en local
 
 Demande Node, un JDK et le SDK Android (environ 1 Go de téléchargement).
 
@@ -56,9 +96,11 @@ cd android          # twa-manifest.json y est déjà, avec tous les réglages
 bubblewrap build    # crée la clé de signature au premier appel
 ```
 
-> Ce dépôt ne peut pas exécuter cette étape : la politique réseau de
-> l'environnement bloque `dl.google.com`, seule source du SDK Android et des
-> versions actuelles du plugin Gradle Android (Maven Central s'arrête à 2017).
+> Le chemin A fait exactement cela, sur un serveur où le SDK est déjà installé.
+> C'est aussi la raison pour laquelle la fabrication n'a pas lieu dans
+> l'environnement de développement : `dl.google.com` y est bloqué, et c'est la
+> seule source du SDK Android comme des versions actuelles du plugin Gradle
+> Android — Maven Central s'arrête à la 2.3.0, de 2017.
 
 ## L'étape qu'il ne faut pas rater : `assetlinks.json`
 
