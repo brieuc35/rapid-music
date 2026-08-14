@@ -258,6 +258,7 @@
           <p class="muted" style="font-size: 13.5px; margin-top: 3px; line-height: 1.5">
             Efface définitivement votre compte et toutes vos données : contrats, concerts,
             sorties, revenus, agenda, contacts et tâches. Cette action est irréversible.
+            <RouterLink to="/suppression-compte">Ce qui est effacé, en détail</RouterLink>.
           </p>
         </div>
         <button class="btn btn--danger" @click="openDelete">
@@ -340,6 +341,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { RouterLink } from 'vue-router'
 import PageHeader from '@/components/PageHeader.vue'
 import Icon from '@/components/Icon.vue'
 import Avatar from '@/components/Avatar.vue'

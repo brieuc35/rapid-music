@@ -5,6 +5,12 @@
     <span class="boot__mark"><BrandMark /></span>
   </div>
 
+  <!--  Les documents légaux passent avant tout test de session : ils doivent
+        s'ouvrir sans compte. Ils portent leur propre mise en page, sans le menu
+        de l'application, et valent aussi bien pour un visiteur que pour un
+        artiste connecté. -->
+  <RouterView v-else-if="pagePublique" />
+
   <LoginView v-else-if="!isLoggedIn" />
 
   <!-- Compte tout neuf : le profil se crée avant d'entrer dans l'application. -->
@@ -99,6 +105,15 @@
           </div>
           <Icon name="up" class="artist-chip__chevron" />
         </RouterLink>
+
+        <!--  Accessibles depuis l'application elle-même, et pas seulement de
+              l'écran de connexion : on doit pouvoir retrouver comment supprimer
+              son compte sans avoir à se déconnecter pour y arriver. -->
+        <nav class="nav__legal" aria-label="Informations légales">
+          <RouterLink v-for="p in PAGES_LEGALES" :key="p.to" :to="p.to" @click="menuOpen = false">
+            {{ p.libelle }}
+          </RouterLink>
+        </nav>
       </div>
     </aside>
 
@@ -160,7 +175,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { RouterLink, RouterView } from 'vue-router'
+import { RouterLink, RouterView, useRoute } from 'vue-router'
 import Icon from './components/Icon.vue'
 import Avatar from './components/Avatar.vue'
 import BrandMark from './components/BrandMark.vue'
@@ -179,6 +194,12 @@ import {
   refreshVerification,
 } from './store'
 import { majDisponible, majEnCours, appliquerMaj } from './pwa'
+import { PAGES_LEGALES } from './router/legal'
+
+const route = useRoute()
+
+/** Vrai sur les documents légaux, consultables sans compte. */
+const pagePublique = computed(() => route.meta.public === true)
 import { syncState, syncMessage } from './store/sync'
 import { daysFromNow } from './utils/format'
 
