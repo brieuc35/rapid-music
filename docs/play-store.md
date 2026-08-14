@@ -64,9 +64,27 @@ de ligne n'y coupe pas les commandes.
 
 ```powershell
 keytool -genkeypair -v -keystore upload.keystore -alias upload -keyalg RSA -keysize 2048 -validity 10000
+```
 
-# Encodage en base64, copié directement dans le presse-papier
-[Convert]::ToBase64String([IO.File]::ReadAllBytes("$PWD\upload.keystore")) | Set-Clipboard
+Puis l'encodage en base64. Le passage par un fichier plutôt que par le
+presse-papier n'est pas un détail : on **voit** alors ce que l'on copie. Un
+presse-papier est invisible, il se fait écraser par la copie suivante, et l'on
+finit par déposer dans le secret la commande au lieu de son résultat — c'est
+arrivé.
+
+```powershell
+[IO.File]::WriteAllText("$PWD\cle-base64.txt", [Convert]::ToBase64String([IO.File]::ReadAllBytes("$PWD\upload.keystore")), [Text.Encoding]::ASCII)
+notepad cle-base64.txt
+```
+
+Le Bloc-notes doit afficher **une seule longue ligne de lettres et de chiffres,
+commençant par `MII`**, de quelques milliers de caractères. C'est elle, et elle
+seule, qui va dans `ANDROID_KEYSTORE_BASE64` : Ctrl+A, Ctrl+C.
+
+Puis supprimer le fichier, aussi sensible que le magasin lui-même :
+
+```powershell
+Remove-Item cle-base64.txt
 ```
 
 **macOS ou Linux**
