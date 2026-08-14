@@ -62,8 +62,11 @@ jobs:
       - name: Installer Bubblewrap
         run: npm install -g @bubblewrap/cli
 
-      # Sans ces deux chemins, Bubblewrap propose de télécharger son propre JDK
-      # et attend une réponse — ce qui bloquerait l'exécution indéfiniment.
+      # Le fichier de configuration doit exister AVANT le premier appel à
+      # Bubblewrap : sans lui, celui-ci propose de télécharger son propre JDK et
+      # attend une réponse dès son démarrage, quelle que soit la commande — y
+      # compris « updateConfig », qui était censée le configurer. Sans terminal
+      # la question ne peut pas être répondue et l'exécution s'arrête.
       - name: Désigner le JDK et le SDK Android
         run: |
           SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
@@ -73,7 +76,13 @@ jobs:
           fi
           echo "JDK : $JAVA_HOME"
           echo "SDK : $SDK"
-          bubblewrap updateConfig --jdkPath="$JAVA_HOME" --androidSdkPath="$SDK"
+          mkdir -p "$HOME/.bubblewrap"
+          SDK="$SDK" node -e "
+            const { writeFileSync } = require('node:fs')
+            writeFileSync(process.env.HOME + '/.bubblewrap/config.json',
+              JSON.stringify({ jdkPath: process.env.JAVA_HOME, androidSdkPath: process.env.SDK }))
+          "
+          cat "$HOME/.bubblewrap/config.json"
           bubblewrap doctor
 
       - name: Fixer la version
