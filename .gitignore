@@ -9,6 +9,13 @@
 *-adminsdk-*.json
 *.pem
 *.p12
+
+# Clés de signature Android. Celle qui signe l'application envoyée au Play
+# Store ne doit jamais entrer dans un dépôt public : quiconque l'obtient peut
+# publier une mise à jour au nom de l'application.
+*.keystore
+*.jks
+keystore.properties
 .env
 .env.*
 !.env.example
@@ -41,3 +48,9 @@ npm-debug.log*
 /platforms
 /plugins
 /www
+
+# Projet Android produit par Bubblewrap à partir de android/twa-manifest.json.
+# Reconstruit à chaque fabrication, il n'a rien à faire dans le dépôt — et il
+# contiendrait un chemin de magasin de clés.
+/android/*
+!/android/twa-manifest.json
