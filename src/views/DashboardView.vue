@@ -6,8 +6,9 @@
     />
 
     <!--  Ordre voulu : ce qui approche d'abord (les concerts), puis le
-          catalogue, puis les contrats, et le Réseau en dernier puisqu'il n'est
-          pas encore ouvert. -->
+          catalogue, les contrats, et ce qui reste à faire. Les quatre mènent à
+          leur onglet — une case qui ne s'ouvre sur rien invite au clic pour
+          rien. -->
     <div class="grid grid--stats" style="margin-bottom: 26px">
       <RouterLink to="/concerts" class="stat stat--link">
         <div class="stat__ico" style="background: var(--violet-100); color: var(--violet-600)">
@@ -48,20 +49,20 @@
         </div>
       </RouterLink>
 
-      <!-- La case garde sa place pour annoncer ce qui vient. Plus de compteur :
-           il comptait l'activité d'un fil qui n'est pas ouvert, et un nombre
-           affiché ici se lirait comme des messages qui attendent. -->
-      <div class="stat stat--soon">
-        <div class="stat__ico" style="background: rgba(236, 72, 153, 0.12); color: var(--pink-500)">
-          <Icon name="globe" />
+      <RouterLink to="/taches" class="stat stat--link">
+        <div class="stat__ico" style="background: var(--green-bg); color: var(--green)">
+          <Icon name="check" />
         </div>
-        <div class="stat__soon">Bientôt</div>
-        <div class="stat__label">Réseau des professionnels</div>
-        <div class="stat__delta">
-          <Icon name="clock" style="width: 14px; height: 14px" />
-          Pas encore ouvert
+        <div class="stat__val mono">{{ openTasks.length }}</div>
+        <div class="stat__label">Tâches à faire</div>
+        <!-- Le retard passe devant tout le reste : c'est la seule chose qui
+             demande une décision aujourd'hui. À défaut, on dit qu'il n'y en a
+             pas — une ligne vide laisserait douter du calcul. -->
+        <div class="stat__delta" :class="enRetard ? 'stat__delta--down' : 'stat__delta--up'">
+          <Icon :name="enRetard ? 'clock' : 'check'" style="width: 14px; height: 14px" />
+          {{ enRetard ? `${enRetard} en retard` : 'aucune en retard' }}
         </div>
-      </div>
+      </RouterLink>
     </div>
 
     <div class="grid grid--2">
@@ -183,7 +184,7 @@ import { RouterLink } from 'vue-router'
 import PageHeader from '@/components/PageHeader.vue'
 import Icon from '@/components/Icon.vue'
 import EmptyState from '@/components/EmptyState.vue'
-import { store, isPro } from '@/store'
+import { store, isPro, openTasks, overdueTasks } from '@/store'
 import {
   money,
   number,
@@ -239,6 +240,9 @@ const pendingContracts = computed(
   () => store.contracts.filter((c) => c.status !== 'Actif' && c.status !== 'Expiré').length,
 )
 
+/** Nombre de tâches dont l'échéance est passée. */
+const enRetard = computed(() => overdueTasks.value.length)
+
 const upcomingSessions = computed(() =>
   store.studio
     .filter((s) => daysFromNow(s.date) >= 0)
@@ -290,23 +294,6 @@ function coverGradient(hex: string): string {
 }
 .stat--link:active {
   transform: translateY(1px);
-}
-/* Une case annoncée, pas encore ouverte : même gabarit que les autres pour ne
-   pas trouer la rangée, mais sans le poids visuel d'un chiffre — il n'y a rien
-   à consulter. */
-.stat--soon {
-  border-style: dashed;
-  box-shadow: none;
-}
-.stat__soon {
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.36;
-  color: var(--text-muted);
-}
-.stat--soon .stat__delta {
-  color: var(--text-muted);
 }
 .masked {
   color: var(--text-muted);
