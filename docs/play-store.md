@@ -50,7 +50,26 @@ Actions** :
 | `ANDROID_KEY_PASSWORD` | le mot de passe de la clé |
 | `ANDROID_KEY_ALIAS` | le nom de la clé dans le magasin |
 
-Le magasin se crée une fois pour toutes, avec le JDK :
+Le magasin se crée une fois pour toutes, avec `keytool`, livré avec le JDK. Si
+la commande n'est pas reconnue, installer un JDK — Temurin, sur
+<https://adoptium.net>, en veillant à cocher l'ajout au PATH.
+
+À la question « Est-ce correct ? », répondre **oui** : la réponse par défaut est
+« non », et l'on recommence sans comprendre pourquoi. À la demande d'un mot de
+passe pour la clé, appuyer sur Entrée pour reprendre celui du magasin — les
+deux secrets à créer ensuite auront alors la même valeur.
+
+**Windows (PowerShell)** — en une seule ligne : la barre oblique inverse de fin
+de ligne n'y coupe pas les commandes.
+
+```powershell
+keytool -genkeypair -v -keystore upload.keystore -alias upload -keyalg RSA -keysize 2048 -validity 10000
+
+# Encodage en base64, copié directement dans le presse-papier
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("$PWD\upload.keystore")) | Set-Clipboard
+```
+
+**macOS ou Linux**
 
 ```sh
 keytool -genkeypair -v -keystore upload.keystore -alias upload \
