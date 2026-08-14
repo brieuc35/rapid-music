@@ -34,7 +34,7 @@ export default defineConfig({
       injectRegister: null,
       manifest: {
         id: '/',
-        name: 'RapidMusic — gestion de carrière',
+        name: 'RapidMusic - gestion de carrière musicale',
         short_name: 'RapidMusic',
         description:
           'Le gestionnaire de carrière tout-en-un pour les artistes : concerts, sorties, contrats, agenda, tâches et contacts.',
