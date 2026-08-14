@@ -78,7 +78,9 @@
           {{ syncLabel }}
         </div>
 
-        <RouterLink v-if="!isPro" to="/abonnement" class="upsell">
+        <!--  Referme le tiroir comme les autres liens : sans cela, il restait
+              ouvert par-dessus la page d'abonnement qu'il venait d'ouvrir. -->
+        <RouterLink v-if="!isPro" to="/abonnement" class="upsell" @click="menuOpen = false">
           <span class="upsell__ico"><Icon name="star" /></span>
           <div class="upsell__text">
             <b>Passer à Pro</b>
@@ -92,12 +94,16 @@
           title="Voir mon profil"
           @click="menuOpen = false"
         >
+          <!--  32 et non 36 : quatre pixels rendus au menu déroulant, où chaque
+                ligne compte pour afficher tous les onglets sans dérouler. La
+                taille venant d'une propriété, elle ne peut pas être ajustée par
+                une règle mobile sans forcer le style en ligne. -->
           <Avatar
             :name="store.artist.stageName"
             :photo="store.artist.photo"
-            :size="36"
+            :size="32"
             radius="50%"
-            :font="14"
+            :font="13"
           />
           <div class="artist-chip__text">
             <div class="artist-chip__name">{{ store.artist.stageName }}</div>

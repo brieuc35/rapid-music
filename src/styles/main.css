@@ -1340,6 +1340,49 @@ table.tbl tbody tr:hover {
   .scrim--show {
     display: block;
   }
+
+  /* Le menu déroulant doit montrer tous ses onglets sans qu'on ait à le faire
+     défiler : sur un écran de 780 px de haut, il manquait 63 px. Ils sont
+     repris sur ce qui entoure les onglets — jamais sur les onglets eux-mêmes,
+     qui restent à leur taille et à leur zone tactile.
+
+     « Passer à Pro » perd sa ligne d'explication : le titre suffit à cette
+     largeur, et c'est lui qu'on lit. */
+  .brand {
+    padding-bottom: 14px;
+  }
+  .nav__label {
+    padding: 9px 12px 4px;
+  }
+  .nav__item--highlight {
+    margin-top: 12px;
+  }
+  .nav__foot {
+    padding: 9px;
+  }
+  .sync {
+    padding-bottom: 5px;
+  }
+  .upsell {
+    padding: 7px 9px;
+    margin-bottom: 8px;
+  }
+  .upsell__ico {
+    width: 24px;
+    height: 24px;
+    border-radius: 8px;
+  }
+  .upsell__ico svg {
+    width: 13px;
+    height: 13px;
+  }
+  .upsell__text span {
+    display: none;
+  }
+  .artist-chip {
+    padding: 7px;
+  }
+
   .page {
     padding: 20px 18px 90px;
   }
