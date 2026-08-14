@@ -1385,3 +1385,215 @@ table.tbl tbody tr:hover {
     line-height: 1.35;
   }
 }
+
+/* -------------------------------------------------------------------------- */
+/*  Documents légaux                                                          */
+/*                                                                            */
+/*  Pages autonomes : elles s'ouvrent sans compte, donc sans le menu de        */
+/*  l'application. Leur mise en page est celle d'un texte à lire — une colonne */
+/*  étroite, une interligne large — et non celle d'un écran de travail.        */
+/*  Les styles sont globaux, et non dans le composant : le contenu arrive par  */
+/*  un `slot`, que les styles « scoped » du composant n'atteindraient pas.     */
+/* -------------------------------------------------------------------------- */
+.legal {
+  min-height: 100vh;
+  background: var(--bg);
+  padding: 0 20px 60px;
+}
+.legal__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 20px 0;
+}
+.legal__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text);
+}
+.legal__mark {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--brand-gradient);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.legal__mark svg {
+  width: 19px;
+  height: 19px;
+}
+.legal__name {
+  font-weight: 800;
+  font-size: 16.5px;
+  letter-spacing: -0.01em;
+}
+.legal__name b {
+  color: var(--violet-600);
+}
+/* La flèche « up » sert de flèche de retour : une rotation suffit, plutôt que
+   d'ajouter une icône de plus au jeu. */
+.legal__back-ico {
+  transform: rotate(-90deg);
+}
+
+.legal__doc {
+  max-width: 720px;
+  margin: 0 auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 34px 38px 40px;
+  color: var(--text-soft);
+  font-size: 14.5px;
+  line-height: 1.72;
+}
+.legal__doc h1 {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  line-height: 1.25;
+}
+.legal__maj {
+  color: var(--text-muted);
+  font-size: 12.5px;
+  margin-top: 6px;
+}
+/* Le résumé en tête : ce qu'on retient si on ne lit rien d'autre. */
+.legal__chapo {
+  margin-top: 22px;
+  padding: 14px 16px;
+  background: var(--violet-50);
+  border: 1px solid var(--violet-200);
+  border-radius: var(--radius);
+  color: var(--violet-700);
+  font-size: 14px;
+}
+.legal__doc h2 {
+  font-size: 17.5px;
+  font-weight: 750;
+  color: var(--text);
+  margin-top: 34px;
+  letter-spacing: -0.01em;
+}
+.legal__doc h3 {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--text);
+  margin-top: 20px;
+}
+.legal__doc p {
+  margin-top: 12px;
+}
+.legal__doc ul,
+.legal__doc ol {
+  margin-top: 12px;
+  padding-left: 22px;
+}
+.legal__doc li {
+  margin-top: 7px;
+}
+.legal__doc b {
+  color: var(--text);
+  font-weight: 650;
+}
+.legal__doc a {
+  color: var(--violet-600);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.legal__doc a:hover {
+  color: var(--violet-700);
+}
+/* Adresse d'un hébergeur : détachée du texte courant, comme une adresse
+   postale sur un courrier. */
+.legal__bloc {
+  margin-top: 10px;
+  padding: 11px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+.legal__note {
+  margin-top: 14px;
+  font-size: 13px;
+  color: var(--text-muted);
+  border-left: 2px solid var(--border-strong);
+  padding-left: 12px;
+}
+
+/* Sans séparateurs : ils se retrouveraient orphelins en fin de ligne dès que
+   les quatre libellés passent à la ligne. */
+.legal__foot {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  column-gap: 16px;
+  row-gap: 6px;
+  max-width: 720px;
+  margin: 22px auto 0;
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+.legal__foot a {
+  color: var(--text-soft);
+}
+.legal__foot a:hover {
+  color: var(--violet-600);
+  text-decoration: underline;
+}
+/* La page où l'on se trouve déjà : nommée, mais pas cliquable. */
+.legal__ici {
+  color: var(--text-muted);
+  font-weight: 650;
+}
+
+@media (max-width: 620px) {
+  .legal {
+    padding: 0 12px 44px;
+  }
+  .legal__doc {
+    padding: 24px 20px 30px;
+    font-size: 14px;
+  }
+  .legal__doc h1 {
+    font-size: 22px;
+  }
+  .legal__doc h2 {
+    font-size: 16.5px;
+    margin-top: 28px;
+  }
+}
+
+/* Les liens légaux au bas du menu : présents, jamais mis en avant. */
+.nav__legal {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 11px;
+  row-gap: 3px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 11px;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.34);
+}
+.nav__legal a {
+  color: rgba(255, 255, 255, 0.5);
+}
+.nav__legal a:hover {
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: underline;
+}

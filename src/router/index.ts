@@ -74,6 +74,33 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/PricingView.vue'),
     meta: { title: 'Abonnement', icon: 'star' },
   },
+  /*  Les documents légaux. `public: true` les rend consultables sans compte :
+   *  c'est une obligation — on ne peut pas exiger de créer un compte pour lire
+   *  ce à quoi on s'engage, ni pour savoir comment le supprimer. */
+  {
+    path: '/mentions-legales',
+    name: 'legal-notice',
+    component: () => import('@/views/MentionsLegalesView.vue'),
+    meta: { title: 'Mentions légales', public: true },
+  },
+  {
+    path: '/confidentialite',
+    name: 'privacy',
+    component: () => import('@/views/ConfidentialiteView.vue'),
+    meta: { title: 'Politique de confidentialité', public: true },
+  },
+  {
+    path: '/conditions',
+    name: 'terms',
+    component: () => import('@/views/ConditionsView.vue'),
+    meta: { title: "Conditions d'utilisation", public: true },
+  },
+  {
+    path: '/suppression-compte',
+    name: 'account-deletion',
+    component: () => import('@/views/SuppressionCompteView.vue'),
+    meta: { title: 'Supprimer mon compte', public: true },
+  },
   { path: '/:pathMatch(.*)*', redirect: '/tableau-de-bord' },
 ]
 

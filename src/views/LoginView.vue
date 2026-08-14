@@ -93,15 +93,24 @@
       <p class="login__note">
         Vos données sont enregistrées sur votre compte, dans un centre de données européen.
       </p>
+
+      <!--  Consultables avant de créer un compte : c'est tout l'intérêt. On ne
+            peut pas demander d'accepter des conditions qu'il faudrait un compte
+            pour lire. -->
+      <nav class="login__legal" aria-label="Informations légales">
+        <RouterLink v-for="p in PAGES_LEGALES" :key="p.to" :to="p.to">{{ p.libelle }}</RouterLink>
+      </nav>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { RouterLink } from 'vue-router'
 import BrandMark from '@/components/BrandMark.vue'
 import Icon from '@/components/Icon.vue'
 import { login, signUp, resetPassword } from '@/store'
+import { PAGES_LEGALES } from '@/router/legal'
 
 type Mode = 'login' | 'signup' | 'reset'
 
@@ -308,5 +317,28 @@ async function submit() {
   font-size: 12.5px;
   line-height: 1.5;
   margin-top: 18px;
+}
+/* Discret mais atteignable : on doit pouvoir lire les conditions avant de
+   créer un compte, sans que ces liens concurrencent le formulaire.
+
+   Aucun séparateur entre les liens : à cette largeur ils passent à la ligne, et
+   un « · » se retrouverait orphelin en fin de ligne. L'espacement suffit. */
+.login__legal {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  column-gap: 14px;
+  row-gap: 5px;
+  margin-top: 14px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.login__legal a {
+  color: var(--text-soft);
+}
+.login__legal a:hover {
+  color: var(--violet-600);
+  text-decoration: underline;
 }
 </style>
