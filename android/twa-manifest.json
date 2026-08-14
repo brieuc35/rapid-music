@@ -4,7 +4,6 @@
   "name": "RapidMusic — gestion de carrière",
   "launcherName": "RapidMusic",
   "display": "standalone",
-  "orientation": "any",
   "themeColor": "#14101F",
   "themeColorDark": "#14101F",
   "navigationColor": "#F6F7FB",
@@ -16,16 +15,33 @@
   "startUrl": "/",
   "iconUrl": "https://rapidmusic.fr/icon-512.png",
   "maskableIconUrl": "https://rapidmusic.fr/icon-maskable-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./android.keystore",
+    "alias": "android"
+  },
   "appVersionName": "1.0.0",
   "appVersionCode": 1,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
   "webManifestUrl": "https://rapidmusic.fr/manifest.webmanifest",
   "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
   "enableSiteSettingsShortcut": true,
   "isChromeOSOnly": false,
   "isMetaQuest": false,
   "fullScopeUrl": "https://rapidmusic.fr/",
-  "minSdkVersion": 23,
-  "features": {}
+  "minSdkVersion": 21,
+  "orientation": "default",
+  "fingerprints": [],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "protocolHandlers": [],
+  "fileHandlers": [],
+  "launchHandlerClientMode": "",
+  "displayOverride": [],
+  "appVersion": "1.0.0"
 }
