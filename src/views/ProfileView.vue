@@ -267,6 +267,14 @@
       </div>
     </div>
 
+    <!--  Les documents légaux, au bas de la page où l'on vient déjà régler son
+          compte. Ils étaient au bas du menu, qui n'avait plus de place à leur
+          consacrer ; l'écran de connexion garde les siens, pour qu'on puisse
+          les lire avant de s'inscrire. -->
+    <nav class="legaux" aria-label="Informations légales">
+      <RouterLink v-for="p in PAGES_LEGALES" :key="p.to" :to="p.to">{{ p.libelle }}</RouterLink>
+    </nav>
+
     <Modal :open="!!pending" title="Importer ce fichier" @close="closeImport">
       <p style="margin: 0 0 14px; color: var(--text-soft); line-height: 1.6">
         Le fichier <b style="color: var(--text)">{{ pendingName }}</b> contient :
@@ -351,6 +359,7 @@ import type { AppData, ArtistProfile } from '@/store/types'
 import { fileToAvatarDataUrl, ImageError } from '@/utils/image'
 import { GENRES } from '@/utils/genres'
 import { BackupError, describeBackup, downloadBackup, parseBackup } from '@/utils/backup'
+import { PAGES_LEGALES } from '@/router/legal'
 
 const editMode = ref(false)
 const draft = ref<ArtistProfile>({ ...store.artist })
@@ -560,6 +569,29 @@ async function doDelete() {
 </script>
 
 <style scoped>
+/* Pied de page des documents légaux. Discret : on vient ici pour son profil,
+   pas pour lire des conditions — mais on doit pouvoir les trouver. Sans
+   séparateur « · », qui resterait orphelin en fin de ligne quand les quatre
+   libellés passent à la ligne. */
+.legaux {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  column-gap: 16px;
+  row-gap: 6px;
+  margin-top: 26px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+.legaux a {
+  color: var(--text-soft);
+}
+.legaux a:hover {
+  color: var(--violet-600);
+  text-decoration: underline;
+}
+
 .hero {
   display: flex;
   gap: 28px;

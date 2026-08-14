@@ -105,15 +105,6 @@
           </div>
           <Icon name="up" class="artist-chip__chevron" />
         </RouterLink>
-
-        <!--  Accessibles depuis l'application elle-même, et pas seulement de
-              l'écran de connexion : on doit pouvoir retrouver comment supprimer
-              son compte sans avoir à se déconnecter pour y arriver. -->
-        <nav class="nav__legal" aria-label="Informations légales">
-          <RouterLink v-for="p in PAGES_LEGALES" :key="p.to" :to="p.to" @click="menuOpen = false">
-            {{ p.libelle }}
-          </RouterLink>
-        </nav>
       </div>
     </aside>
 
@@ -194,14 +185,13 @@ import {
   refreshVerification,
 } from './store'
 import { majDisponible, majEnCours, appliquerMaj } from './pwa'
-import { PAGES_LEGALES } from './router/legal'
+import { syncState, syncMessage } from './store/sync'
+import { daysFromNow } from './utils/format'
 
 const route = useRoute()
 
 /** Vrai sur les documents légaux, consultables sans compte. */
 const pagePublique = computed(() => route.meta.public === true)
-import { syncState, syncMessage } from './store/sync'
-import { daysFromNow } from './utils/format'
 
 const menuOpen = ref(false)
 
