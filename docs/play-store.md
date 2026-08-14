@@ -20,7 +20,7 @@ figées dans `android/twa-manifest.json`.
 | Nom affiché | RapidMusic | sous l'icône, 12 caractères maximum utiles |
 | Nom complet | RapidMusic - carrière musicale | nom dans le paquet Android, visible dans les réglages du téléphone. Identique au titre de la fiche, pour qu'un seul nom circule |
 | Barre d'état | `#14101F` | couleur de la barre de navigation de l'application |
-| Barre système du bas | `#F6F7FB` | fond des pages |
+| Barre système du bas | `#14101F` | la même que celle du haut : l'application est encadrée de son violet sombre, au lieu d'être bordée de blanc |
 | Écran de lancement | `#14101F` | enchaîne sans rupture sur l'écran d'attente de l'application |
 | Version | 1.0.0 (code 1) | le **code** doit augmenter à chaque envoi |
 
