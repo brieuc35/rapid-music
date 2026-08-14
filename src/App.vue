@@ -141,6 +141,21 @@
       </RouterView>
     </div>
   </div>
+
+  <!--  Une nouvelle version est en cache et attend. Elle n'est pas appliquée
+        d'office : recharger au milieu d'une saisie ferait perdre ce qui est en
+        train d'être écrit. Le bandeau est en dehors de la mise en page, pour
+        rester visible quel que soit le défilement. -->
+  <div v-if="majDisponible" class="maj" role="status">
+    <Icon name="check" />
+    <span class="maj__texte">Une nouvelle version est prête.</span>
+    <button class="btn btn--sm btn--primary" :disabled="majEnCours" @click="appliquerMaj">
+      {{ majEnCours ? 'Chargement…' : 'Recharger' }}
+    </button>
+    <button class="maj__close" aria-label="Plus tard" @click="majDisponible = false">
+      <Icon name="close" />
+    </button>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -163,6 +178,7 @@ import {
   resendVerification,
   refreshVerification,
 } from './store'
+import { majDisponible, majEnCours, appliquerMaj } from './pwa'
 import { syncState, syncMessage } from './store/sync'
 import { daysFromNow } from './utils/format'
 
