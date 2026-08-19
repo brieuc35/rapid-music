@@ -566,6 +566,20 @@ function toMessage(e: unknown): string {
   return authMessage(code)
 }
 
+/**
+ * Crée le compte et envoie le lien de confirmation de l'adresse.
+ *
+ * Cet envoi est **provisoire**. Le message de bienvenue fabriqué par la fonction
+ * serveur porte déjà ce même lien (voir functions/ et docs/courriels.md) : une
+ * fois les fonctions déployées et vérifiées, les deux lignes ci-dessous
+ * disparaissent, et l'artiste ne reçoit plus qu'un seul message.
+ *
+ * Elles restent tant que ce n'est pas fait, et pas par prudence excessive : les
+ * retirer d'abord ouvrirait une période — le temps de faire vérifier le domaine
+ * d'expédition, un jour ou deux — pendant laquelle un nouveau compte ne
+ * recevrait aucun message, alors que le bandeau affirmerait qu'un lien a été
+ * envoyé. Deux messages valent mieux que zéro.
+ */
 export async function signUp(email: string, password: string): Promise<void> {
   try {
     const cred = await createUserWithEmailAndPassword(auth, email.trim(), password)

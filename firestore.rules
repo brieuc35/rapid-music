@@ -64,6 +64,23 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // La file d'envoi des courriels, surveillée par l'extension « Trigger
+    // Email from Firestore ». Fermée des deux côtés, sans exception.
+    //
+    // Le fourre-tout en fin de fichier la refuserait déjà. Elle est écrite ici
+    // quand même, parce que le droit qu'elle porte n'est pas ordinaire :
+    // déposer un document dans cette collection, c'est envoyer un message au
+    // nom de RapidMusic, à l'adresse que l'on veut et avec le contenu que l'on
+    // veut. Une règle explicite empêche qu'on l'ouvre un jour par distraction,
+    // en croyant n'ouvrir qu'une collection de plus.
+    //
+    // Les fonctions serveur y écrivent avec les droits d'administration, qui
+    // passent au-dessus de ces règles — elles n'ont donc besoin d'aucune
+    // autorisation ici.
+    match /mail/{id} {
+      allow read, write: if false;
+    }
+
     function valide() {
       return request.resource.data.keys().hasOnly(['rev', 'data', 'updatedAt'])
              && request.resource.data.rev is int
