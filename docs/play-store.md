@@ -139,6 +139,28 @@ bubblewrap build    # crée la clé de signature au premier appel
 > seule source du SDK Android comme des versions actuelles du plugin Gradle
 > Android — Maven Central s'arrête à la 2.3.0, de 2017.
 
+## L'icône sous l'écran d'accueil
+
+Elle vient de `public/icon-maskable-512.png`, et **pas** du site : elle est
+recopiée dans le paquet Android. Changer le fichier ne suffit donc pas — il faut
+refabriquer un `.aab` (ou un `.apk`) et réinstaller. C'est la seule chose de
+l'application qui ne se met pas à jour toute seule.
+
+La proportion du dessin n'est pas libre. Le gabarit d'une icône adaptative
+mesure 108 dp, Bubblewrap y pose l'image avec 8,5 dp de marge — soit 91 dp — et
+le lanceur n'affiche que les **72 dp centraux**, découpés en cercle ou en
+squircle selon le téléphone. La part visible du fichier vaut donc 72/91, environ
+**79 %** de sa largeur : tout ce qui dépasse est perdu, et un dessin calculé
+pour les 66,7 % habituels serait trop petit.
+
+Le logo occupe aujourd'hui **55 % du disque visible** — il en occupait 66 %, ce
+qui le faisait toucher le bord. Le dessin est centré sur son tracé réel, non sur
+son cadre : le glyphe de `favicon.svg` n'est pas centré dans son repère de 24
+unités, et s'y fier plaçait le logo 10 px trop haut.
+
+Le fichier est en RVB sans couche alpha — une icône maskable est opaque par
+construction — ce qui le laisse à 13 Ko.
+
 ## L'étape qu'il ne faut pas rater : `assetlinks.json`
 
 Sans elle, l'application s'ouvre **avec une barre d'adresse en haut** : elle a
