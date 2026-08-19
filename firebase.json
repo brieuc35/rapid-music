@@ -1,0 +1,12 @@
+{
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "courriels",
+      "ignore": ["node_modules", ".git", "*.log", "src/**/*.test.ts", "lib/**/*.test.*"]
+    }
+  ]
+}

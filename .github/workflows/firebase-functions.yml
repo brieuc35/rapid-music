@@ -1,0 +1,91 @@
+name: Courriels automatiques (déploiement)
+
+# Déploie les fonctions serveur qui envoient les deux courriels automatiques.
+#
+# Pourquoi ici et pas depuis un poste de travail : le déploiement réclame Node,
+# firebase-tools et une session Firebase. Le même choix que pour le paquet
+# Android — l'onglet Actions suffit, il n'y a rien à installer.
+#
+# Secret attendu, à créer dans Réglages → Secrets and variables → Actions :
+#
+#   FIREBASE_SERVICE_ACCOUNT   la clé d'un compte de service du projet, en JSON
+#
+# Cette clé passe au-dessus des règles de sécurité : c'est exactement ce qu'il
+# faut pour déployer, et exactement ce qui ne doit jamais entrer dans le dépôt
+# ni dans une page web. La procédure figure dans docs/courriels.md.
+
+on:
+  workflow_dispatch:
+  # Sur modification du code des fonctions : une erreur de compilation y serait
+  # autrement invisible jusqu'au jour du déploiement. Les tests tournent alors,
+  # mais rien n'est déployé sans demande explicite.
+  push:
+    paths:
+      - 'functions/**'
+      - '.github/workflows/firebase-functions.yml'
+
+permissions:
+  contents: read
+
+env:
+  PROJET: rapidmusic-db075
+
+jobs:
+  courriels:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: functions/package-lock.json
+
+      - name: Installer les dépendances
+        working-directory: functions
+        run: npm ci
+
+      - name: Vérifier les types
+        working-directory: functions
+        run: npx tsc --noEmit
+
+      # Les tests avant le déploiement, et non après : ils vérifient les règles
+      # d'envoi — ne pas écrire deux fois, ne pas laisser passer de HTML non
+      # échappé — et un manquement doit arrêter la mise en ligne.
+      - name: Lancer les tests
+        working-directory: functions
+        run: npm test
+
+      - name: Déployer
+        # Le déploiement seulement sur demande. Un envoi de code ne doit pas
+        # mettre en ligne tout seul quelque chose qui écrit à des artistes.
+        if: github.event_name == 'workflow_dispatch'
+        working-directory: functions
+        env:
+          CLE: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          if [ -z "$CLE" ]; then
+            echo "::error::Le secret FIREBASE_SERVICE_ACCOUNT est absent. Voir docs/courriels.md pour le créer."
+            exit 1
+          fi
+
+          # Écrite dans un fichier hors du dépôt, puis désignée par la variable
+          # que firebase-tools attend. Le passer en ligne de commande
+          # l'exposerait dans la liste des processus.
+          CHEMIN="$RUNNER_TEMP/cle-service.json"
+          printf '%s' "$CLE" > "$CHEMIN"
+
+          if ! node -e 'JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))' "$CHEMIN"; then
+            echo "::error::FIREBASE_SERVICE_ACCOUNT n'est pas du JSON exploitable. Le secret doit contenir le fichier de clé entier, accolades comprises."
+            exit 1
+          fi
+
+          export GOOGLE_APPLICATION_CREDENTIALS="$CHEMIN"
+          npx --yes firebase-tools@latest deploy \
+            --only functions \
+            --project "$PROJET" \
+            --non-interactive \
+            --force
