@@ -1121,7 +1121,8 @@ textarea {
 /* Au-dessus de la barre d'onglets, qui occupe désormais le bas de l'écran. */
 @media (max-width: 900px) {
   .maj {
-    bottom: calc(74px + env(safe-area-inset-bottom));
+    /* 4,5 px au-dessus de la barre, qui mesure 55,6 px. */
+    bottom: calc(60px + env(safe-area-inset-bottom));
   }
 }
 
@@ -1426,8 +1427,8 @@ table.tbl tbody tr:hover {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
-    padding: 8px 4px 9px;
+    gap: 3px;
+    padding: 6px 4px 7px;
     /* 0,82 et non 0,55 : à mi-transparence, une icône de 22 px sur fond sombre
        se lit mal et se touche à l'aveugle. */
     color: rgba(255, 255, 255, 0.82);
@@ -1442,8 +1443,8 @@ table.tbl tbody tr:hover {
   .tabbar__ico {
     position: relative;
     width: 46px;
-    height: 31px;
-    border-radius: 13px;
+    height: 26px;
+    border-radius: 11px;
     display: grid;
     place-items: center;
     transition: background 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease;
@@ -1488,6 +1489,11 @@ table.tbl tbody tr:hover {
   .tabbar__label {
     font-size: 11px;
     font-weight: 600;
+    /* Sans cette ligne, l'étiquette héritait le 1,5 des paragraphes : 16,5 px
+       réservés pour une police de 11, soit près de 4 px de hauteur de barre
+       consacrés au vide au-dessus et en dessous d'une ligne unique. La police,
+       elle, ne bouge pas — c'est la lisibilité. */
+    line-height: 1.15;
     letter-spacing: -0.01em;
     white-space: nowrap;
     overflow: hidden;
@@ -1501,7 +1507,9 @@ table.tbl tbody tr:hover {
   /* La marge basse des pages laisse passer la barre : sans elle, le dernier
      bouton d'un écran finirait dessous. */
   .page {
-    padding: 20px 18px calc(96px + env(safe-area-inset-bottom));
+    /* 82 px : la barre (55,6) et un peu d'air, pour que le dernier bouton d'un
+       écran ne finisse pas dessous. */
+    padding: 20px 18px calc(82px + env(safe-area-inset-bottom));
   }
   .page-head__title {
     font-size: 22px;
