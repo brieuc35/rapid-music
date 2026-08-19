@@ -358,6 +358,16 @@ function confirmDelete() {
     /*  Plancher : sur les écrans les plus étroits, le rapport seul descendait la
      *  cellule à 34 px, en dessous de la taille où l'on rate sa case. */
     min-height: 36px;
+    /*  Les deux règles ci-dessus se combinent en une largeur de 36 × 1,12 =
+     *  40,3 px, que rien ne réclamait : sous 390 px la carte débordait alors la
+     *  page, gardant sa marge à gauche et plus aucune à droite — les deux cartes
+     *  de l'écran paraissaient décalées. Il faut couper les deux chemins :
+     *    - min-width, pour que la colonne ne soit pas élargie à 40,3 px ;
+     *    - width, pour que la cellule ne dépasse pas la colonne obtenue.
+     *  La largeur vient alors du partage en sept, la hauteur s'en déduit, et le
+     *  plancher de 36 px continue de s'appliquer. */
+    min-width: 0;
+    width: 100%;
     border-radius: 9px;
     padding: 5px 3px 3px;
     gap: 4px;
