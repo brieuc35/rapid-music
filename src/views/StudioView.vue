@@ -174,8 +174,14 @@ const cells = computed(() => {
   const startOffset = (first.getDay() + 6) % 7 // Monday-first
   const start = new Date(year, month, 1 - startOffset)
   const todayISO = toISO(new Date())
+  /*  Le nombre de semaines réellement occupées, et non six par principe : selon
+   *  le jour où tombe le 1er, un mois en occupe quatre, cinq ou six. Une
+   *  sixième ligne dessinée pour rien ne montrait que des jours du mois suivant
+   *  et prenait, sur un téléphone, la place de la liste des évènements. */
+  const joursDuMois = new Date(year, month + 1, 0).getDate()
+  const semaines = Math.ceil((startOffset + joursDuMois) / 7)
   const out = []
-  for (let i = 0; i < 42; i++) {
+  for (let i = 0; i < semaines * 7; i++) {
     const d = new Date(start)
     d.setDate(start.getDate() + i)
     const iso = toISO(d)
@@ -327,6 +333,42 @@ function confirmDelete() {
 .cal-cell__dots {
   display: flex;
   gap: 3px;
+}
+
+/*  Sur téléphone, le mois doit tenir en entier avec le début de la liste des
+ *  évènements. Les cellules perdent un peu de hauteur — jamais de largeur, qui
+ *  vient du partage de l'écran en sept — et les marges du calendrier se
+ *  resserrent. Un plancher garde la cellule à 36 px, taille en
+ *  dessous de laquelle on rate sa case. */
+@media (max-width: 900px) {
+  .studio-layout .card {
+    padding: 14px;
+  }
+  .cal-head {
+    margin-bottom: 12px;
+  }
+  .cal-grid {
+    gap: 5px;
+  }
+  .cal-grid--head {
+    margin-bottom: 6px;
+  }
+  .cal-cell {
+    aspect-ratio: 1.12;
+    /*  Plancher : sur les écrans les plus étroits, le rapport seul descendait la
+     *  cellule à 34 px, en dessous de la taille où l'on rate sa case. */
+    min-height: 36px;
+    border-radius: 9px;
+    padding: 5px 3px 3px;
+    gap: 4px;
+  }
+  .cal-cell__num {
+    font-size: 13px;
+  }
+  .cal-cell--today .cal-cell__num {
+    width: 22px;
+    height: 22px;
+  }
 }
 .cal-dot {
   width: 6px;
