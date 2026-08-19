@@ -152,6 +152,21 @@
         <component :is="Component" />
       </RouterView>
     </div>
+
+    <!--  Barre d'onglets du téléphone. Quatre destinations, celles qu'on
+          surveille tous les jours : le tiroir garde les cinq autres, qui se
+          consultent sans se surveiller. Elle ne remplace donc pas le menu, elle
+          met à portée du pouce ce qui servait deux fois par heure — et rend
+          visibles des compteurs qui étaient cachés derrière un bouton. -->
+    <nav class="tabbar" aria-label="Navigation principale">
+      <RouterLink v-for="t in barreOnglets" :key="t.path" :to="t.path" class="tabbar__item">
+        <span class="tabbar__ico">
+          <Icon :name="t.icon" />
+          <span v-if="t.badge" class="tabbar__badge">{{ t.badge > 99 ? '99+' : t.badge }}</span>
+        </span>
+        <span class="tabbar__label">{{ t.label }}</span>
+      </RouterLink>
+    </nav>
   </div>
 
   <!--  Une nouvelle version est en cache et attend. Elle n'est pas appliquée
@@ -263,6 +278,20 @@ const upcomingSessions = computed(
 const pendingContracts = computed(
   () => store.contracts.filter((c) => c.status === 'En attente').length,
 )
+
+/*  Les quatre onglets de la barre du téléphone, dans l'ordre d'usage : le
+ *  résumé, puis ce qui a des dates, puis ce qui se coche.
+ *
+ *  « Accueil » et non « Tableau de bord » : à quatre onglets sur une largeur de
+ *  téléphone, chaque libellé dispose d'un quart de l'écran, et « Tableau de
+ *  bord » n'y tient pas. L'icône est la même que dans le menu, la destination
+ *  aussi. */
+const barreOnglets = computed(() => [
+  { path: '/tableau-de-bord', label: 'Accueil', icon: 'dashboard', badge: 0 },
+  { path: '/concerts', label: 'Concerts', icon: 'concert', badge: upcomingConcerts.value },
+  { path: '/taches', label: 'Tâches', icon: 'check', badge: openTasks.value.length },
+  { path: '/studio', label: 'Agenda', icon: 'calendar', badge: upcomingSessions.value },
+])
 
 const topNav = computed(() => [
   { path: '/tableau-de-bord', title: 'Tableau de bord', icon: 'dashboard', badge: 0 },

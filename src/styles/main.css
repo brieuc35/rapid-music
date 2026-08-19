@@ -590,6 +590,15 @@ textarea {
   height: 20px;
 }
 
+/* ==========================================================================
+   Barre d'onglets du téléphone
+   ==========================================================================
+   Masquée par défaut : le bureau a sa barre latérale, toujours visible. Elle
+   n'apparaît qu'à la largeur où le menu devient un tiroir. */
+.tabbar {
+  display: none;
+}
+
 .scrim {
   display: none;
   position: fixed;
@@ -1109,6 +1118,13 @@ textarea {
    dessous. Sans « flex-basis: 100% », elle se partagerait la ligne avec eux et
    se retrouverait comprimée en une colonne d'un mot par ligne. L'icône, qui
    n'est que décorative, disparaît pour laisser la place au texte. */
+/* Au-dessus de la barre d'onglets, qui occupe désormais le bas de l'écran. */
+@media (max-width: 900px) {
+  .maj {
+    bottom: calc(74px + env(safe-area-inset-bottom));
+  }
+}
+
 @media (max-width: 430px) {
   .maj {
     flex-wrap: wrap;
@@ -1383,8 +1399,94 @@ table.tbl tbody tr:hover {
     padding: 7px;
   }
 
+  /* Quatre onglets, à portée du pouce. Le fond reprend celui du menu, si bien
+     que la barre système du téléphone — réglée sur la même couleur dans le
+     paquet Android — la prolonge sans démarcation.
+
+     z-index 35 : au-dessus du contenu, mais sous le voile (39) et le tiroir
+     (40), qui doivent la recouvrir quand le menu s'ouvre. */
+  .tabbar {
+    display: flex;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 35;
+    background: var(--nav-bg);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    /* Zone réservée des téléphones sans bouton, sous la barre de gestes. */
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .tabbar__item {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 9px 4px 10px;
+    color: rgba(255, 255, 255, 0.55);
+    transition: color 0.15s;
+  }
+  .tabbar__item.router-link-active {
+    color: #fff;
+  }
+  /* Un trait au-dessus de l'onglet actif : la couleur seule ne suffit pas à le
+     désigner pour qui distingue mal les nuances. */
+  .tabbar__item.router-link-active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 22%;
+    right: 22%;
+    height: 2px;
+    border-radius: 0 0 3px 3px;
+    background: var(--brand-gradient);
+  }
+  .tabbar__ico {
+    position: relative;
+    display: grid;
+    place-items: center;
+  }
+  .tabbar__ico svg {
+    width: 22px;
+    height: 22px;
+  }
+  .tabbar__item.router-link-active .tabbar__ico svg {
+    color: var(--violet-400);
+  }
+  /* Le compteur se pose sur l'icône : ce qui attend se voit sans ouvrir le
+     menu, ce qui était impossible quand il vivait dans le tiroir. */
+  .tabbar__badge {
+    position: absolute;
+    top: -5px;
+    left: 13px;
+    min-width: 16px;
+    padding: 0 4px;
+    border-radius: 20px;
+    background: var(--violet-500);
+    border: 2px solid var(--nav-bg);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 16px;
+    text-align: center;
+  }
+  .tabbar__label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  /* La marge basse des pages laisse passer la barre : sans elle, le dernier
+     bouton d'un écran finirait dessous. */
   .page {
-    padding: 20px 18px 90px;
+    padding: 20px 18px calc(96px + env(safe-area-inset-bottom));
   }
   .page-head__title {
     font-size: 22px;
