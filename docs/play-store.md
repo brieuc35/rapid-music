@@ -146,6 +146,16 @@ recopiée dans le paquet Android. Changer le fichier ne suffit donc pas — il f
 refabriquer un `.aab` (ou un `.apk`) et réinstaller. C'est la seule chose de
 l'application qui ne se met pas à jour toute seule.
 
+Le fichier n'est pas retouché à la main : il est produit par
+
+```sh
+node scripts/icone-maskable.mjs
+```
+
+Les couleurs et les proportions sont des constantes en tête de ce script, avec
+la raison de chacune. Les règles ci-dessous y sont calculées puis vérifiées sur
+l'image produite, plutôt que réappliquées de mémoire.
+
 La proportion du dessin n'est pas libre. Le gabarit d'une icône adaptative
 mesure 108 dp, Bubblewrap y pose l'image avec 8,5 dp de marge — soit 91 dp — et
 le lanceur n'affiche que les **72 dp centraux**, découpés en cercle ou en
@@ -158,8 +168,20 @@ qui le faisait toucher le bord. Le dessin est centré sur son tracé réel, non 
 son cadre : le glyphe de `favicon.svg` n'est pas centré dans son repère de 24
 unités, et s'y fier plaçait le logo 10 px trop haut.
 
+Le fond est le dégradé de la marque, de `#8b5cf6` à `#d946ef`. Le violet de
+départ est exactement celui de `--brand-gradient` dans `src/styles/main.css`,
+pour qu'un seul violet circule ; l'arrivée est en fuchsia et non en rose, ce qui
+fait lire le fond nettement plus violet sans l'aplatir.
+
+Ce dégradé est **calculé pixel par pixel**, et non confié au rasteriseur : celui-ci
+le trame, d'un écart de ±1 par canal. Invisible à l'œil, mais la compression ne
+peut plus exploiter la régularité du dégradé et le fichier grossit de près de
+40 %.
+
 Le fichier est en RVB sans couche alpha — une icône maskable est opaque par
-construction — ce qui le laisse à 13 Ko.
+construction — ce qui le laisse à 12 Ko. Les cinq filtres du format PNG ont été
+mesurés sur cette image : tous l'alourdissent, de 4 % pour le meilleur à 27 %
+pour le pire. Un dégradé lisse se comprime déjà bien sans eux.
 
 ## L'étape qu'il ne faut pas rater : `assetlinks.json`
 
