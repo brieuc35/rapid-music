@@ -11,7 +11,7 @@
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { echapper, estPro, formaterDate, mailBienvenue, mailPro, passeAPro } from './courriels.js'
+import { CID_LOGO, echapper, estPro, formaterDate, mailBienvenue, mailPro, passeAPro } from './courriels.js'
 
 /* -------------------------------------------------------------------------- */
 /*  Quand faut-il annoncer l'abonnement Pro ?                                  */
@@ -154,18 +154,37 @@ for (const [nom, courriel] of [
   ['bienvenue', mailBienvenue(LIEN)],
   ['Pro', mailPro('2026-08-19')],
 ] as const) {
-  test(`${nom} : les trois champs attendus par l'extension sont remplis`, () => {
+  test(`${nom} : les trois champs attendus sont remplis`, () => {
     assert.equal(typeof courriel.subject, 'string')
     assert.ok(courriel.subject.length > 0 && courriel.subject.length < 90)
     assert.ok(courriel.html.length > 0)
     assert.ok(courriel.text.length > 0)
   })
 
-  test(`${nom} : aucune feuille de style ni image externe`, () => {
-    // Les logiciels de messagerie suppriment le premier et bloquent la seconde.
+  test(`${nom} : aucune feuille de style ni image chargée de l'extérieur`, () => {
+    /*  Les messageries suppriment le `<style>` et bloquent par défaut les images
+     *  qu'il faut aller chercher sur un serveur. Une image embarquée dans le
+     *  message — désignée par « cid: » — n'est pas concernée : c'est justement
+     *  la parade, et elle est vérifiée par le test suivant. */
     assert.ok(!/<style/i.test(courriel.html), 'balise <style> présente')
-    assert.ok(!/<img/i.test(courriel.html), 'balise <img> présente')
+    assert.ok(!/src\s*=\s*["']https?:/i.test(courriel.html), 'image chargée depuis un serveur')
     assert.ok(!/<link/i.test(courriel.html), 'balise <link> présente')
+  })
+
+  test(`${nom} : le logo annoncé et le logo joint ne peuvent pas diverger`, () => {
+    /*  L'invariant qui compte : si le HTML désigne l'image embarquée sans que
+     *  le drapeau la fasse joindre, le lecteur voit un cadre vide. Et un
+     *  drapeau sans référence ferait apparaître un fichier reçu en pièce
+     *  jointe, sans raison. */
+    const designe = courriel.html.includes(`cid:${CID_LOGO}`)
+    assert.equal(designe, courriel.logo === true, designe ? 'logo désigné mais non joint' : 'logo joint mais non désigné')
+  })
+
+  test(`${nom} : une image embarquée porte un texte de remplacement`, () => {
+    // Bloquée ou non chargée, elle ne doit pas laisser un nom de fichier à l'écran.
+    for (const balise of courriel.html.match(/<img[^>]*>/gi) ?? []) {
+      assert.match(balise, /alt=/, 'image sans attribut alt')
+    }
   })
 
   test(`${nom} : les liens légaux obligatoires sont présents`, () => {
