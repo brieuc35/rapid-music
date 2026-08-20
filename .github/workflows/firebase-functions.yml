@@ -16,6 +16,11 @@ name: Courriels automatiques (déploiement)
 
 on:
   workflow_dispatch:
+    inputs:
+      detail:
+        description: "Journal détaillé, pour diagnostiquer un échec de déploiement."
+        type: boolean
+        default: false
   # Sur modification du code des fonctions : une erreur de compilation y serait
   # autrement invisible jusqu'au jour du déploiement. Les tests tournent alors,
   # mais rien n'est déployé sans demande explicite.
@@ -84,8 +89,34 @@ jobs:
           fi
 
           export GOOGLE_APPLICATION_CREDENTIALS="$CHEMIN"
+
+          DETAIL=""
+          if [ "${{ inputs.detail }}" = "true" ]; then DETAIL="--debug"; fi
+
+          # La sortie est conservée pour être relue juste après.
+          #
+          #   pipefail : sans lui, c'est le code de « tee » qui compterait,
+          #              jamais celui du déploiement ;
+          #   set +e   : l'étape tourne sous « bash -e », qui interromprait le
+          #              script à l'échec du déploiement — donc avant la lecture
+          #              du journal, et le diagnostic serait perdu.
+          set -o pipefail
+          set +e
+          JOURNAL="$RUNNER_TEMP/deploiement.log"
           npx --yes firebase-tools@latest deploy \
             --only functions \
             --project "$PROJET" \
             --non-interactive \
-            --force
+            --force $DETAIL 2>&1 | tee "$JOURNAL"
+          CODE=$?
+          set -e
+
+          # Le code de sortie ne suffit pas : « firebase deploy » rend 0 alors
+          # qu'une fonction a échoué à se créer, et le workflow s'affichait vert
+          # avec la moitié du travail faite. On relit donc ce qu'il a écrit.
+          if grep -qiE 'failed to (create|update|delete) function|Deploy failed' "$JOURNAL"; then
+            echo "::error::Une ou plusieurs fonctions n'ont pas été déployées — voir les lignes ci-dessous. Relancer avec « detail » coché pour connaître la cause."
+            grep -iE 'failed|error' "$JOURNAL" | head -30
+            exit 1
+          fi
+          exit $CODE
