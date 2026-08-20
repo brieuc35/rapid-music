@@ -196,8 +196,7 @@ export function mailPro(depuis?: string): Courriel {
     'Votre compte Pro est actif',
     `<p style="margin:0 0 14px;font-size:15px;line-height:1.6">C'est confirmé : votre abonnement Pro est en cours${leJour}. Toutes les fonctions sont ouvertes, sans limite de contacts.</p>
      ${bouton(`${SITE}/#/tableau-de-bord`, 'Ouvrir RapidMusic')}
-     <p style="margin:0 0 14px;font-size:15px;line-height:1.6">Merci de votre confiance. Le reçu de votre paiement vous est envoyé séparément par notre prestataire.</p>
-     <p style="margin:0;font-size:15px;line-height:1.6">Une question ? Répondez simplement à ce message.</p>`,
+     <p style="margin:0;font-size:15px;line-height:1.6">Merci de votre confiance. Le reçu de votre paiement vous est envoyé séparément par notre prestataire.</p>`,
   )
   const text = `Votre compte Pro est actif
 
@@ -207,9 +206,7 @@ sont ouvertes, sans limite de contacts.
 ${SITE}/#/tableau-de-bord
 
 Merci de votre confiance. Le reçu de votre paiement vous est envoyé séparément
-par notre prestataire.
-
-Une question ? Répondez simplement à ce message.`
+par notre prestataire.`
   return { subject: 'Votre compte RapidMusic Pro est actif', html, text }
 }
 
