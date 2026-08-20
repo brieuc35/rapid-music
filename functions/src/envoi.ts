@@ -50,21 +50,29 @@ export interface OptionsSmtp {
  * jusqu'à expiration, sans message d'erreur utile.
  *
  * L'hôte accepte un port optionnel, séparé par deux-points. Sans port, 465.
+ *
+ * Les trois valeurs sont débarrassées des blancs de début et de fin. Ce n'est
+ * pas de la coquetterie : un retour à la ligne collé par mégarde au bout d'un
+ * secret ne se voit sur aucun écran, et produit un refus d'authentification qui
+ * n'en dit pas la cause. C'est déjà arrivé sur la clé de signature Android.
  */
 export function optionsSmtp(hote: string, identifiant: string, cle: string): OptionsSmtp {
-  if (!hote || !identifiant || !cle) {
+  const h = hote.trim()
+  const u = identifiant.trim()
+  const p = cle.trim()
+  if (!h || !u || !p) {
     /*  Message explicite plutôt qu'un échec d'authentification obscur trois
      *  étapes plus loin : c'est l'erreur la plus probable d'une première mise
-     *  en service. */
+     *  en service. Un secret ne contenant que des blancs vaut absent. */
     throw new Error(
       `Secrets d'envoi absents ou incomplets (${SMTP_HOTE}, ${SMTP_IDENTIFIANT}, ${SMTP_CLE}). Voir docs/courriels.md.`,
     )
   }
-  const sep = hote.lastIndexOf(':')
-  const nom = sep === -1 ? hote : hote.slice(0, sep)
-  const port = sep === -1 ? 465 : Number(hote.slice(sep + 1))
+  const sep = h.lastIndexOf(':')
+  const nom = sep === -1 ? h : h.slice(0, sep)
+  const port = sep === -1 ? 465 : Number(h.slice(sep + 1))
   if (!Number.isInteger(port) || port < 1 || port > 65535) {
-    throw new Error(`Port SMTP invalide dans ${SMTP_HOTE} : « ${hote.slice(sep + 1)} »`)
+    throw new Error(`Port SMTP invalide dans ${SMTP_HOTE} : « ${h.slice(sep + 1)} »`)
   }
   return {
     host: nom,
@@ -72,7 +80,7 @@ export function optionsSmtp(hote: string, identifiant: string, cle: string): Opt
     // Le port décide du chiffrement, et non un réglage à part : 465 est chiffré
     // d'emblée, 587 et les autres le deviennent après négociation.
     secure: port === 465,
-    auth: { user: identifiant, pass: cle },
+    auth: { user: u, pass: p },
   }
 }
 

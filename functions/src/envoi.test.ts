@@ -56,6 +56,29 @@ test('un secret manquant donne un message qui nomme les trois secrets', () => {
   }
 })
 
+test('un retour à la ligne collé au bout d’un secret ne casse rien', () => {
+  // Le copier-coller depuis un gestionnaire de mots de passe en ajoute souvent
+  // un. Il ne se voit sur aucun écran, et provoquerait un refus muet.
+  const o = optionsSmtp('  smtp-relay.brevo.com\n', 'b60cc1001@smtp-brevo.com\n', ' xsmtpsib-abc \n')
+  assert.equal(o.host, 'smtp-relay.brevo.com')
+  assert.equal(o.port, 465)
+  assert.equal(o.auth.user, 'b60cc1001@smtp-brevo.com')
+  assert.equal(o.auth.pass, 'xsmtpsib-abc')
+})
+
+test('un port survit aussi aux blancs autour de l’hôte', () => {
+  const o = optionsSmtp(' smtp-relay.brevo.com:587 \n', 'moi', 'secret')
+  assert.equal(o.host, 'smtp-relay.brevo.com')
+  assert.equal(o.port, 587)
+  assert.equal(o.secure, false)
+})
+
+test('un secret ne contenant que des blancs vaut absent', () => {
+  assert.throws(() => optionsSmtp('  \n ', 'moi', 'secret'), /SMTP_HOTE/)
+  assert.throws(() => optionsSmtp('hote', '   ', 'secret'), /SMTP_IDENTIFIANT/)
+  assert.throws(() => optionsSmtp('hote', 'moi', '\n'), /SMTP_CLE/)
+})
+
 test('un port illisible est refusé, plutôt que traité comme 465', () => {
   // Sans ce contrôle, « hote:abc » donnait un port NaN et une panne obscure.
   assert.throws(() => optionsSmtp('smtp.exemple.fr:abc', 'moi', 'secret'), /Port SMTP invalide/)
