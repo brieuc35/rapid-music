@@ -119,19 +119,18 @@ export async function envoyer(destinataire: string, courriel: Courriel, sujet: R
       subject: courriel.subject,
       text: courriel.text,
       html: courriel.html,
-      /*  Le logo voyage avec le message, désigné par son identifiant. Joint
-       *  seulement quand le HTML s'y réfère : une pièce jointe inutilisée
-       *  s'afficherait comme un fichier reçu dans certaines messageries. */
-      attachments: courriel.logo
-        ? [
-            {
-              filename: 'rapidmusic.png',
-              content: Buffer.from(LOGO_BASE64, 'base64'),
-              contentType: 'image/png',
-              cid: CID_LOGO,
-            },
-          ]
-        : undefined,
+      /*  Le logo voyage avec le message, désigné par son identifiant. Toujours
+       *  joint, parce que l'enveloppe le désigne toujours : une condition ici
+       *  devrait rester en phase avec le HTML, et une divergence donnerait soit
+       *  un cadre vide, soit une pièce jointe orpheline. */
+      attachments: [
+        {
+          filename: 'rapidmusic.png',
+          content: Buffer.from(LOGO_BASE64, 'base64'),
+          contentType: 'image/png',
+          cid: CID_LOGO,
+        },
+      ],
     })
   } catch (e) {
     erreur = e instanceof Error ? e.message : String(e)

@@ -69,8 +69,6 @@ export interface Courriel {
   subject: string
   html: string
   text: string
-  /** Vrai quand le HTML désigne le logo embarqué et qu'il faut donc le joindre. */
-  logo?: boolean
 }
 
 const SITE = 'https://rapidmusic.fr'
@@ -95,19 +93,14 @@ export const CID_LOGO = 'logo-rapidmusic'
  * « RapidMusic » reste écrit à côté, si bien qu'un blocage ne coûte que
  * l'icône, jamais le nom.
  */
-function enveloppe(titre: string, corps: string, avecLogo = false): string {
-  const logo = avecLogo
-    ? `<img src="cid:${CID_LOGO}" width="26" height="26" alt="" style="display:block;border:0;width:26px;height:26px">`
-    : ''
+function enveloppe(titre: string, corps: string): string {
   /*  Deux cellules côte à côte plutôt qu'une image alignée dans du texte :
    *  Outlook ignore `vertical-align` sur une image et la laisse retomber sur la
    *  ligne de base, décalée de quelques pixels vers le bas. */
-  const entete = avecLogo
-    ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
-             <td style="padding-right:10px">${logo}</td>
+  const entete = `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+             <td style="padding-right:10px"><img src="cid:${CID_LOGO}" width="26" height="26" alt="" style="display:block;border:0;width:26px;height:26px"></td>
              <td><span style="font-size:19px;font-weight:700;color:#ffffff">RapidMusic</span></td>
            </tr></table>`
-    : `<span style="font-size:19px;font-weight:700;color:#ffffff">RapidMusic</span>`
 
   return `<!doctype html>
 <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head>
@@ -167,7 +160,7 @@ export function mailBienvenue(lienConfirmation: string): Courriel {
        <li>Notez vos sorties et suivez leurs écoutes.</li>
        <li>Rangez vos contrats et vos contacts au même endroit.</li>
      </ul>`,
-    true,
+
   )
   const text = `Bienvenue sur RapidMusic
 
@@ -180,7 +173,7 @@ Pour démarrer :
 - Ajoutez votre premier concert : dates, cachet, billets vendus.
 - Notez vos sorties et suivez leurs écoutes.
 - Rangez vos contrats et vos contacts au même endroit.`
-  return { subject: 'Bienvenue sur RapidMusic — confirmez votre adresse', html, text, logo: true }
+  return { subject: 'Bienvenue sur RapidMusic — confirmez votre adresse', html, text }
 }
 
 /**
