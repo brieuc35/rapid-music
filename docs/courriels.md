@@ -15,22 +15,23 @@ une action de l'artiste, la loi les appelle des messages *transactionnels*.
 
 ```
 création de compte  ─┐
-                     ├─→  fonction serveur  ─→  collection « mail »  ─→  extension  ─→  artiste
-abonnement → pro    ─┘        (functions/)         (Firestore)         Trigger Email
+                     ├─→  fonction serveur  ─→  SMTP  ─→  Brevo  ─→  artiste
+abonnement → pro    ─┘       (functions/)                   │
+                                                            └→  trace dans « courriels »
 ```
 
-Les fonctions **n'envoient pas** les messages : elles déposent un document dans
-la collection `mail`, que l'extension officielle *Trigger Email from Firestore*
-surveille. Deux raisons de ne pas ouvrir une connexion SMTP dans le code :
+Les fonctions envoient elles-mêmes, en SMTP direct.
 
-- l'identifiant d'envoi reste dans la configuration de l'extension, et
-  n'apparaît donc jamais dans ce dépôt ;
-- les échecs et les réessais sont écrits dans le document lui-même : un envoi
-  manqué se voit, au lieu de disparaître dans un journal.
+> **Pourquoi pas l'extension « Trigger Email »**, qui était le chemin naturel :
+> les extensions Firebase s'arrêtent le **31 mars 2027**, et surtout leurs
+> réglages deviennent immodifiables à cette date. Impossible d'y renouveler une
+> clé qui aurait fuité. Cloud Functions, lui, n'est pas concerné par cet arrêt.
 
-**La collection `mail` est fermée au navigateur** (`firestore.rules`). Ce n'est
-pas une précaution de principe : y déposer un document, c'est envoyer un message
-au nom de RapidMusic, à l'adresse que l'on veut et avec le contenu que l'on veut.
+Les identifiants d'envoi sont dans **Secret Manager** de Google Cloud : ni dans
+ce dépôt, ni dans le code déployé, et modifiables à tout moment sans redéployer.
+
+Rien dans le code n'est propre à Brevo. Changer de service se fait en changeant
+les secrets.
 
 ## Un seul message à l'inscription — la dernière étape
 
@@ -44,24 +45,21 @@ fonction serveur**. Il n'y a donc plus qu'à retirer l'envoi du navigateur, dans
 `signUp()` (`src/store/index.ts`) — deux lignes.
 
 **À faire en dernier, et pas avant.** Les retirer d'abord ouvrirait une période
-— le temps de faire vérifier le domaine d'expédition, un jour ou deux — pendant
-laquelle un nouveau compte ne recevrait *aucun* message, alors que le bandeau de
-l'application affirmerait qu'un lien a été envoyé. Deux messages valent mieux que
-zéro. L'ordre est donc :
+pendant laquelle un nouveau compte ne recevrait *aucun* message, alors que le
+bandeau de l'application affirmerait qu'un lien a été envoyé. Deux messages
+valent mieux que zéro. L'ordre est donc :
 
-1. les quatre étapes ci-dessous ;
+1. les trois étapes ci-dessous ;
 2. essayer les deux messages pour de vrai ;
 3. alors seulement, retirer l'envoi du navigateur.
 
-Dans tous les cas le filet reste en place : le bandeau de l'application permet de
-redemander le lien à tout moment (`resendVerification()`), et l'application reste
-utilisable sans adresse confirmée.
+Dans tous les cas le filet reste en place : le bandeau permet de redemander le
+lien à tout moment (`resendVerification()`), et l'application reste utilisable
+sans adresse confirmée.
 
 ## Ce qu'il reste à faire — dans la console, une fois
 
-Ces quatre étapes ne peuvent pas être faites depuis le dépôt.
-
-### 1. Choisir un service d'envoi
+### 1. Le service d'envoi
 
 Il faut une adresse d'expédition et un accès SMTP. Trois offres gratuites
 suffisantes ici :
@@ -75,28 +73,45 @@ suffisantes ici :
 Le volume attendu est de deux messages par artiste : n'importe laquelle convient
 largement.
 
-**Faire vérifier le domaine `rapidmusic.fr`** dans le service choisi (il demande
-d'ajouter deux ou trois lignes chez le fournisseur du domaine). Sans cela, les
-messages partent d'une adresse qui n'est pas la vôtre et finissent en indésirables.
-Adresse d'expédition conseillée : `bonjour@rapidmusic.fr`.
+**Faire vérifier le domaine `rapidmusic.fr`** dans le service choisi. Sans cela,
+les messages partent d'une adresse qui n'est pas la vôtre et finissent en
+indésirables. Chez Brevo : *Expéditeurs, domaines et IP dédiées* → onglet
+*Domaines*. Le service donne des lignes à créer dans la zone DNS du domaine ;
+certaines sont des `TXT`, d'autres des `CNAME`.
 
-### 2. Installer l'extension Trigger Email
+> Piège de l'éditeur de zone : le champ « sous-domaine » ne prend que la partie
+> de gauche. Pour `mail._domainkey.rapidmusic.fr`, on saisit `mail._domainkey`,
+> et le domaine est ajouté automatiquement. Pour une ligne sur le domaine
+> lui-même, on laisse le champ vide.
 
-Console Firebase → **Extensions** → rechercher **Trigger Email from Firestore**
-→ Installer. Réglages à donner :
+Puis récupérer la **clé SMTP** : chez Brevo, *SMTP & API* → onglet *SMTP* →
+« Générer une nouvelle clé SMTP ». Lui donner un nom qui dit à quoi elle sert
+(`firebase`), pour pouvoir la révoquer seule plus tard. **Elle ne se réaffiche
+pas** : la copier tout de suite dans un gestionnaire de mots de passe.
 
-| Réglage | Valeur |
-| --- | --- |
-| Collection surveillée | `mail` |
-| Adresse d'expédition | `RapidMusic <bonjour@rapidmusic.fr>` |
-| Adresse de réponse | `rapidmusic.rm@gmail.com` |
-| Connexion SMTP | celle fournie par le service de l'étape 1 |
-| Région | `europe-west1` |
+> La clé SMTP est un mot de passe. Elle ne va **jamais** dans les DNS, qui sont
+> publics — à ne pas confondre avec la clé DKIM, qui elle est publique par
+> nature.
 
-La région importe : les fonctions sont déployées en Europe, autant que l'envoi le
-soit aussi.
+### 2. Les trois secrets
 
-### 3. Créer la clé de déploiement
+Console Google Cloud → **Secret Manager** → *Créer un secret*, trois fois. Les
+noms doivent être **exactement** ceux-ci :
+
+| Nom du secret | Valeur | Exemple |
+| --- | --- | --- |
+| `SMTP_HOTE` | serveur, port optionnel après deux-points | `smtp-relay.brevo.com` |
+| `SMTP_IDENTIFIANT` | identifiant de connexion | affiché sur la page SMTP |
+| `SMTP_CLE` | la clé SMTP | `xsmtpsib-…` |
+
+Sans port, le 465 est utilisé, chiffré d'emblée. Pour le 587, écrire
+`smtp-relay.brevo.com:587` : le chiffrement s'y négocie après connexion, et le
+code s'adapte au port.
+
+Ces trois valeurs se modifient plus tard sans toucher au code : Secret Manager
+crée une nouvelle version, et le prochain démarrage la prend.
+
+### 3. La clé de déploiement
 
 Console Google Cloud → **IAM et administration** → **Comptes de service** →
 créer un compte, lui donner le rôle **Firebase Admin**, puis créer une **clé au
@@ -121,9 +136,11 @@ refuse de déployer si un test échoue.
 > `functions/package.json`. Les versions acceptées changent au fil du temps, et
 > le message d'erreur indique lesquelles le sont.
 
-## Essayer, avant d'y croire
+> S'il se plaint de ne pas accéder aux secrets, donner le rôle **Secret Manager
+> Secret Accessor** au compte de service utilisé par les fonctions, dans la
+> console Google Cloud.
 
-Le mieux est de vérifier les deux chemins pour de vrai :
+## Essayer, avant d'y croire
 
 **Le message de bienvenue** — créer un compte avec une adresse à soi, depuis
 <https://rapidmusic.fr>. Le message doit arriver en une minute, avec un bouton
@@ -134,10 +151,14 @@ Le mieux est de vérifier les deux chemins pour de vrai :
 message doit arriver. C'est exactement ce que fera le prestataire de paiement
 plus tard.
 
-**Si rien n'arrive :** regarder la collection `mail` dans Firestore. Chaque
-document y reçoit un champ `delivery` qui dit où en est l'envoi, et pourquoi il a
-échoué le cas échéant. Si le document n'existe pas du tout, le problème est dans
-la fonction : Console → Functions → Journaux.
+**La preuve que la signature fonctionne** — ouvrir le message reçu dans Gmail,
+puis *Afficher l'original*. La ligne `DKIM : 'PASS' avec le domaine
+rapidmusic.fr` prouve d'un coup que la clé est publiée, correcte, et acceptée.
+
+**Si rien n'arrive :** regarder la collection **`courriels`** dans Firestore.
+Chaque envoi y laisse une ligne — `etat` vaut `envoye` ou `echec`, et le champ
+`erreur` dit pourquoi. Si aucune ligne n'apparaît, le problème est en amont :
+Console → Functions → Journaux.
 
 ## Le second message et les paiements
 
@@ -159,12 +180,11 @@ payé.
 
 ## Modifier le texte des messages
 
-Tout est dans `functions/src/courriels.ts`, et les tests de
-`functions/src/courriels.test.ts` vérifient ce qui doit le rester : la présence
-du lien de confirmation, celle des mentions légales, l'absence de feuille de
-style et d'image (les logiciels de messagerie suppriment la première et bloquent
-la seconde), et le fait qu'un message ne part jamais deux fois pour le même
-évènement.
+Tout est dans `functions/src/courriels.ts`. Les tests vérifient ce qui doit le
+rester : la présence du lien de confirmation, celle des mentions légales,
+l'absence de feuille de style et d'image (les logiciels de messagerie
+suppriment la première et bloquent la seconde), et le fait qu'un message ne part
+jamais deux fois pour le même évènement.
 
 ```sh
 cd functions && npm test
