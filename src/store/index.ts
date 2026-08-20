@@ -463,6 +463,19 @@ export const currentUser = ref<User | null>(null)
  *  seconde à chaque ouverture, alors que l'artiste est déjà connecté. */
 export const authReady = ref(false)
 
+/*  Vrai le temps de charger les données du compte qui vient de s'ouvrir.
+ *
+ *  Une session est connue avant ses données : `currentUser` est posé dès que
+ *  Firebase annonce l'artiste, et la lecture de son document ne se termine
+ *  qu'ensuite. Entre les deux, l'application se croit ouverte sur les données
+ *  encore en mémoire — celles de la démonstration, dont le profil est déjà
+ *  rempli. Un compte tout neuf voyait donc le tableau de bord une seconde
+ *  avant que l'accueil ne prenne sa place.
+ *
+ *  Ce drapeau maintient l'écran d'attente jusqu'à ce que les données du bon
+ *  compte soient là, et qu'il n'y ait plus qu'un seul écran possible. */
+export const chargementCompte = ref(false)
+
 export const isLoggedIn = computed(() => currentUser.value !== null)
 
 /* -------------------------------------------------------------------------- */
@@ -494,34 +507,45 @@ onAuthStateChanged(auth, async (user) => {
     syncer.stop()
     syncer = null
   }
+  /*  Levé avant de poser la session : entre les deux, l'application aurait un
+   *  artiste connecté et les données de quelqu'un d'autre. */
+  chargementCompte.value = user !== null
   currentUser.value = user
   readVerified(user)
 
-  if (user) {
-    syncer = new Syncer(user.uid, apply)
-    const legacy = readLegacy()
-    /*  Les deux lectures en parallèle : l'abonnement ne dépend pas des données
-     *  et rien ne l'attend, l'enchaîner ne ferait que retarder l'ouverture.
-     *  `readSubscription` ne lève jamais — un compte sans abonnement est le cas
-     *  normal, et un refus de droits ne doit pas empêcher d'entrer. */
-    const [data] = await Promise.all([
-      // Sans données locales à reprendre, un compte neuf démarre sur un espace
-      // vierge : les concerts et contrats de la démonstration appartiennent à
-      // une autre artiste, ils n'ont rien à faire dans le compte de celui-ci.
-      syncer.start(legacy ? withDefaults(legacy) : starterData()),
-      readSubscription(user.uid),
-    ])
-    apply(data)
-    if (legacy) markLegacyTaken(user.uid)
-  } else {
-    // Ne pas laisser à l'écran les données du compte qui vient de partir.
-    apply({})
-    // Ni le statut d'abonnement du compte précédent, qui resterait sinon en
-    // mémoire jusqu'au rechargement de la page.
-    clearSubscription()
+  try {
+    if (user) {
+      syncer = new Syncer(user.uid, apply)
+      const legacy = readLegacy()
+      /*  Les deux lectures en parallèle : l'abonnement ne dépend pas des données
+       *  et rien ne l'attend, l'enchaîner ne ferait que retarder l'ouverture.
+       *  `readSubscription` ne lève jamais — un compte sans abonnement est le cas
+       *  normal, et un refus de droits ne doit pas empêcher d'entrer. */
+      const [data] = await Promise.all([
+        // Sans données locales à reprendre, un compte neuf démarre sur un espace
+        // vierge : les concerts et contrats de la démonstration appartiennent à
+        // une autre artiste, ils n'ont rien à faire dans le compte de celui-ci.
+        syncer.start(legacy ? withDefaults(legacy) : starterData()),
+        readSubscription(user.uid),
+      ])
+      apply(data)
+      if (legacy) markLegacyTaken(user.uid)
+    } else {
+      // Ne pas laisser à l'écran les données du compte qui vient de partir.
+      apply({})
+      // Ni le statut d'abonnement du compte précédent, qui resterait sinon en
+      // mémoire jusqu'au rechargement de la page.
+      clearSubscription()
+    }
+  } finally {
+    /*  Baissés quoi qu'il arrive. Les deux lectures ci-dessus rattrapent déjà
+     *  leurs erreurs et retombent sur la copie locale, mais cette garantie vit
+     *  dans d'autres fichiers : si l'une d'elles venait un jour à laisser
+     *  passer une exception, l'artiste resterait devant un écran d'attente sans
+     *  fin, sans rien pouvoir faire. Trop cher pour en dépendre de loin. */
+    chargementCompte.value = false
+    authReady.value = true
   }
-
-  authReady.value = true
 })
 
 /*  Fermeture de l'onglet : la copie locale est déjà à jour, on tente en plus

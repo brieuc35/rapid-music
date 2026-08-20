@@ -1,7 +1,12 @@
 <template>
   <!-- Le temps que Firebase rétablisse la session : ni l'un ni l'autre écran,
-       pour ne pas faire apparaître la connexion à quelqu'un de déjà connecté. -->
-  <div v-if="!authReady" class="boot">
+       pour ne pas faire apparaître la connexion à quelqu'un de déjà connecté.
+
+       Et le temps de charger les données du compte : une session est connue
+       avant elles, si bien qu'un compte tout neuf voyait le tableau de bord
+       une seconde — celui de la démonstration, encore en mémoire — avant que
+       l'accueil ne prenne sa place. -->
+  <div v-if="!authReady || chargementCompte" class="boot">
     <span class="boot__mark"><BrandMark /></span>
   </div>
 
@@ -197,6 +202,7 @@ import {
   store,
   isLoggedIn,
   authReady,
+  chargementCompte,
   needsOnboarding,
   isPro,
   openTasks,
