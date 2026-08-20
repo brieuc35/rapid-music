@@ -148,7 +148,7 @@ export async function envoyer(destinataire: string, courriel: Courriel, sujet: R
         le: FieldValue.serverTimestamp(),
       })
   } catch (e) {
-    logger.error('Trace impossible', { erreur: String(e) })
+    logger.error(`Trace impossible : ${String(e)}`)
   }
 
   if (erreur) throw new Error(erreur)
