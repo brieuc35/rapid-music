@@ -83,7 +83,10 @@ export const bienvenue = functions
       await envoyer(user.email, mailBienvenue(lien), { type: 'bienvenue', uid: user.uid })
       functions.logger.info('Message de bienvenue envoyé', { uid: user.uid })
     } catch (e) {
-      functions.logger.error('Message de bienvenue impossible', { uid: user.uid, erreur: String(e) })
+      /*  La raison va dans le message et non dans un champ à côté : le panneau
+       *  « Erreurs » de la console n'affiche que le message, et une erreur qui
+       *  ne dit pas sa cause oblige à retrouver la ligne complète ailleurs. */
+      functions.logger.error(`Message de bienvenue impossible : ${String(e)}`, { uid: user.uid })
     }
   })
 
@@ -123,6 +126,6 @@ export const abonnementPro = functions
       await envoyer(user.email, mailPro(apres?.depuis), { type: 'pro', uid })
       functions.logger.info('Confirmation Pro envoyée', { uid })
     } catch (e) {
-      functions.logger.error('Confirmation Pro impossible', { uid, erreur: String(e) })
+      functions.logger.error(`Confirmation Pro impossible : ${String(e)}`, { uid })
     }
   })
