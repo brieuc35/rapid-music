@@ -171,13 +171,12 @@ for (const [nom, courriel] of [
     assert.ok(!/<link/i.test(courriel.html), 'balise <link> présente')
   })
 
-  test(`${nom} : le logo annoncé et le logo joint ne peuvent pas diverger`, () => {
-    /*  L'invariant qui compte : si le HTML désigne l'image embarquée sans que
-     *  le drapeau la fasse joindre, le lecteur voit un cadre vide. Et un
-     *  drapeau sans référence ferait apparaître un fichier reçu en pièce
-     *  jointe, sans raison. */
-    const designe = courriel.html.includes(`cid:${CID_LOGO}`)
-    assert.equal(designe, courriel.logo === true, designe ? 'logo désigné mais non joint' : 'logo joint mais non désigné')
+  test(`${nom} : le logo embarqué est désigné dans l'en-tête`, () => {
+    /*  `envoi.ts` joint le logo à tous les messages, sans condition. Ce test
+     *  garde l'autre moitié de l'accord : si l'enveloppe cessait de le
+     *  désigner, chaque message partirait avec une pièce jointe orpheline, que
+     *  certaines messageries afficheraient comme un fichier reçu. */
+    assert.ok(courriel.html.includes(`cid:${CID_LOGO}`), 'le logo embarqué n’est pas désigné')
   })
 
   test(`${nom} : une image embarquée porte un texte de remplacement`, () => {
