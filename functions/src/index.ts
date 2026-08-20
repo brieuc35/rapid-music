@@ -6,19 +6,8 @@
 /*    création d'un compte      → bienvenue, avec le lien de confirmation      */
 /*    abonnements/{uid} → pro   → confirmation de l'abonnement Pro             */
 /*                                                                            */
-/*  L'envoi lui-même n'est pas fait ici : ces fonctions déposent un document    */
-/*  dans la collection `mail`, que l'extension « Trigger Email from Firestore » */
-/*  surveille. Deux raisons de passer par elle plutôt que d'ouvrir une          */
-/*  connexion SMTP ici :                                                       */
-/*                                                                            */
-/*    — l'identifiant d'envoi reste dans la configuration de l'extension, et    */
-/*      n'apparaît donc jamais dans ce dépôt ;                                 */
-/*    — les échecs et les réessais sont écrits dans le document lui-même, ce    */
-/*      qui rend un envoi manqué visible au lieu d'être perdu dans un journal.  */
-/*                                                                            */
-/*  La collection `mail` est fermée au navigateur (voir firestore.rules). Ce    */
-/*  n'est pas un détail : elle donne le droit d'envoyer un message au nom de    */
-/*  RapidMusic, à n'importe quelle adresse.                                     */
+/*  L'envoi lui-même est dans envoi.ts, et le contenu dans courriels.ts. Ce     */
+/*  fichier ne fait que relier les deux à ce qui les déclenche.                */
 /*                                                                            */
 /*  Pourquoi l'API « v1 » : le déclencheur sur la création d'un compte n'existe */
 /*  qu'en v1 — la v2 ne propose que des fonctions bloquantes, qui réclament     */
@@ -28,28 +17,18 @@
 import * as functions from 'firebase-functions/v1'
 import { initializeApp } from 'firebase-admin/app'
 import { getAuth } from 'firebase-admin/auth'
-import { getFirestore } from 'firebase-admin/firestore'
-import { mailBienvenue, mailPro, passeAPro, type Abonnement, type Courriel } from './courriels.js'
+import { mailBienvenue, mailPro, passeAPro, type Abonnement } from './courriels.js'
+import { envoyer, SMTP_CLE, SMTP_HOTE, SMTP_IDENTIFIANT } from './envoi.js'
 
 initializeApp()
 
 /** Région européenne : les données des artistes n'ont pas à traverser l'Atlantique. */
 const REGION = 'europe-west1'
 
-/** Collection surveillée par l'extension d'envoi. */
-const FILE_ENVOI = 'mail'
-
-/**
- * Dépose un message dans la file d'envoi.
- *
- * `to` est passé tel quel : c'est l'adresse du compte, telle que Firebase
- * l'a enregistrée.
- */
-async function envoyer(to: string, courriel: Courriel): Promise<void> {
-  await getFirestore()
-    .collection(FILE_ENVOI)
-    .add({ to, message: courriel, creeLe: new Date().toISOString() })
-}
+/*  Les trois secrets d'envoi, réclamés par les deux fonctions. Déclarés ici,
+ *  ils sont lus dans Secret Manager au démarrage et exposés à la fonction —
+ *  jamais écrits dans le dépôt ni dans le déploiement. */
+const SECRETS = [SMTP_HOTE, SMTP_IDENTIFIANT, SMTP_CLE]
 
 /* -------------------------------------------------------------------------- */
 /*  1. Ouverture d'un compte                                                   */
@@ -62,13 +41,13 @@ async function envoyer(to: string, courriel: Courriel): Promise<void> {
  * demandé par le navigateur : c'est ce qui permet de n'envoyer qu'un seul
  * message au lieu de deux à la même seconde.
  *
- * La fonction n'échoue jamais bruyamment sur un compte sans adresse — une
- * connexion par un autre moyen n'en fournit pas forcément — et une erreur
- * d'envoi n'a personne à prévenir : le bandeau de l'application permet de
- * redemander le lien.
+ * L'erreur est journalisée et non relancée : un réessai automatique renverrait
+ * le message d'accueil en double, ce qui est pire que de ne pas l'avoir. Le
+ * bandeau de l'application permet de redemander le lien.
  */
 export const bienvenue = functions
   .region(REGION)
+  .runWith({ secrets: SECRETS })
   .auth.user()
   .onCreate(async (user) => {
     if (!user.email) {
@@ -80,11 +59,9 @@ export const bienvenue = functions
         url: 'https://rapidmusic.fr/',
         handleCodeInApp: false,
       })
-      await envoyer(user.email, mailBienvenue(lien))
-      functions.logger.info('Message de bienvenue déposé', { uid: user.uid })
+      await envoyer(user.email, mailBienvenue(lien), { type: 'bienvenue', uid: user.uid })
+      functions.logger.info('Message de bienvenue envoyé', { uid: user.uid })
     } catch (e) {
-      /*  Journalisé et non relancé : un réessai automatique renverrait le
-       *  message d'accueil en double, ce qui est pire que de ne pas l'avoir. */
       functions.logger.error('Message de bienvenue impossible', { uid: user.uid, erreur: String(e) })
     }
   })
@@ -108,6 +85,7 @@ export const bienvenue = functions
  */
 export const abonnementPro = functions
   .region(REGION)
+  .runWith({ secrets: SECRETS })
   .firestore.document('abonnements/{uid}')
   .onWrite(async (change, context) => {
     const avant = (change.before.exists ? change.before.data() : null) as Abonnement | null
@@ -121,8 +99,8 @@ export const abonnementPro = functions
         functions.logger.info('Abonné sans adresse, aucun message envoyé', { uid })
         return
       }
-      await envoyer(user.email, mailPro(apres?.depuis))
-      functions.logger.info('Confirmation Pro déposée', { uid })
+      await envoyer(user.email, mailPro(apres?.depuis), { type: 'pro', uid })
+      functions.logger.info('Confirmation Pro envoyée', { uid })
     } catch (e) {
       functions.logger.error('Confirmation Pro impossible', { uid, erreur: String(e) })
     }
