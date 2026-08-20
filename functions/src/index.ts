@@ -30,6 +30,27 @@ const REGION = 'europe-west1'
  *  jamais écrits dans le dépôt ni dans le déploiement. */
 const SECRETS = [SMTP_HOTE, SMTP_IDENTIFIANT, SMTP_CLE]
 
+/*  L'identité sous laquelle les fonctions s'exécutent.
+ *
+ *  Désignée explicitement, et non laissée par défaut, pour deux raisons.
+ *
+ *  La première est pratique : le compte par défaut de Firebase est celui
+ *  d'App Engine, que les projets récents ne créent plus. Le déploiement
+ *  échouait sur son absence, et le formulaire censé le créer réclame... ce même
+ *  compte.
+ *
+ *  La seconde vaut mieux que la première : ce compte par défaut porte le rôle
+ *  d'éditeur du projet, soit bien plus que ce que deux fonctions d'envoi de
+ *  courriels ont à faire. Celui-ci n'a que deux droits — lire les comptes et
+ *  écrire dans Firestore — et sa création est décrite dans docs/courriels.md.
+ *
+ *  Le droit de lire les trois secrets lui est donné par le déploiement, il n'y
+ *  a rien à régler pour cela. */
+const COMPTE = 'courriels@rapidmusic-db075.iam.gserviceaccount.com'
+
+/** Réglages communs aux deux fonctions. */
+const REGLAGES = { secrets: SECRETS, serviceAccount: COMPTE }
+
 /* -------------------------------------------------------------------------- */
 /*  1. Ouverture d'un compte                                                   */
 /* -------------------------------------------------------------------------- */
@@ -47,7 +68,7 @@ const SECRETS = [SMTP_HOTE, SMTP_IDENTIFIANT, SMTP_CLE]
  */
 export const bienvenue = functions
   .region(REGION)
-  .runWith({ secrets: SECRETS })
+  .runWith(REGLAGES)
   .auth.user()
   .onCreate(async (user) => {
     if (!user.email) {
@@ -85,7 +106,7 @@ export const bienvenue = functions
  */
 export const abonnementPro = functions
   .region(REGION)
-  .runWith({ secrets: SECRETS })
+  .runWith(REGLAGES)
   .firestore.document('abonnements/{uid}')
   .onWrite(async (change, context) => {
     const avant = (change.before.exists ? change.before.data() : null) as Abonnement | null
