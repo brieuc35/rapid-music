@@ -49,7 +49,7 @@ pendant laquelle un nouveau compte ne recevrait *aucun* message, alors que le
 bandeau de l'application affirmerait qu'un lien a été envoyé. Deux messages
 valent mieux que zéro. L'ordre est donc :
 
-1. les trois étapes ci-dessous ;
+1. les cinq étapes ci-dessous ;
 2. essayer les deux messages pour de vrai ;
 3. alors seulement, retirer l'envoi du navigateur.
 
@@ -111,7 +111,30 @@ code s'adapte au port.
 Ces trois valeurs se modifient plus tard sans toucher au code : Secret Manager
 crée une nouvelle version, et le prochain démarrage la prend.
 
-### 3. La clé de déploiement
+### 3. Le compte sous lequel les fonctions s'exécutent
+
+Console Google Cloud → **Comptes de service** → *Créer un compte de service*.
+
+| Champ | Valeur |
+| --- | --- |
+| Identifiant | `courriels` |
+| Rôles | **Utilisateur Cloud Datastore** et **Administrateur Firebase Authentication** |
+
+L'adresse obtenue — `courriels@rapidmusic-db075.iam.gserviceaccount.com` — est
+celle inscrite dans `functions/src/index.ts`. Les deux doivent correspondre.
+
+**Pourquoi ce compte plutôt que celui par défaut.** Firebase utilise sinon le
+compte d'App Engine, que les projets récents ne créent plus : le déploiement
+échoue alors sur son absence, et le formulaire censé le créer réclame ce même
+compte. Surtout, ce compte par défaut porte le rôle d'éditeur du projet — bien
+plus que ce que deux fonctions d'envoi de courriels ont à faire.
+
+Les deux rôles ci-dessus sont exactement ce dont elles ont besoin : lire un
+compte pour connaître son adresse et fabriquer un lien de confirmation, et
+écrire la trace de l'envoi. Le droit de lire les trois secrets est accordé
+automatiquement par le déploiement.
+
+### 4. La clé de déploiement
 
 Console Google Cloud → **IAM et administration** → **Comptes de service** →
 créer un compte, lui donner le rôle **Firebase Admin**, puis créer une **clé au
@@ -125,7 +148,7 @@ fichier entier**, accolades comprises.
 > le dépôt ni dans une page web — à ne pas confondre avec la configuration
 > Firebase de `src/firebase.ts`, qui est publique par conception.
 
-### 4. Déployer
+### 5. Déployer
 
 Onglet **Actions** → **Courriels automatiques (déploiement)** → **Run
 workflow**. Le workflow vérifie les types, lance les tests, puis déploie. Il
