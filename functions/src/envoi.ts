@@ -18,7 +18,8 @@
 import { createTransport, type Transporter } from 'nodemailer'
 import { getFirestore, FieldValue } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v1'
-import type { Courriel } from './courriels.js'
+import { CID_LOGO, type Courriel } from './courriels.js'
+import { LOGO_BASE64 } from './logo.js'
 
 /** Serveur SMTP, port inclus s'il diffère de 465 : `smtp-relay.brevo.com`. */
 export const SMTP_HOTE = 'SMTP_HOTE'
@@ -118,6 +119,19 @@ export async function envoyer(destinataire: string, courriel: Courriel, sujet: R
       subject: courriel.subject,
       text: courriel.text,
       html: courriel.html,
+      /*  Le logo voyage avec le message, désigné par son identifiant. Joint
+       *  seulement quand le HTML s'y réfère : une pièce jointe inutilisée
+       *  s'afficherait comme un fichier reçu dans certaines messageries. */
+      attachments: courriel.logo
+        ? [
+            {
+              filename: 'rapidmusic.png',
+              content: Buffer.from(LOGO_BASE64, 'base64'),
+              contentType: 'image/png',
+              cid: CID_LOGO,
+            },
+          ]
+        : undefined,
     })
   } catch (e) {
     erreur = e instanceof Error ? e.message : String(e)
