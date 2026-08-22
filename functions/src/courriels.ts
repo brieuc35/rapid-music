@@ -137,43 +137,65 @@ function bouton(lien: string, texte: string): string {
 }
 
 /**
- * Mail d'ouverture de compte : il accueille **et** porte le lien de
- * confirmation.
+ * Mail d'ouverture de compte : il accueille, et porte le lien de confirmation
+ * **quand celui-ci a pu être fabriqué**.
  *
  * Le but est un seul message et non deux : Firebase sait envoyer sa propre
  * demande de confirmation, mais elle arrive à la même seconde que celui-ci, et
- * deux messages simultanés pour un seul évènement font mauvais effet. Le lien
- * étant fabriqué côté serveur, il n'y a rien à perdre à le porter ici.
+ * deux messages simultanés pour un seul évènement font mauvais effet.
+ *
+ * Le lien reste facultatif, et ce n'est pas une précaution théorique. Firebase
+ * limite le nombre de liens qu'on peut lui demander, et refuse au-delà avec un
+ * « TOO_MANY_ATTEMPTS_TRY_LATER » — ce qui est arrivé dès les premiers essais.
+ * Faire dépendre l'accueil de ce lien revenait à ne rien envoyer du tout dans
+ * ces moments-là, alors que le message avait tout à dire sans lui : sans le
+ * lien, il renvoie au bandeau de l'application, qui sait le redemander.
  *
  * L'envoi par le navigateur subsiste tant que ces fonctions ne sont pas
  * déployées et vérifiées — le retirer avant laisserait une période sans aucun
  * message. La marche à suivre est dans docs/courriels.md.
  */
-export function mailBienvenue(lienConfirmation: string): Courriel {
+export function mailBienvenue(lienConfirmation: string | null): Courriel {
+  const confirmation = lienConfirmation
+    ? `<p style="margin:0 0 14px;font-size:15px;line-height:1.6">Votre compte est ouvert. Il ne reste qu'à confirmer votre adresse, pour que vous puissiez récupérer votre mot de passe en cas d'oubli.</p>
+     ${bouton(echapper(lienConfirmation), 'Confirmer mon adresse')}`
+    : `<p style="margin:0 0 14px;font-size:15px;line-height:1.6">Votre compte est ouvert. Pensez à confirmer votre adresse : le bandeau en haut de l'application vous permet d'en recevoir le lien, et c'est ce qui vous permettra de récupérer votre mot de passe en cas d'oubli.</p>`
+
   const html = enveloppe(
     'Bienvenue sur RapidMusic',
-    `<p style="margin:0 0 14px;font-size:15px;line-height:1.6">Votre compte est ouvert. Il ne reste qu'à confirmer votre adresse, pour que vous puissiez récupérer votre mot de passe en cas d'oubli.</p>
-     ${bouton(echapper(lienConfirmation), 'Confirmer mon adresse')}
+    `${confirmation}
      <p style="margin:0 0 6px;font-size:15px;line-height:1.6;font-weight:600">Pour démarrer</p>
      <ul style="margin:0;padding-left:20px;font-size:15px;line-height:1.7">
        <li>Ajoutez votre premier concert : dates, cachet, billets vendus.</li>
        <li>Notez vos sorties et suivez leurs écoutes.</li>
        <li>Rangez vos contrats et vos contacts au même endroit.</li>
      </ul>`,
-
   )
-  const text = `Bienvenue sur RapidMusic
 
-Votre compte est ouvert. Il ne reste qu'à confirmer votre adresse, pour que vous
+  const confirmationTexte = lienConfirmation
+    ? `Votre compte est ouvert. Il ne reste qu'à confirmer votre adresse, pour que vous
 puissiez récupérer votre mot de passe en cas d'oubli :
 
-${lienConfirmation}
+${lienConfirmation}`
+    : `Votre compte est ouvert. Pensez à confirmer votre adresse : le bandeau en haut
+de l'application vous permet d'en recevoir le lien, et c'est ce qui vous
+permettra de récupérer votre mot de passe en cas d'oubli.`
+
+  const text = `Bienvenue sur RapidMusic
+
+${confirmationTexte}
 
 Pour démarrer :
 - Ajoutez votre premier concert : dates, cachet, billets vendus.
 - Notez vos sorties et suivez leurs écoutes.
 - Rangez vos contrats et vos contacts au même endroit.`
-  return { subject: 'Bienvenue sur RapidMusic — confirmez votre adresse', html, text }
+
+  /*  L'objet suit le contenu : promettre une confirmation que le message ne
+   *  porte pas ferait chercher un bouton absent. */
+  const subject = lienConfirmation
+    ? 'Bienvenue sur RapidMusic — confirmez votre adresse'
+    : 'Bienvenue sur RapidMusic'
+  return { subject, html, text }
 }
 
 /**
