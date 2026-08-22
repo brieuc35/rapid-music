@@ -113,6 +113,41 @@ test('bienvenue : un lien contenant une esperluette reste cliquable', () => {
   assert.ok(!m.html.includes('"&oobCode'), 'esperluette brute dans un attribut')
 })
 
+/* -------------------------------------------------------------------------- */
+/*  Bienvenue sans lien : Firebase refuse d'en fabriquer au-delà d'un certain   */
+/*  nombre. Le message doit partir quand même — c'est le chemin qu'on ne        */
+/*  regarde jamais, et c'est celui qui a servi en premier.                      */
+/* -------------------------------------------------------------------------- */
+
+test('bienvenue sans lien : le message existe et reste utile', () => {
+  const m = mailBienvenue(null)
+  assert.ok(m.html.length > 0 && m.text.length > 0)
+  assert.match(m.html, /Votre compte est ouvert/)
+  // La liste « Pour démarrer » reste : c'est l'essentiel de l'accueil.
+  assert.match(m.html, /premier concert/)
+  assert.match(m.text, /premier concert/)
+})
+
+test('bienvenue sans lien : aucun bouton ni lien mort', () => {
+  const m = mailBienvenue(null)
+  assert.ok(!m.html.includes('Confirmer mon adresse'), 'bouton présent sans lien derrière')
+  assert.ok(!/href="cid|href=""/.test(m.html), 'lien vide dans le message')
+  assert.ok(!m.html.includes('null') && !m.text.includes('null'), '« null » visible dans le message')
+})
+
+test("bienvenue sans lien : l'objet ne promet pas une confirmation absente", () => {
+  // Promettre au-dessus ce que le corps ne porte pas fait chercher un bouton
+  // qui n'existe pas.
+  assert.equal(mailBienvenue(null).subject, 'Bienvenue sur RapidMusic')
+  assert.match(mailBienvenue(LIEN).subject, /confirmez/i)
+})
+
+test('bienvenue sans lien : le message dit où retrouver la confirmation', () => {
+  const m = mailBienvenue(null)
+  assert.match(m.html, /bandeau/)
+  assert.match(m.text, /bandeau/)
+})
+
 test('bienvenue : objet et corps parlent de confirmation et de bienvenue', () => {
   const m = mailBienvenue(LIEN)
   assert.match(m.subject, /Bienvenue/)

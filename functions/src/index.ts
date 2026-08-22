@@ -75,13 +75,28 @@ export const bienvenue = functions
       functions.logger.info('Compte sans adresse, aucun message envoyé', { uid: user.uid })
       return
     }
+    /*  Le lien est demandé à part, et son échec n'emporte pas le message.
+     *
+     *  Firebase limite le nombre de liens qu'on peut lui demander et refuse
+     *  au-delà — « TOO_MANY_ATTEMPTS_TRY_LATER », rencontré dès les premiers
+     *  essais. Dans le montage précédent, un refus ici supprimait l'accueil tout
+     *  entier : l'artiste n'avait plus rien, alors que le message avait tout à
+     *  dire sans le lien. Le bandeau de l'application sait le redemander. */
+    let lien: string | null = null
     try {
-      const lien = await getAuth().generateEmailVerificationLink(user.email, {
+      lien = await getAuth().generateEmailVerificationLink(user.email, {
         url: 'https://rapidmusic.fr/',
         handleCodeInApp: false,
       })
+    } catch (e) {
+      functions.logger.warn(`Lien de confirmation indisponible, message envoyé sans lui : ${String(e)}`, {
+        uid: user.uid,
+      })
+    }
+
+    try {
       await envoyer(user.email, mailBienvenue(lien), { type: 'bienvenue', uid: user.uid })
-      functions.logger.info('Message de bienvenue envoyé', { uid: user.uid })
+      functions.logger.info('Message de bienvenue envoyé', { uid: user.uid, avecLien: lien !== null })
     } catch (e) {
       /*  La raison va dans le message et non dans un champ à côté : le panneau
        *  « Erreurs » de la console n'affiche que le message, et une erreur qui
