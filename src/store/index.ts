@@ -591,30 +591,23 @@ function toMessage(e: unknown): string {
 }
 
 /**
- * Crée le compte et envoie le lien de confirmation de l'adresse.
+ * Crée le compte. N'envoie aucun message : c'est la fonction serveur
+ * `bienvenue` qui s'en charge (voir functions/ et docs/courriels.md).
  *
- * Cet envoi est **provisoire**. Le message de bienvenue fabriqué par la fonction
- * serveur porte déjà ce même lien (voir functions/ et docs/courriels.md) : une
- * fois les fonctions déployées et vérifiées, les deux lignes ci-dessous
- * disparaissent, et l'artiste ne reçoit plus qu'un seul message.
+ * Le navigateur envoyait jusqu'ici sa propre demande de confirmation, ce qui
+ * faisait deux messages pour un seul évènement. Le retirer a une seconde raison,
+ * moins évidente : les deux demandes partaient pour la même adresse à une
+ * seconde d'intervalle, et la protection anti-abus de Firebase refusait la
+ * seconde — celle du serveur — avec « TOO_MANY_ATTEMPTS_TRY_LATER ». Le message
+ * d'accueil arrivait donc sans son bouton de confirmation.
  *
- * Elles restent tant que ce n'est pas fait, et pas par prudence excessive : les
- * retirer d'abord ouvrirait une période — le temps de faire vérifier le domaine
- * d'expédition, un jour ou deux — pendant laquelle un nouveau compte ne
- * recevrait aucun message, alors que le bandeau affirmerait qu'un lien a été
- * envoyé. Deux messages valent mieux que zéro.
+ * Le filet reste en place si le lien manque malgré tout : le bandeau de
+ * l'application permet de le redemander (`resendVerification`), et
+ * l'application reste utilisable sans adresse confirmée.
  */
 export async function signUp(email: string, password: string): Promise<void> {
   try {
-    const cred = await createUserWithEmailAndPassword(auth, email.trim(), password)
-    // L'envoi ne conditionne pas la création du compte : une panne du service de
-    // messagerie ne doit pas empêcher d'entrer. Le bandeau permettra de
-    // redemander le lien.
-    try {
-      await sendEmailVerification(cred.user)
-    } catch {
-      /* silencieux : l'artiste pourra relancer l'envoi depuis le bandeau */
-    }
+    await createUserWithEmailAndPassword(auth, email.trim(), password)
   } catch (e) {
     throw new Error(toMessage(e))
   }
