@@ -298,7 +298,7 @@ const barreOnglets = computed(() => [
   { path: '/taches', label: 'Tâches', icon: 'check', badge: openTasks.value.length },
   /*  Le profil plutôt que l'agenda : celui-ci reste à un geste, par le menu, et
    *  la quatrième place vaut mieux à ce qu'on cherche sans savoir où c'est. */
-  { path: '/mon-profil', label: 'Profil', icon: 'users', badge: 0 },
+  { path: '/mon-profil', label: 'Profil', icon: 'user', badge: 0 },
 ])
 
 const topNav = computed(() => [
