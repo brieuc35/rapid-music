@@ -56,46 +56,45 @@ confirmée.
 
 ## La page qui suit le bouton de confirmation
 
-Par défaut, les liens d'action de Firebase — confirmation d'adresse, mot de passe
-oublié — mènent à une page hébergée par Google : **en anglais, à ses couleurs**,
-et sans moyen d'y changer la langue. Le paramètre `lang` du lien, essayé, n'y
-change rien.
+Par défaut, les liens d'action de Firebase mènent à une page hébergée par
+Google : **en anglais, à ses couleurs**. L'application fournit la sienne, à
+`/action`.
 
-L'application fournit donc la sienne, à l'adresse `/#/action`. À déclarer une
-fois :
+**Aucun réglage de console n'est nécessaire.** Le champ prévu pour cela
+(« Personnaliser l'URL d'action ») refuse de s'enregistrer sur ce projet — avec
+ou sans dièse, domaine autorisé ou non, le message reste « Une erreur s'est
+produite lors de la modification de l'URL d'action ». La cause n'a pas été
+trouvée.
 
-**Console Firebase → Authentication → Templates → Modifier (l'icône crayon) →
-« Personnaliser l'URL d'action »** :
+Elle n'a pas eu besoin de l'être : **le message de bienvenue est le nôtre**, et
+son contenu nous appartient. La fonction garde du lien de Firebase ce qui compte
+— le code à usage unique — et le présente à notre page
+(`versNotrePage` dans `functions/src/courriels.ts`). Le code vaut par lui-même ;
+l'adresse qui l'a transporté n'entre pas dans sa validation.
 
-```
-https://rapidmusic.fr/action
-```
+En cas de doute — lien illisible, code absent — le lien d'origine est rendu tel
+quel : une page en anglais qui fonctionne vaut mieux qu'un lien à nous qui ne
+mène nulle part.
 
-> **Sans dièse.** Firebase refuse une adresse qui en contient un — l'essai a
-> donné « Une erreur s'est produite lors de la modification de l'URL d'action ».
-> Or le routeur de l'application travaille après le dièse, et seul « / » existe
-> réellement sur le serveur.
->
-> Deux replis rattrapent l'écart, et **les deux sont nécessaires** :
->
-> - `public/404.html` — GitHub Pages le sert pour toute adresse inconnue, à la
->   première visite ;
-> - un court script dans `index.html` — car une fois le service worker installé,
->   c'est lui qui répond aux adresses inconnues (`navigateFallback` dans
->   `vite.config.ts`), et 404.html n'est alors jamais atteint.
->
-> Chacun replace l'adresse demandée dans le dièse, paramètres compris.
->
-> Le domaine doit par ailleurs figurer dans **Authentication → Settings →
-> Domaines autorisés**, sans quoi l'enregistrement échoue aussi.
+### Ce qui reste en anglais
 
-Ce réglage vaut pour **tous** les messages d'action, pas seulement la
-confirmation. C'est pourquoi la page traite aussi la réinitialisation de mot de
-passe et le retour à une ancienne adresse : n'en gérer qu'un seul casserait les
-autres.
+**Le mot de passe oublié.** Ce message-là est envoyé par Firebase, pas par nous,
+et son lien mène donc toujours à la page de Google. La page `/action` sait
+pourtant le traiter : le jour où le réglage de la console s'enregistrera, ou si
+l'envoi de ce message passe un jour par une fonction, ce sera réglé sans une
+ligne de plus.
 
-Les paramètres sont cherchés **des deux côtés du dièse**, Firebase pouvant les
-placer avant ou après selon la façon dont il assemble le lien.
+### Le repli des adresses profondes
+
+Le routeur de l'application travaille après le dièse, et seul « / » existe sur
+le serveur. Deux replis ramènent `/action` au bon endroit, et **les deux sont
+nécessaires** :
+
+- `public/404.html` — GitHub Pages le sert pour toute adresse inconnue, à la
+  première visite ;
+- un court script dans `index.html` — car une fois le service worker installé,
+  c'est lui qui répond aux adresses inconnues (`navigateFallback` dans
+  `vite.config.ts`), et 404.html n'est alors jamais atteint.
 
 L'adresse de retour transmise par Firebase n'est suivie que si elle pointe vers
 `rapidmusic.fr` : elle arrive par le lien, donc modifiable par quiconque, et la
