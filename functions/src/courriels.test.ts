@@ -11,7 +11,7 @@
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { CID_LOGO, echapper, enFrancais, estPro, formaterDate, mailBienvenue, mailPro, passeAPro } from './courriels.js'
+import { CID_LOGO, echapper, estPro, formaterDate, mailBienvenue, mailPro, passeAPro, versNotrePage } from './courriels.js'
 
 /* -------------------------------------------------------------------------- */
 /*  Quand faut-il annoncer l'abonnement Pro ?                                  */
@@ -97,11 +97,13 @@ const LIEN = 'https://rapidmusic-db075.firebaseapp.com/__/auth/action?mode=verif
 
 test('bienvenue : le lien de confirmation est présent, en HTML et en texte', () => {
   const m = mailBienvenue(LIEN)
-  /*  Dans le HTML le lien est échappé — c'est ce qu'exige un attribut « href »,
-   *  et le navigateur le rétablit à la lecture. En version texte il est brut,
-   *  puisqu'il doit pouvoir être recopié tel quel. */
-  assert.ok(m.html.includes(echapper(LIEN)), 'lien absent du HTML')
-  assert.ok(m.text.includes(LIEN), 'lien absent de la version texte')
+  /*  Le lien attendu n'est plus celui de Firebase mais le nôtre : le message le
+   *  réécrit pour mener à une page en français. Dans le HTML il est échappé —
+   *  c'est ce qu'exige un attribut « href » — et brut en version texte, où il
+   *  doit pouvoir être recopié tel quel. */
+  const attendu = versNotrePage(LIEN)
+  assert.ok(m.html.includes(echapper(attendu)), 'lien absent du HTML')
+  assert.ok(m.text.includes(attendu), 'lien absent de la version texte')
 })
 
 test('bienvenue : un lien contenant une esperluette reste cliquable', () => {
@@ -114,43 +116,50 @@ test('bienvenue : un lien contenant une esperluette reste cliquable', () => {
 })
 
 /* -------------------------------------------------------------------------- */
-/*  La langue de la page d'atterrissage                                        */
+/*  Le lien mène à notre page, pas à celle de Firebase                          */
 /* -------------------------------------------------------------------------- */
 
-test('enFrancais : ajoute la langue à un lien qui a déjà des paramètres', () => {
-  assert.equal(enFrancais('https://x.fr/action?mode=verifyEmail&oobCode=A'), 'https://x.fr/action?mode=verifyEmail&oobCode=A&lang=fr')
+const FIREBASE = 'https://rapidmusic-db075.firebaseapp.com/__/auth/action'
+
+test('versNotrePage : garde le code et le mode, change la destination', () => {
+  const sortie = versNotrePage(`${FIREBASE}?mode=verifyEmail&oobCode=aB1_c-D2&apiKey=AIza&lang=en`)
+  assert.ok(sortie.startsWith('https://rapidmusic.fr/action?'), `destination inattendue : ${sortie}`)
+  assert.ok(sortie.includes('oobCode=aB1_c-D2'), 'le code a été perdu ou abîmé')
+  assert.ok(sortie.includes('mode=verifyEmail'), 'le mode a été perdu')
 })
 
-test('enFrancais : ajoute la langue à un lien sans paramètre', () => {
-  assert.equal(enFrancais('https://x.fr/action'), 'https://x.fr/action?lang=fr')
+test('versNotrePage : ne traîne pas les paramètres de Firebase', () => {
+  // La clé d'API et la langue anglaise n'ont rien à faire sur notre page.
+  const sortie = versNotrePage(`${FIREBASE}?mode=verifyEmail&oobCode=A&apiKey=AIza&lang=en`)
+  assert.ok(!sortie.includes('apiKey'), 'la clé d’API a été recopiée')
+  assert.ok(!sortie.includes('lang=en'), 'la langue anglaise a été recopiée')
 })
 
-test('enFrancais : ne double pas une langue déjà présente', () => {
-  const deja = 'https://x.fr/action?oobCode=A&lang=fr'
-  assert.equal(enFrancais(deja), deja)
-  assert.equal(enFrancais('https://x.fr/action?lang=en'), 'https://x.fr/action?lang=en')
+test('versNotrePage : un lien sans code est rendu tel quel', () => {
+  /*  Le repli qui compte : une page en anglais qui fonctionne vaut mieux qu'un
+   *  lien à nous qui ne mène nulle part. */
+  const sansCode = `${FIREBASE}?mode=verifyEmail`
+  assert.equal(versNotrePage(sansCode), sansCode)
+  const sansMode = `${FIREBASE}?oobCode=A`
+  assert.equal(versNotrePage(sansMode), sansMode)
 })
 
-test("enFrancais : ne touche à rien d'autre dans le lien", () => {
-  /*  Le code à usage unique et l'adresse de retour sont encodés : les
-   *  ré-encoder les casserait. On vérifie que le lien d'origine ressort
-   *  intact, préfixe compris. */
-  const lien = 'https://x.fr/action?mode=verifyEmail&oobCode=aB1%2Fc&continueUrl=https%3A%2F%2Frapidmusic.fr%2F'
-  const sortie = enFrancais(lien)
-  assert.ok(sortie.startsWith(lien), 'le lien a été modifié')
-  assert.ok(sortie.includes('oobCode=aB1%2Fc'), 'le code a été ré-encodé')
-  assert.ok(sortie.includes('continueUrl=https%3A%2F%2Frapidmusic.fr%2F'), "l'adresse de retour a été ré-encodée")
+test('versNotrePage : ce qui n’est pas une adresse ressort intact', () => {
+  assert.equal(versNotrePage('pas une adresse'), 'pas une adresse')
+  assert.equal(versNotrePage(''), '')
 })
 
-test('enFrancais : un lien vide ressort vide', () => {
-  assert.equal(enFrancais(''), '')
+test('versNotrePage : un code contenant des signes à encoder survit', () => {
+  const sortie = versNotrePage(`${FIREBASE}?mode=resetPassword&oobCode=${encodeURIComponent('a+b/c=')}`)
+  const relu = new URL(sortie).searchParams.get('oobCode')
+  assert.equal(relu, 'a+b/c=', 'le code ne se relit pas à l’identique')
 })
 
-test('bienvenue : le lien du message porte la langue française', () => {
-  // Sans elle, la page qui suit le bouton s'affiche en anglais.
+test('bienvenue : le bouton mène à notre page et non à celle de Firebase', () => {
   const m = mailBienvenue(LIEN)
-  assert.ok(m.text.includes('lang=fr'), 'langue absente de la version texte')
-  assert.ok(m.html.includes('lang=fr') || m.html.includes('lang%3Dfr'), 'langue absente du HTML')
+  assert.ok(m.html.includes('rapidmusic.fr/action'), 'le bouton ne mène pas à notre page')
+  assert.ok(!m.html.includes('firebaseapp.com'), 'le lien de Firebase est resté')
+  assert.ok(m.text.includes('rapidmusic.fr/action'), 'la version texte pointe ailleurs')
 })
 
 /* -------------------------------------------------------------------------- */

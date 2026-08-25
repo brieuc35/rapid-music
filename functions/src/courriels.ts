@@ -65,25 +65,41 @@ export function echapper(texte: string): string {
     .replace(/'/g, '&#39;')
 }
 
+/** Notre page d'atterrissage, celle qui parle français. */
+const PAGE_ACTION = 'https://rapidmusic.fr/action'
+
 /**
- * Ajoute la langue au lien de confirmation.
+ * Renvoie le lien de confirmation vers notre propre page.
  *
- * La page d'atterrissage est hébergée par Firebase, et elle choisit sa langue
- * d'après le paramètre `lang` du lien. Les liens fabriqués par le navigateur le
- * portent, parce que `auth.languageCode = 'fr'` y est réglé ; ceux fabriqués par
- * le serveur, avec les droits d'administration, ne le portent pas — la page
- * s'affichait donc en anglais.
+ * Firebase fabrique un lien qui pointe vers une page à lui — en anglais, à ses
+ * couleurs. Le réglage prévu pour la remplacer (« Personnaliser l'URL
+ * d'action », dans la console) refuse obstinément de s'enregistrer, avec ou sans
+ * dièse, domaine autorisé ou non.
  *
- * L'ajout se fait par concaténation et non avec l'analyseur d'URL : celui-ci
- * ré-encoderait tous les paramètres du lien au passage, dont le code à usage
- * unique et l'adresse de retour. Un lien qui doit fonctionner exactement se
- * touche le moins possible.
+ * On n'en a pourtant pas besoin. Ce message est le nôtre, et son contenu nous
+ * appartient : il suffit de garder du lien de Firebase ce qui compte vraiment —
+ * le **code à usage unique** — et de le présenter à notre page. Le code vaut par
+ * lui-même ; l'adresse qui l'a transporté n'entre pas dans sa validation.
  *
- * Un lien vide ou déjà pourvu d'une langue ressort inchangé.
+ * En cas de doute, le lien d'origine est rendu tel quel : une page en anglais
+ * qui fonctionne vaut mieux qu'un lien à nous qui ne mène nulle part.
  */
-export function enFrancais(lien: string): string {
-  if (!lien || /[?&]lang=/.test(lien)) return lien
-  return lien + (lien.includes('?') ? '&' : '?') + 'lang=fr'
+export function versNotrePage(lien: string): string {
+  if (!lien) return lien
+  let url: URL
+  try {
+    url = new URL(lien)
+  } catch {
+    return lien
+  }
+  const code = url.searchParams.get('oobCode')
+  const mode = url.searchParams.get('mode')
+  if (!code || !mode) return lien
+  /*  `URLSearchParams` encode ce qui doit l'être : ici on construit un lien neuf
+   *  plutôt que d'en retoucher un, le risque d'abîmer un encodage existant ne se
+   *  pose donc pas. */
+  const params = new URLSearchParams({ mode, oobCode: code })
+  return `${PAGE_ACTION}?${params.toString()}`
 }
 
 export interface Courriel {
@@ -177,9 +193,9 @@ function bouton(lien: string, texte: string): string {
  * message. La marche à suivre est dans docs/courriels.md.
  */
 export function mailBienvenue(lienBrut: string | null): Courriel {
-  /*  La page d'atterrissage suit la langue du lien : sans elle, elle s'affiche
-   *  en anglais à quelqu'un qui vient de lire un message en français. */
-  const lienConfirmation = lienBrut ? enFrancais(lienBrut) : null
+  /*  Le lien est renvoyé vers notre page, qui parle français : celle de
+   *  Firebase est en anglais et son remplacement par la console est inopérant. */
+  const lienConfirmation = lienBrut ? versNotrePage(lienBrut) : null
   const confirmation = lienConfirmation
     ? `<p style="margin:0 0 14px;font-size:15px;line-height:1.6">Votre compte est ouvert. Il ne reste qu'à confirmer votre adresse, pour que vous puissiez récupérer votre mot de passe en cas d'oubli.</p>
      ${bouton(echapper(lienConfirmation), 'Confirmer mon adresse')}`
