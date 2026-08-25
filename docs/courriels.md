@@ -68,11 +68,26 @@ fois :
 « Personnaliser l'URL d'action »** :
 
 ```
-https://rapidmusic.fr/#/action
+https://rapidmusic.fr/action
 ```
 
-> Le dièse est nécessaire : le site utilise un routeur à dièse et n'a pas de page
-> de repli côté serveur. `rapidmusic.fr/action` renverrait une erreur 404.
+> **Sans dièse.** Firebase refuse une adresse qui en contient un — l'essai a
+> donné « Une erreur s'est produite lors de la modification de l'URL d'action ».
+> Or le routeur de l'application travaille après le dièse, et seul « / » existe
+> réellement sur le serveur.
+>
+> Deux replis rattrapent l'écart, et **les deux sont nécessaires** :
+>
+> - `public/404.html` — GitHub Pages le sert pour toute adresse inconnue, à la
+>   première visite ;
+> - un court script dans `index.html` — car une fois le service worker installé,
+>   c'est lui qui répond aux adresses inconnues (`navigateFallback` dans
+>   `vite.config.ts`), et 404.html n'est alors jamais atteint.
+>
+> Chacun replace l'adresse demandée dans le dièse, paramètres compris.
+>
+> Le domaine doit par ailleurs figurer dans **Authentication → Settings →
+> Domaines autorisés**, sans quoi l'enregistrement échoue aussi.
 
 Ce réglage vaut pour **tous** les messages d'action, pas seulement la
 confirmation. C'est pourquoi la page traite aussi la réinitialisation de mot de

@@ -23,6 +23,26 @@
   </head>
   <body>
     <div id="app"></div>
+    <script>
+      /*  Le même repli que public/404.html, mais côté application.
+       *
+       *  Les deux sont nécessaires, et ne se recouvrent pas : GitHub Pages sert
+       *  404.html à la première visite, mais une fois le service worker installé
+       *  c'est LUI qui répond aux adresses inconnues, avec index.html
+       *  (`navigateFallback` dans vite.config.ts). 404.html n'est alors jamais
+       *  atteint, et sans ce second garde-fou l'application démarrerait sur son
+       *  écran d'accueil en perdant le lien demandé.
+       *
+       *  Placé avant le chargement de l'application : il n'y a rien à défaire si
+       *  la redirection a lieu.
+       */
+      ;(function () {
+        var chemin = location.pathname
+        if (chemin !== '/' && chemin !== '/index.html' && !location.hash) {
+          location.replace('/#' + chemin + location.search)
+        }
+      })()
+    </script>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
