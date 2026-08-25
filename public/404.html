@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <title>RapidMusic</title>
+    <meta name="robots" content="noindex" />
+    <script>
+      /*  Repli des adresses profondes, servi par GitHub Pages.
+       *
+       *  Le site est une application d'une seule page, dont le routeur travaille
+       *  après le dièse : seul « / » existe réellement sur le serveur. Une
+       *  adresse comme « /action » n'y correspond à aucun fichier, et GitHub
+       *  Pages sert alors cette page-ci.
+       *
+       *  Elle replace l'adresse demandée dans le dièse, paramètres compris, et
+       *  l'application la reconnaît. Sans elle, un lien de confirmation envoyé
+       *  par Firebase — qui refuse les adresses à dièse — tomberait sur une
+       *  erreur 404.
+       *
+       *  `replace` et non `href` : l'adresse fautive ne doit pas rester dans
+       *  l'historique, sans quoi le bouton « précédent » y ramènerait.
+       */
+      ;(function () {
+        var chemin = location.pathname
+        if (chemin !== '/' && chemin !== '/index.html') {
+          location.replace('/#' + chemin + location.search)
+        } else {
+          location.replace('/')
+        }
+      })()
+    </script>
+  </head>
+  <body>
+    <noscript>
+      <p>Cette page nécessite JavaScript. <a href="/">Retour à RapidMusic</a>.</p>
+    </noscript>
+  </body>
+</html>
