@@ -296,7 +296,9 @@ const barreOnglets = computed(() => [
   { path: '/tableau-de-bord', label: 'Accueil', icon: 'dashboard', badge: 0 },
   { path: '/concerts', label: 'Concerts', icon: 'concert', badge: upcomingConcerts.value },
   { path: '/taches', label: 'Tâches', icon: 'check', badge: openTasks.value.length },
-  { path: '/studio', label: 'Agenda', icon: 'calendar', badge: upcomingSessions.value },
+  /*  Le profil plutôt que l'agenda : celui-ci reste à un geste, par le menu, et
+   *  la quatrième place vaut mieux à ce qu'on cherche sans savoir où c'est. */
+  { path: '/mon-profil', label: 'Profil', icon: 'users', badge: 0 },
 ])
 
 const topNav = computed(() => [
