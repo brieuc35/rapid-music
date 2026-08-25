@@ -54,6 +54,39 @@ renvoie alors au bandeau de l'application, qui sait redemander la confirmation
 (`resendVerification()`), et l'application demeure utilisable sans adresse
 confirmée.
 
+## La page qui suit le bouton de confirmation
+
+Par défaut, les liens d'action de Firebase — confirmation d'adresse, mot de passe
+oublié — mènent à une page hébergée par Google : **en anglais, à ses couleurs**,
+et sans moyen d'y changer la langue. Le paramètre `lang` du lien, essayé, n'y
+change rien.
+
+L'application fournit donc la sienne, à l'adresse `/#/action`. À déclarer une
+fois :
+
+**Console Firebase → Authentication → Templates → Modifier (l'icône crayon) →
+« Personnaliser l'URL d'action »** :
+
+```
+https://rapidmusic.fr/#/action
+```
+
+> Le dièse est nécessaire : le site utilise un routeur à dièse et n'a pas de page
+> de repli côté serveur. `rapidmusic.fr/action` renverrait une erreur 404.
+
+Ce réglage vaut pour **tous** les messages d'action, pas seulement la
+confirmation. C'est pourquoi la page traite aussi la réinitialisation de mot de
+passe et le retour à une ancienne adresse : n'en gérer qu'un seul casserait les
+autres.
+
+Les paramètres sont cherchés **des deux côtés du dièse**, Firebase pouvant les
+placer avant ou après selon la façon dont il assemble le lien.
+
+L'adresse de retour transmise par Firebase n'est suivie que si elle pointe vers
+`rapidmusic.fr` : elle arrive par le lien, donc modifiable par quiconque, et la
+suivre aveuglément renverrait un artiste vers un site étranger depuis une page à
+nos couleurs.
+
 ## Ce qu'il reste à faire — dans la console, une fois
 
 ### 1. Le service d'envoi

@@ -54,3 +54,4 @@ npm-debug.log*
 # contiendrait un chemin de magasin de clés.
 /android/*
 !/android/twa-manifest.json
+.test-tmp/

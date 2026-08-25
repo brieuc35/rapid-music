@@ -101,6 +101,20 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/SuppressionCompteView.vue'),
     meta: { title: 'Supprimer mon compte', public: true },
   },
+  /*  La page d'atterrissage des liens envoyés par Firebase — confirmation
+   *  d'adresse, mot de passe oublié. Publique par nécessité : on y arrive
+   *  depuis un courriel, avant toute connexion, et souvent depuis un autre
+   *  appareil que celui où l'on est connecté.
+   *
+   *  Elle remplace la page de Google, en anglais et à ses couleurs. Le renvoi
+   *  se règle dans la console : Authentication → Templates → « Personnaliser
+   *  l'URL d'action » → https://rapidmusic.fr/#/action */
+  {
+    path: '/action',
+    name: 'auth-action',
+    component: () => import('@/views/ActionView.vue'),
+    meta: { title: 'Lien RapidMusic', public: true },
+  },
   { path: '/:pathMatch(.*)*', redirect: '/tableau-de-bord' },
 ]
 
