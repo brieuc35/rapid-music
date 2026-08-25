@@ -1680,13 +1680,19 @@ table.tbl tbody tr:hover {
   color: var(--text);
   font-weight: 650;
 }
-.legal__doc a {
+/* Les liens du texte courant, et eux seuls.
+   `:not(.btn)` n'est pas une précaution de style mais une correction de
+   lisibilité : cette règle a une classe ET un élément, donc plus de poids que
+   `.btn--primary` qui n'a qu'une classe. Sans l'exclusion, un bouton posé dans
+   un de ces documents recevait ce violet par-dessus son fond violet, et son
+   texte devenait illisible. */
+.legal__doc a:not(.btn) {
   color: var(--violet-600);
   font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 2px;
 }
-.legal__doc a:hover {
+.legal__doc a:not(.btn):hover {
   color: var(--violet-700);
 }
 /* Adresse d'un hébergeur : détachée du texte courant, comme une adresse
