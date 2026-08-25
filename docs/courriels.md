@@ -33,29 +33,26 @@ ce dépôt, ni dans le code déployé, et modifiables à tout moment sans redép
 Rien dans le code n'est propre à Brevo. Changer de service se fait en changeant
 les secrets.
 
-## Un seul message à l'inscription — la dernière étape
+## Un seul message à l'inscription
 
-Firebase sait envoyer sa propre demande de confirmation d'adresse, et
-`signUp()` l'utilise encore aujourd'hui. Elle arrive à la même seconde que le
-message de bienvenue : deux courriels pour un seul évènement, ce qui fait mauvais
-effet et invite à n'en lire aucun.
+Firebase sait envoyer sa propre demande de confirmation d'adresse, et `signUp()`
+l'a fait pendant la mise en service — le temps de vérifier que le message
+d'accueil arrivait vraiment. Cet envoi a été retiré depuis.
 
-Le message de bienvenue porte déjà le lien de confirmation, **fabriqué par la
-fonction serveur**. Il n'y a donc plus qu'à retirer l'envoi du navigateur, dans
-`signUp()` (`src/store/index.ts`) — deux lignes.
+Deux raisons, dont la seconde n'était pas prévue :
 
-**À faire en dernier, et pas avant.** Les retirer d'abord ouvrirait une période
-pendant laquelle un nouveau compte ne recevrait *aucun* message, alors que le
-bandeau de l'application affirmerait qu'un lien a été envoyé. Deux messages
-valent mieux que zéro. L'ordre est donc :
+- deux courriels pour un seul évènement font mauvais effet et invitent à n'en
+  lire aucun ;
+- surtout, les deux demandes partaient **pour la même adresse à une seconde
+  d'intervalle**, et la protection anti-abus de Firebase refusait la seconde —
+  celle du serveur — avec `TOO_MANY_ATTEMPTS_TRY_LATER`. Le message d'accueil
+  arrivait donc sans son bouton de confirmation, et le premier essai réel l'a
+  montré.
 
-1. les cinq étapes ci-dessous ;
-2. essayer les deux messages pour de vrai ;
-3. alors seulement, retirer l'envoi du navigateur.
-
-Dans tous les cas le filet reste en place : le bandeau permet de redemander le
-lien à tout moment (`resendVerification()`), et l'application reste utilisable
-sans adresse confirmée.
+Le filet reste en place si le lien manque malgré tout : le message d'accueil
+renvoie alors au bandeau de l'application, qui sait redemander la confirmation
+(`resendVerification()`), et l'application demeure utilisable sans adresse
+confirmée.
 
 ## Ce qu'il reste à faire — dans la console, une fois
 
