@@ -11,7 +11,7 @@
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { CID_LOGO, echapper, estPro, formaterDate, mailBienvenue, mailPro, passeAPro } from './courriels.js'
+import { CID_LOGO, echapper, enFrancais, estPro, formaterDate, mailBienvenue, mailPro, passeAPro } from './courriels.js'
 
 /* -------------------------------------------------------------------------- */
 /*  Quand faut-il annoncer l'abonnement Pro ?                                  */
@@ -111,6 +111,46 @@ test('bienvenue : un lien contenant une esperluette reste cliquable', () => {
   assert.ok(m.html.includes('oobCode=ABC123'), 'la fin du lien a été perdue')
   assert.ok(m.html.includes('&amp;oobCode'), "l'esperluette du lien n'est pas échappée")
   assert.ok(!m.html.includes('"&oobCode'), 'esperluette brute dans un attribut')
+})
+
+/* -------------------------------------------------------------------------- */
+/*  La langue de la page d'atterrissage                                        */
+/* -------------------------------------------------------------------------- */
+
+test('enFrancais : ajoute la langue à un lien qui a déjà des paramètres', () => {
+  assert.equal(enFrancais('https://x.fr/action?mode=verifyEmail&oobCode=A'), 'https://x.fr/action?mode=verifyEmail&oobCode=A&lang=fr')
+})
+
+test('enFrancais : ajoute la langue à un lien sans paramètre', () => {
+  assert.equal(enFrancais('https://x.fr/action'), 'https://x.fr/action?lang=fr')
+})
+
+test('enFrancais : ne double pas une langue déjà présente', () => {
+  const deja = 'https://x.fr/action?oobCode=A&lang=fr'
+  assert.equal(enFrancais(deja), deja)
+  assert.equal(enFrancais('https://x.fr/action?lang=en'), 'https://x.fr/action?lang=en')
+})
+
+test("enFrancais : ne touche à rien d'autre dans le lien", () => {
+  /*  Le code à usage unique et l'adresse de retour sont encodés : les
+   *  ré-encoder les casserait. On vérifie que le lien d'origine ressort
+   *  intact, préfixe compris. */
+  const lien = 'https://x.fr/action?mode=verifyEmail&oobCode=aB1%2Fc&continueUrl=https%3A%2F%2Frapidmusic.fr%2F'
+  const sortie = enFrancais(lien)
+  assert.ok(sortie.startsWith(lien), 'le lien a été modifié')
+  assert.ok(sortie.includes('oobCode=aB1%2Fc'), 'le code a été ré-encodé')
+  assert.ok(sortie.includes('continueUrl=https%3A%2F%2Frapidmusic.fr%2F'), "l'adresse de retour a été ré-encodée")
+})
+
+test('enFrancais : un lien vide ressort vide', () => {
+  assert.equal(enFrancais(''), '')
+})
+
+test('bienvenue : le lien du message porte la langue française', () => {
+  // Sans elle, la page qui suit le bouton s'affiche en anglais.
+  const m = mailBienvenue(LIEN)
+  assert.ok(m.text.includes('lang=fr'), 'langue absente de la version texte')
+  assert.ok(m.html.includes('lang=fr') || m.html.includes('lang%3Dfr'), 'langue absente du HTML')
 })
 
 /* -------------------------------------------------------------------------- */
