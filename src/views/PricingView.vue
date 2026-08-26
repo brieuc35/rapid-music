@@ -106,8 +106,12 @@
       <div class="section-head" style="padding: 18px 20px 12px">
         <span class="section-head__title">Ce que change l'abonnement</span>
       </div>
+      <!--  `tbl--compare` : ce tableau-ci se lit d'un bloc, il ne se parcourt
+            pas comme un relevé de chiffres. Il tient donc dans la largeur de
+            l'encadré au lieu de défiler — un défilement horizontal y cachait
+            la colonne « Pro », la seule qui justifie l'abonnement. -->
       <div class="tablewrap">
-        <table class="tbl">
+        <table class="tbl tbl--compare">
           <thead>
             <tr>
               <th>Onglet</th>
@@ -446,5 +450,21 @@ function doCancel() {
   border-radius: 20px;
   padding: 3px 9px;
   white-space: nowrap;
+}
+
+/*  Sur un téléphone, les deux colonnes de verdict prenaient 184 px des 322
+ *  disponibles pour afficher une coche : le libellé se retrouvait sur quatre
+ *  lignes et le tableau s'allongeait démesurément. Les pastilles maigrissent
+ *  pour que ces colonnes tiennent en 74 px, et la place revient au texte. */
+@media (max-width: 620px) {
+  .ico-part {
+    font-size: 11px;
+    padding: 2px 7px;
+  }
+  .ico-soon {
+    font-size: 10px;
+    letter-spacing: 0;
+    padding: 3px 7px;
+  }
 }
 </style>
