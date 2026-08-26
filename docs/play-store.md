@@ -20,21 +20,27 @@ figées dans `android/twa-manifest.json`.
 | Nom affiché | RapidMusic | sous l'icône, 12 caractères maximum utiles |
 | Nom complet | RapidMusic - carrière musicale | nom dans le paquet Android, visible dans les réglages du téléphone. Identique au titre de la fiche, pour qu'un seul nom circule |
 | Barre d'état | `#14101F` | le sombre de l'en-tête, qu'elle surplombe |
-| Barre système du bas | `#6D28D9` | le violet de la barre d'onglets, qu'elle prolonge. Voir la réserve ci-dessous |
+| Barre système du bas | `#FFFFFF` | le blanc de la barre d'onglets, qu'elle prolonge. Voir la réserve ci-dessous |
 | Écran de lancement | `#14101F` | enchaîne sans rupture sur l'écran d'attente de l'application |
 | Version | 1.0.0 (code 1) | le **code** doit augmenter à chaque envoi |
 
 > **La barre système du bas n'obéit pas toujours.** Sur un téléphone en
 > navigation par gestes, Android garde ces quelques pixels — 15 px, mesurés — et
-> les peint de sa propre teinte claire, sans tenir compte de la couleur
-> demandée. Le réglage ci-dessus vaut pour les autres cas : navigation à trois
-> boutons, et versions d'Android antérieures à l'imposition du plein écran.
+> les peint de sa propre teinte claire, `#F6F6F6` sur l'appareil observé, sans
+> tenir compte de la couleur demandée. Le réglage ci-dessus vaut pour les autres
+> cas : navigation à trois boutons, et versions d'Android antérieures à
+> l'imposition du plein écran.
 >
-> L'application, elle, réserve déjà la place (`env(safe-area-inset-bottom)` sur
+> **C'est la raison pour laquelle la barre d'onglets est blanche.** Puisque ces
+> pixels échappent à l'application, la seule façon de faire disparaître la
+> couture est de les rejoindre plutôt que de buter dessus. L'écart entre notre
+> blanc et le sien vaut 1,08 de contraste : invisible.
+>
+> L'application réserve tout de même la place (`env(safe-area-inset-bottom)` sur
 > `.tabbar`). Chrome branche le vrai plein écran pour les applications
 > installées — modifications déposées en juillet 2026, pas encore livrées ; le
-> jour où elles le seront, cette zone deviendra celle de la page et prendra le
-> violet sans rien changer ici.
+> jour où elles le seront, cette zone deviendra celle de la page sans rien
+> changer ici.
 
 ## Fabriquer le fichier `.aab`
 

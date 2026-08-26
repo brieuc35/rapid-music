@@ -48,15 +48,18 @@
   --nav-text: #b7b1c9;
   --nav-text-active: #ffffff;
 
-  /*  La barre d'onglets du téléphone, et elle seule. Elle reprenait le fond du
-   *  menu de bureau, si sombre qu'on le lisait comme du noir ; ce violet-là se
-   *  voit. Il est assez foncé pour porter du texte blanc — 5,82 de contraste
-   *  pour les libellés inactifs — ce que le violet des boutons (#7C3AED) ne
-   *  fait plus qu'à 4,75, et le dégradé de la marque plus du tout.
+  /*  La barre d'onglets du téléphone, et elle seule — le menu de bureau, lui,
+   *  reste sombre, d'où une variable à part.
    *
-   *  Sa propre variable, et non `--nav-bg` : le menu de bureau reste sombre,
-   *  il occupe toute la hauteur d'un côté de l'écran et ce violet y pèserait. */
-  --tab-bg: #6d28d9;
+   *  Blanche, et c'est une réponse à Android autant qu'un choix d'allure : en
+   *  navigation par gestes, le système garde les quinze derniers pixels de
+   *  l'écran et les peint d'un clair à lui, sans tenir compte de la couleur que
+   *  le paquet demande. Une barre sombre s'arrêtait net dessus, et cette couture
+   *  se voyait plus que la bande elle-même. Une barre blanche la prolonge.
+   *
+   *  L'écart qui subsiste entre ce blanc et le sien, mesuré, vaut 1,08 de
+   *  contraste — sous le seuil de perception. */
+  --tab-bg: #ffffff;
 
   /* Elevation */
   --shadow-sm: 0 1px 2px rgba(23, 20, 31, 0.05);
@@ -1413,12 +1416,15 @@ table.tbl tbody tr:hover {
     padding: 7px;
   }
 
-  /* Quatre onglets, à portée du pouce. Le fond est le violet de la marque,
-     assombri d'un cran pour porter du texte blanc : l'ombre portée le détache
-     du contenu clair au lieu de le poser dessus.
+  /* Quatre onglets, à portée du pouce. Le fond est blanc : il prolonge la bande
+     que le système garde en bas de l'écran, au lieu de s'arrêter net dessus.
+
+     Le fond des pages étant gris clair et non blanc, la barre s'en détache
+     quand même — c'est le trait du haut et l'ombre portée qui font ce travail,
+     là où un fond sombre le faisait tout seul.
 
      Plus de lueur violette en haut : elle servait à réchauffer un fond presque
-     noir, et sur ce violet-ci elle ne ferait que le troubler.
+     noir, elle n'a plus rien à réchauffer.
 
      z-index 35 : au-dessus du contenu, mais sous le voile (39) et le tiroir
      (40), qui doivent la recouvrir quand le menu s'ouvre. */
@@ -1430,8 +1436,8 @@ table.tbl tbody tr:hover {
     bottom: 0;
     z-index: 35;
     background: var(--tab-bg);
-    border-top: 1px solid rgba(255, 255, 255, 0.12);
-    box-shadow: 0 -10px 30px rgba(76, 29, 149, 0.3);
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -8px 24px rgba(20, 16, 31, 0.06);
     /* Zone réservée des téléphones sans bouton, sous la barre de gestes.
        Android ne la réserve pas toujours : sur un téléphone en navigation par
        gestes, le système garde ces quelques pixels et les peint lui-même, sans
@@ -1447,23 +1453,19 @@ table.tbl tbody tr:hover {
     align-items: center;
     gap: 3px;
     padding: 6px 4px 7px;
-    /* 0,88 et non 0,82 : sur un fond violet, plus clair que le fond presque
-       noir d'avant, le blanc à 0,82 tombait à 4,08 de contraste pour les
-       libellés inactifs — sous le seuil de 4,5. À 0,88 il est à 5,82, et
-       l'onglet actif reste distinct, en blanc plein et en gras. */
-    color: rgba(255, 255, 255, 0.88);
+    /* Le gris des textes courants, et non celui des textes secondaires : sur
+       blanc, ce dernier ne donne que 3,20 de contraste pour un libellé de
+       11 px, sous le seuil de 4,5. Celui-ci tient 6,98, et l'onglet actif
+       reste distinct — il est violet, en gras, et porte la pastille. */
+    color: var(--text-soft);
   }
   .tabbar__item.router-link-active {
-    color: #fff;
+    color: var(--violet-600);
   }
 
-  /* L'onglet actif porte une pastille pleine. Une forme et un contraste, et non
-     une simple nuance : il reste reconnaissable pour qui distingue mal les
-     couleurs.
-
-     Elle est blanche depuis que la barre est violette — une pastille violette
-     s'y serait fondue. Le rapport s'inverse simplement : la pastille prend la
-     couleur du texte, l'icône celle du fond. */
+  /* L'onglet actif porte une pastille pleine aux couleurs de la marque. Une
+     forme et un contraste, et non une simple nuance : il reste reconnaissable
+     pour qui distingue mal les couleurs. */
   .tabbar__ico {
     position: relative;
     width: 46px;
@@ -1480,11 +1482,11 @@ table.tbl tbody tr:hover {
     stroke-width: 2.2;
   }
   .tabbar__item.router-link-active .tabbar__ico {
-    background: #fff;
-    box-shadow: 0 4px 12px rgba(20, 16, 31, 0.22);
+    background: var(--brand-gradient);
+    box-shadow: 0 5px 14px rgba(236, 72, 153, 0.35);
   }
   .tabbar__item.router-link-active .tabbar__ico svg {
-    color: var(--tab-bg);
+    color: #fff;
     stroke-width: 2.4;
   }
   /* Réaction au doigt : la pastille s'enfonce légèrement. */
@@ -1509,7 +1511,7 @@ table.tbl tbody tr:hover {
     border-radius: 20px;
     background: var(--pink-600);
     /* Le liseré reprend le fond de la barre, pour détacher le badge de l'icône
-       qu'il chevauche. Il suit donc le violet, pas le sombre du menu. */
+       qu'il chevauche. Il suit donc la barre, pas le sombre du menu. */
     border: 2px solid var(--tab-bg);
     color: #fff;
     font-size: 10px;
