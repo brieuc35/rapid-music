@@ -19,10 +19,22 @@ figées dans `android/twa-manifest.json`.
 | Identifiant du paquet | `fr.rapidmusic.app` | **Irréversible.** Le changer imposerait de publier une autre application, sans les installations existantes. |
 | Nom affiché | RapidMusic | sous l'icône, 12 caractères maximum utiles |
 | Nom complet | RapidMusic - carrière musicale | nom dans le paquet Android, visible dans les réglages du téléphone. Identique au titre de la fiche, pour qu'un seul nom circule |
-| Barre d'état | `#14101F` | couleur de la barre de navigation de l'application |
-| Barre système du bas | `#14101F` | la même que celle du haut : l'application est encadrée de son violet sombre, au lieu d'être bordée de blanc |
+| Barre d'état | `#14101F` | le sombre de l'en-tête, qu'elle surplombe |
+| Barre système du bas | `#6D28D9` | le violet de la barre d'onglets, qu'elle prolonge. Voir la réserve ci-dessous |
 | Écran de lancement | `#14101F` | enchaîne sans rupture sur l'écran d'attente de l'application |
 | Version | 1.0.0 (code 1) | le **code** doit augmenter à chaque envoi |
+
+> **La barre système du bas n'obéit pas toujours.** Sur un téléphone en
+> navigation par gestes, Android garde ces quelques pixels — 15 px, mesurés — et
+> les peint de sa propre teinte claire, sans tenir compte de la couleur
+> demandée. Le réglage ci-dessus vaut pour les autres cas : navigation à trois
+> boutons, et versions d'Android antérieures à l'imposition du plein écran.
+>
+> L'application, elle, réserve déjà la place (`env(safe-area-inset-bottom)` sur
+> `.tabbar`). Chrome branche le vrai plein écran pour les applications
+> installées — modifications déposées en juillet 2026, pas encore livrées ; le
+> jour où elles le seront, cette zone deviendra celle de la page et prendra le
+> violet sans rien changer ici.
 
 ## Fabriquer le fichier `.aab`
 
