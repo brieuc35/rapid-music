@@ -1338,6 +1338,52 @@ table.tbl tbody tr:hover {
   background: var(--surface-2);
 }
 
+/* Le comparatif des formules : un tableau qu'on lit d'un bloc, pas un relevé
+   qu'on parcourt. Il tient dans la largeur de son encadré à toute taille
+   d'écran, au lieu de défiler latéralement — le défilement y cachait la
+   colonne « Pro », la seule qui justifie l'abonnement.
+
+   Largeurs figées pour les deux colonnes de verdict, le reste à la première :
+   sans cela le navigateur les élargit à la mesure de leur en-tête et laisse le
+   libellé déborder. */
+table.tbl--compare {
+  table-layout: fixed;
+  width: 100%;
+}
+table.tbl--compare th,
+table.tbl--compare td {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+table.tbl--compare th:nth-child(2),
+table.tbl--compare td:nth-child(2),
+table.tbl--compare th:nth-child(3),
+table.tbl--compare td:nth-child(3) {
+  width: 92px;
+}
+
+/* Sur un téléphone, ces deux colonnes prenaient 184 px des 322 disponibles
+   pour y montrer une coche : le libellé passait sur quatre lignes et le
+   tableau doublait de hauteur. Elles se resserrent, l'en-tête perd son
+   interlettrage, et la place revient au texte — qui, lui, se lit. */
+@media (max-width: 620px) {
+  table.tbl--compare th,
+  table.tbl--compare td {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+  table.tbl--compare th {
+    font-size: 11px;
+    letter-spacing: 0;
+  }
+  table.tbl--compare th:nth-child(2),
+  table.tbl--compare td:nth-child(2),
+  table.tbl--compare th:nth-child(3),
+  table.tbl--compare td:nth-child(3) {
+    width: 74px;
+  }
+}
+
 /* Progress bar */
 .bar {
   height: 8px;
