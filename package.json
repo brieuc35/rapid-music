@@ -2,13 +2,13 @@
   "name": "rapid-music",
   "version": "1.0.0",
   "private": true,
-  "description": "RapidMusic — le gestionnaire de carrière tout-en-un pour les artistes",
+  "description": "RapidMusic \u2014 le gestionnaire de carri\u00e8re tout-en-un pour les artistes",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "tsc src/auth-action.ts src/auth-action.test.ts --outDir .test-tmp --module nodenext --moduleResolution nodenext --target es2022 --strict --skipLibCheck && node --test .test-tmp/*.test.js"
+    "test": "tsc src/auth-action.ts src/auth-action.test.ts src/utils/image-regles.ts src/utils/image-regles.test.ts --outDir .test-tmp --module nodenext --moduleResolution nodenext --target es2022 --strict --skipLibCheck && node --test .test-tmp/**/*.test.js .test-tmp/*.test.js"
   },
   "dependencies": {
     "firebase": "^12.17.1",

@@ -1,8 +1,7 @@
+import { messageEchecDecodage, refuserFichier } from './image-regles.js'
+
 /** Taille maximale (en pixels) du côté le plus long de la photo enregistrée. */
 const MAX_SIDE = 512
-
-/** Taille de fichier acceptée en entrée (avant redimensionnement). */
-export const MAX_INPUT_BYTES = 10 * 1024 * 1024 // 10 Mo
 
 export class ImageError extends Error {}
 
@@ -12,14 +11,13 @@ export class ImageError extends Error {}
  * Le redimensionnement est indispensable : le stockage local du navigateur est
  * limité (~5 Mo) et une photo d'appareil brute le saturerait à elle seule.
  * L'image est recadrée au centre en carré, puis réduite à MAX_SIDE au plus.
+ *
+ * Ce qui est accepté en entrée est décidé dans `image-regles.ts`, à part et
+ * sous tests : c'est là que se jouait le refus de photos valables.
  */
 export function fileToAvatarDataUrl(file: File): Promise<string> {
-  if (!file.type.startsWith('image/')) {
-    throw new ImageError("Ce fichier n'est pas une image.")
-  }
-  if (file.size > MAX_INPUT_BYTES) {
-    throw new ImageError('Image trop volumineuse (10 Mo maximum).')
-  }
+  const refus = refuserFichier(file.type, file.size)
+  if (refus) throw new ImageError(refus)
 
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file)
@@ -47,9 +45,13 @@ export function fileToAvatarDataUrl(file: File): Promise<string> {
       }
     }
 
+    /*  Le décodage est le seul juge : un fichier a pu arriver sans type, ou
+     *  avec un type générique, et c'est ici qu'on apprend s'il était vraiment
+     *  une image. Le message tient compte de son nom — le HEIC des appareils
+     *  récents est le cas courant, et il a une issue. */
     img.onerror = () => {
       URL.revokeObjectURL(url)
-      reject(new ImageError("Ce fichier image n'a pas pu être lu."))
+      reject(new ImageError(messageEchecDecodage(file.name)))
     }
 
     img.src = url
