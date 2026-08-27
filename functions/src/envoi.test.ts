@@ -9,7 +9,7 @@
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { optionsSmtp } from './envoi.js'
+import { CHAMP_COMPTE, JOURNAL, optionsSmtp, sujetTrace } from './envoi.js'
 
 test('sans port : 465, chiffré d’emblée', () => {
   const o = optionsSmtp('smtp-relay.brevo.com', 'moi', 'secret')
@@ -84,4 +84,29 @@ test('un port illisible est refusé, plutôt que traité comme 465', () => {
   assert.throws(() => optionsSmtp('smtp.exemple.fr:abc', 'moi', 'secret'), /Port SMTP invalide/)
   assert.throws(() => optionsSmtp('smtp.exemple.fr:0', 'moi', 'secret'), /Port SMTP invalide/)
   assert.throws(() => optionsSmtp('smtp.exemple.fr:99999', 'moi', 'secret'), /Port SMTP invalide/)
+})
+
+/* -------------------------------------------------------------------------- */
+/*  Ce qui rattache une trace à son compte                                     */
+/*                                                                            */
+/*  La trace contient une adresse e-mail. Si elle ne portait pas le compte      */
+/*  auquel elle appartient, la suppression du compte ne saurait pas la          */
+/*  retrouver, et l'adresse resterait après l'effacement — exactement le        */
+/*  défaut que ce champ corrige.                                               */
+/* -------------------------------------------------------------------------- */
+
+test('une trace porte toujours le compte, sous le nom par lequel on l’efface', () => {
+  for (const type of ['bienvenue', 'pro'] as const) {
+    const s = sujetTrace(type, 'abc123')
+    assert.equal(s[CHAMP_COMPTE], 'abc123', `${type} : le compte manque`)
+    assert.equal(s.type, type)
+  }
+})
+
+test('le champ et la collection ne changent pas de nom sans qu’on le voie', () => {
+  //  Ces deux noms sont écrits d'un côté et relus de l'autre, dans deux
+  //  fonctions différentes. Les renommer d'un seul côté rendrait les traces
+  //  ineffaçables, sans erreur ni message.
+  assert.equal(CHAMP_COMPTE, 'uid')
+  assert.equal(JOURNAL, 'courriels')
 })

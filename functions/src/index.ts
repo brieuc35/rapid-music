@@ -17,8 +17,17 @@
 import * as functions from 'firebase-functions/v1'
 import { initializeApp } from 'firebase-admin/app'
 import { getAuth } from 'firebase-admin/auth'
+import { getFirestore } from 'firebase-admin/firestore'
 import { mailBienvenue, mailPro, passeAPro, type Abonnement } from './courriels.js'
-import { envoyer, SMTP_CLE, SMTP_HOTE, SMTP_IDENTIFIANT } from './envoi.js'
+import {
+  CHAMP_COMPTE,
+  envoyer,
+  JOURNAL,
+  SMTP_CLE,
+  SMTP_HOTE,
+  SMTP_IDENTIFIANT,
+  sujetTrace,
+} from './envoi.js'
 
 initializeApp()
 
@@ -95,7 +104,7 @@ export const bienvenue = functions
     }
 
     try {
-      await envoyer(user.email, mailBienvenue(lien), { type: 'bienvenue', uid: user.uid })
+      await envoyer(user.email, mailBienvenue(lien), sujetTrace('bienvenue', user.uid))
       functions.logger.info('Message de bienvenue envoyé', { uid: user.uid, avecLien: lien !== null })
     } catch (e) {
       /*  La raison va dans le message et non dans un champ à côté : le panneau
@@ -138,9 +147,85 @@ export const abonnementPro = functions
         functions.logger.info('Abonné sans adresse, aucun message envoyé', { uid })
         return
       }
-      await envoyer(user.email, mailPro(apres?.depuis), { type: 'pro', uid })
+      await envoyer(user.email, mailPro(apres?.depuis), sujetTrace('pro', uid))
       functions.logger.info('Confirmation Pro envoyée', { uid })
     } catch (e) {
       functions.logger.error(`Confirmation Pro impossible : ${String(e)}`, { uid })
+    }
+  })
+
+/* -------------------------------------------------------------------------- */
+/*  3. Suppression d'un compte                                                 */
+/* -------------------------------------------------------------------------- */
+
+/*  Nombre de traces effacées par tour. Un lot Firestore accepte 500 écritures ;
+ *  on reste en dessous pour laisser la place aux deux documents joints au
+ *  premier tour. Un compte ordinaire n'a que deux traces — cette boucle ne sert
+ *  qu'aux comptes dont un envoi a échoué et été réessayé plusieurs fois. */
+const PAR_TOUR = 400
+
+/**
+ * Efface ce que la suppression du compte laisse derrière elle.
+ *
+ * Trois restes, dont deux que le navigateur ne peut pas atteindre :
+ *
+ * - `courriels` — la trace des deux messages automatiques. Elle contient
+ *   l'adresse e-mail, et la collection est fermée des deux côtés par les règles.
+ *   C'est ce reste-là qui rendait la suppression incomplète : les données de
+ *   l'artiste partaient, son adresse restait ;
+ * - `abonnements/{uid}` — `allow write: if false` interdit au navigateur de
+ *   l'effacer, c'est le prix de son inviolabilité ;
+ * - `artistes/{uid}` — l'application l'efface elle-même avant de supprimer le
+ *   compte, et cette ligne est donc presque toujours sans effet. Presque : un
+ *   compte supprimé depuis la console Firebase ne passe pas par l'application,
+ *   et laisserait tout en place.
+ *
+ * Effacer un document qui n'existe pas ne coûte rien et ne lève rien : les
+ * trois sont demandés sans condition.
+ *
+ * Aucun secret n'est réclamé ici — cette fonction n'envoie rien.
+ */
+export const oubli = functions
+  .region(REGION)
+  .runWith({ serviceAccount: COMPTE })
+  .auth.user()
+  .onDelete(async (user) => {
+    const { uid } = user
+    const db = getFirestore()
+
+    try {
+      let efface = 0
+      let premier = true
+
+      /*  Boucle plutôt qu'une seule requête : rien ne garantit qu'un compte
+       *  n'ait que deux traces, et un lot a une taille maximale. */
+      for (;;) {
+        const traces = await db
+          .collection(JOURNAL)
+          .where(CHAMP_COMPTE, '==', uid)
+          .limit(PAR_TOUR)
+          .get()
+
+        if (traces.empty && !premier) break
+
+        const lot = db.batch()
+        if (premier) {
+          lot.delete(db.doc(`artistes/${uid}`))
+          lot.delete(db.doc(`abonnements/${uid}`))
+          premier = false
+        }
+        traces.forEach((t) => lot.delete(t.ref))
+        await lot.commit()
+        efface += traces.size
+
+        if (traces.size < PAR_TOUR) break
+      }
+
+      functions.logger.info('Restes du compte effacés', { uid, traces: efface })
+    } catch (e) {
+      /*  Journalisé et non relancé : un réessai automatique reprendrait un
+       *  travail déjà fait, et l'échec se voit dans les journaux. Le compte,
+       *  lui, est déjà supprimé — c'est l'essentiel du droit à l'effacement. */
+      functions.logger.error(`Restes du compte non effacés : ${String(e)}`, { uid })
     }
   })
