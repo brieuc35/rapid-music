@@ -247,14 +247,18 @@ Ces étapes ne dépendent pas du code ; le détail figure dans la réponse
 - **test fermé : 12 testeurs inscrits pendant 14 jours consécutifs** avant de
   pouvoir demander l'accès à la production — c'est le délai le plus long, à
   lancer tôt ;
-- formulaire « Sécurité des données », classification du contenu, public visé ;
+- formulaire **« Sécurité des données »** : les réponses exactes sont dans
+  [`securite-des-donnees.md`](securite-des-donnees.md), établies en relisant le
+  code. Restent la classification du contenu et le public visé ;
 - adresses des pages légales, déjà en ligne :
   - <https://rapidmusic.fr/#/confidentialite> (obligatoire) ;
   - <https://rapidmusic.fr/#/suppression-compte> (obligatoire dès qu'il y a des
     comptes) ;
   - <https://rapidmusic.fr/#/mentions-legales>, <https://rapidmusic.fr/#/conditions> ;
 - fiche : icône 512×512 (`public/icon-512.png`), image de mise en avant
-  1024×500, deux captures d'écran de téléphone au minimum.
+  1024×500 et captures d'écran — **déjà produites**, dans
+  [`play-store/`](../play-store/), avec le script qui les refait quand
+  l'interface change.
 
 ### Les textes de la fiche, à recopier dans la Console
 
