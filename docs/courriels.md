@@ -7,6 +7,9 @@ RapidMusic envoie deux messages, et deux seulement :
 | Un compte est créé | Bienvenue, avec le lien de confirmation de l'adresse |
 | `abonnements/{uid}` passe à `pro` | Confirmation que le compte Pro est actif |
 
+Un troisième déclencheur existe, qui n'envoie rien : **`oubli`** efface les
+restes d'un compte supprimé — voir « Ce qui part avec le compte » plus bas.
+
 Aucun autre envoi. Pas de lettre d'information : celle-là demanderait un
 consentement préalable, ce que ces deux-ci ne demandent pas — ils accompagnent
 une action de l'artiste, la loi les appelle des messages *transactionnels*.
@@ -226,6 +229,28 @@ rapidmusic.fr` prouve d'un coup que la clé est publiée, correcte, et acceptée
 Chaque envoi y laisse une ligne — `etat` vaut `envoye` ou `echec`, et le champ
 `erreur` dit pourquoi. Si aucune ligne n'apparaît, le problème est en amont :
 Console → Functions → Journaux.
+
+## Ce qui part avec le compte
+
+La collection `courriels` contient des adresses e-mail. Elle ne peut donc pas
+survivre à la suppression d'un compte, et le navigateur ne peut pas l'effacer
+lui-même : les règles la ferment des deux côtés.
+
+Le déclencheur **`oubli`** s'en charge, sur la suppression du compte. Il efface
+trois choses :
+
+- les traces d'envoi de ce compte, dans `courriels` ;
+- `abonnements/{uid}`, que `allow write: if false` interdit au navigateur ;
+- `artistes/{uid}` — que l'application efface déjà elle-même. Cette ligne ne
+  sert qu'au cas où le compte est supprimé depuis la console Firebase, sans
+  passer par l'application.
+
+Il ne réclame aucun secret : il n'envoie rien.
+
+> La trace est retrouvée par le champ `uid`, écrit au moment de l'envoi par
+> `sujetTrace`. Les deux côtés emploient la même constante, `CHAMP_COMPTE` :
+> les séparer rendrait les traces ineffaçables **sans lever la moindre erreur**.
+> Deux tests l'interdisent.
 
 ## Le second message et les paiements
 

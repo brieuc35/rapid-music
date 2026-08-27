@@ -149,26 +149,29 @@ Deux points valent d'être notés, parce qu'on pourrait croire le contraire :
 | Application validée par un audit de sécurité indépendant | **Non** |
 | Engagement envers les règles « Familles » | **Non** — l'application ne vise pas les enfants |
 
-## Un point à corriger, découvert en écrivant cette page
+## Ce que la suppression du compte efface — vraiment tout
 
-La suppression du compte efface le document de l'artiste puis le compte
-lui-même (`deleteAccount`, dans cet ordre — une fois le compte parti, plus aucun
-droit ne permettrait d'effacer les données).
+Écrire cette page a mis au jour un reste : la collection **`courriels`** garde
+l'adresse du destinataire des deux messages automatiques, et rien ne l'effaçait.
+L'artiste supprimait son compte, son adresse restait.
 
-Mais la collection **`courriels`** garde l'adresse du destinataire des deux
-messages automatiques, et **rien ne l'efface**. Après une suppression de compte,
-cette adresse subsiste donc dans la trace d'envoi.
+C'est corrigé. Un troisième déclencheur, `oubli`, part sur la suppression d'un
+compte et efface les trois restes :
 
-Ce n'est pas un problème pour ce formulaire — la réponse « suppression
-possible » reste vraie. C'en est un pour le RGPD, où le droit à l'effacement
-porte sur toutes les copies. Deux issues, au choix :
+| Ce qui reste | Pourquoi le navigateur ne peut pas l'effacer |
+| --- | --- |
+| `courriels` | fermée des deux côtés par les règles — elle contient des adresses |
+| `abonnements/{uid}` | `allow write: if false`, le prix de son inviolabilité |
+| `artistes/{uid}` | il le peut, et le fait déjà. Mais un compte supprimé depuis la console Firebase ne passe pas par l'application |
 
-1. **une durée de conservation** : effacer les traces de plus de 90 jours ;
-   elles servent à diagnostiquer un envoi manqué, pas à archiver ;
-2. **effacer aussi à la suppression du compte**, ce qui demande une fonction
-   serveur, le navigateur n'ayant aucun droit sur cette collection.
+Aucune durée de conservation n'a donc été nécessaire : plutôt qu'attendre
+quatre-vingt-dix jours, la trace part avec le compte. Un compte vivant n'a de
+toute façon que deux traces.
 
-La première est plus simple et suffit. Elle n'est pas encore faite.
+Le lien entre l'écriture et l'effacement est sous test : la trace est écrite par
+`sujetTrace`, qui y met le compte sous le nom exact que la suppression
+interroge. Renommer ce champ d'un seul côté rendrait les traces ineffaçables
+sans lever la moindre erreur — deux tests l'interdisent.
 
 ## Après l'envoi
 

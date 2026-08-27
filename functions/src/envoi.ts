@@ -33,7 +33,32 @@ const EXPEDITEUR = 'RapidMusic <bonjour@rapidmusic.fr>'
 const REPONDRE_A = 'rapidmusic.rm@gmail.com'
 
 /** Collection qui garde la trace des envois. Fermée au navigateur. */
-const JOURNAL = 'courriels'
+export const JOURNAL = 'courriels'
+
+/**
+ * Le champ qui rattache une trace à un compte.
+ *
+ * Exporté, et employé des deux côtés : c'est par lui que la trace est écrite,
+ * et par lui qu'elle est retrouvée le jour où le compte disparaît. Un nom
+ * recopié à la main de chaque côté suffirait à rendre une trace inaltérable —
+ * elle contient une adresse e-mail, ce serait une donnée qu'on ne saurait plus
+ * effacer.
+ */
+export const CHAMP_COMPTE = 'uid'
+
+/** Les deux évènements qui produisent un envoi. */
+export type TypeEnvoi = 'bienvenue' | 'pro'
+
+/**
+ * Ce qui identifie une trace : l'évènement, et le compte concerné.
+ *
+ * Une fonction plutôt que deux objets écrits à la main sur les lieux d'appel :
+ * l'effacement du compte dépend de la présence de `uid`, et rien ne le
+ * rappellerait à qui ajouterait un troisième courriel.
+ */
+export function sujetTrace(type: TypeEnvoi, uid: string): Record<string, string> {
+  return { type, [CHAMP_COMPTE]: uid }
+}
 
 export interface OptionsSmtp {
   host: string
