@@ -493,7 +493,7 @@ export const needsOnboarding = computed(() => isLoggedIn.value && !store.onboard
  * paiement n'est encaissé, l'écran le dit explicitement.
  */
 export function completeOnboarding(
-  profile: Pick<ArtistProfile, 'stageName' | 'genre' | 'city' | 'photo' | 'bio'>,
+  profile: Pick<ArtistProfile, 'stageName' | 'email' | 'genre' | 'city' | 'photo' | 'bio'>,
   plan: Plan,
 ): void {
   Object.assign(store.artist, profile)

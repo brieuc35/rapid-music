@@ -44,6 +44,25 @@
           />
         </div>
 
+        <!--  Reprise de l'adresse du compte, et non redemandée à vide : c'est
+              celle que l'artiste vient de saisir, la retaper serait une
+              corvée et une occasion de faute de frappe. Elle reste modifiable
+              — le compte sert à se connecter, celle-ci à être joint, et rien
+              n'oblige les deux à rester identiques. -->
+        <div class="field">
+          <label for="onb-email">Adresse e-mail <span class="req">*</span></label>
+          <input
+            id="onb-email"
+            v-model="email"
+            type="email"
+            maxlength="120"
+            autocomplete="email"
+            placeholder="vous@exemple.fr"
+            required
+          />
+          <p class="onb__hint">Celle de votre compte. Modifiable si vous préférez en donner une autre.</p>
+        </div>
+
         <div class="field--row">
           <div class="field">
             <label for="onb-genre">Style de musique <span class="req">*</span></label>
@@ -133,13 +152,18 @@ import { computed, ref } from 'vue'
 import Avatar from '@/components/Avatar.vue'
 import BrandMark from '@/components/BrandMark.vue'
 import Icon from '@/components/Icon.vue'
-import { completeOnboarding, PRO_PRICE, FREE_CONTACTS } from '@/store'
+import { completeOnboarding, currentUser, PRO_PRICE, FREE_CONTACTS } from '@/store'
 import type { Plan } from '@/store/types'
 import { money } from '@/utils/format'
 import { fileToAvatarDataUrl, ImageError } from '@/utils/image'
 import { GENRES } from '@/utils/genres'
 
 const stageName = ref('')
+/*  Pré-remplie avec l'adresse du compte : cet écran ne s'affiche qu'une fois
+ *  connecté, elle est donc toujours connue. Le `?? ''` n'est pas une hypothèse
+ *  sur ce cas mais un refus d'écrire « undefined » dans un champ de saisie si
+ *  l'ordre d'affichage venait à changer. */
+const email = ref(currentUser.value?.email ?? '')
 const genre = ref('')
 const genreAutre = ref('')
 const city = ref('')
@@ -182,14 +206,24 @@ const style = computed(() =>
   genre.value === '__autre' ? genreAutre.value.trim() : genre.value,
 )
 
+/*  Contrôle volontairement grossier : « quelque chose, un arobase, quelque
+ *  chose, un point, quelque chose ». Les expressions savantes qui prétendent
+ *  valider une adresse en refusent de parfaitement valables, et aucune ne
+ *  détecte la seule faute qui compte vraiment — une adresse bien formée mais
+ *  erronée. Celle-ci n'écarte que les saisies manifestement incomplètes. */
+const emailValide = computed(() => /\S+@\S+\.\S+/.test(email.value.trim()))
+
 const complet = computed(
-  () => !!stageName.value.trim() && !!style.value && plan.value !== '',
+  () => !!stageName.value.trim() && emailValide.value && !!style.value && plan.value !== '',
 )
 
 /** Ce qu'il reste à renseigner, nommé plutôt que laissé à deviner. */
 const manquant = computed(() => {
   const reste: string[] = []
   if (!stageName.value.trim()) reste.push('le nom de scène')
+  if (!emailValide.value) {
+    reste.push(email.value.trim() ? 'une adresse e-mail valide' : "l'adresse e-mail")
+  }
   if (!style.value) {
     reste.push(genre.value === '__autre' ? 'le style à préciser' : 'le style de musique')
   }
@@ -220,6 +254,7 @@ function submit() {
   completeOnboarding(
     {
       stageName: stageName.value.trim(),
+      email: email.value.trim(),
       genre: style.value,
       city: city.value.trim(),
       bio: bio.value.trim(),
