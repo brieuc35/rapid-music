@@ -6,8 +6,8 @@
 /*  Produit dans play-store/ :                                                 */
 /*    — l'image de mise en avant, 1024 × 500 exactement ;                      */
 /*    — six captures d'écran de téléphone, 1080 × 2160 ;                       */
-/*    — six visuels : la capture posée dans un téléphone en perspective, sur   */
-/*      le violet de la marque et sous une phrase, 1080 × 1920.                */
+/*    — six visuels : la capture posée dans un cadre de téléphone, sur le      */
+/*      violet de la marque et sous une phrase, 1080 × 1920.                   */
 /*                                                                            */
 /*  Pourquoi un script et non des captures faites à la main : l'interface      */
 /*  change souvent, et une fiche montrant une version d'il y a trois mois se   */
@@ -213,12 +213,12 @@ const FONDS = [
  *  contient. « Vos dates, salle par salle » dit mieux le métier que
  *  « Liste des concerts ». */
 const VISUELS = [
-  ['1-tableau-de-bord', 'Toute votre carrière<br />en un seul écran'],
+  ['1-tableau-de-bord', 'Toute votre carrière,<br />au même endroit'],
   ['2-concerts', 'Vos dates,<br />salle par salle'],
-  ['3-agenda', 'Studio, répètes,<br />réunions'],
+  ['3-agenda', 'Séances studio,<br />interviews, réunions'],
   ['4-taches', 'Ce qu’il reste à faire,<br />et pour quand'],
-  ['5-sorties', 'Votre catalogue,<br />toujours à jour'],
-  ['6-profil', 'La fiche que<br />vous montrez'],
+  ['5-sorties', 'Votre catalogue<br />musical'],
+  ['6-profil', 'Votre profil<br />d’artiste'],
 ]
 
 function pageVisuel(titre, imageBase64, fond) {
@@ -237,13 +237,13 @@ function pageVisuel(titre, imageBase64, fond) {
     position: absolute; top: 62px; left: 0; right: 0; text-align: center; padding: 0 44px;
     font-size: 42px; font-weight: 800; line-height: 1.12; letter-spacing: -.02em; color: #fff;
   }
-  /*  La profondeur est portée par la scène : sans \`perspective\` sur le parent,
-      une rotation aplatit le cadre au lieu de lui donner du volume. */
-  .socle { position: absolute; inset: 0; perspective: 1400px; }
+  /*  Le téléphone est droit, sans rotation : incliné, l'écran se lit de biais et
+      les copies d'écran perdent en netteté sur les bords. L'ombre portée suffit
+      à le détacher du fond. */
+  .socle { position: absolute; inset: 0; }
   .tel {
     position: absolute; left: 50%; top: 236px; width: 296px; height: 622px;
-    transform: translateX(-50%) rotateY(-9deg) rotateX(2.5deg) rotateZ(-1deg);
-    transform-origin: 50% 30%;
+    transform: translateX(-50%);
     border-radius: 40px; background: #0b0812; padding: 9px;
     box-shadow: 0 60px 90px rgba(0,0,0,.55), 0 0 0 1.5px rgba(255,255,255,.14), 0 0 0 8px rgba(255,255,255,.05);
   }
