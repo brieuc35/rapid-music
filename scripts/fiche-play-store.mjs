@@ -5,7 +5,9 @@
 /*                                                                            */
 /*  Produit dans play-store/ :                                                 */
 /*    — l'image de mise en avant, 1024 × 500 exactement ;                      */
-/*    — six captures d'écran de téléphone, 1080 × 2160.                        */
+/*    — six captures d'écran de téléphone, 1080 × 2160 ;                       */
+/*    — six visuels : la capture posée dans un téléphone en perspective, sur   */
+/*      le violet de la marque et sous une phrase, 1080 × 1920.                */
 /*                                                                            */
 /*  Pourquoi un script et non des captures faites à la main : l'interface      */
 /*  change souvent, et une fiche montrant une version d'il y a trois mois se   */
@@ -19,7 +21,7 @@
 /* -------------------------------------------------------------------------- */
 
 import { spawn } from 'node:child_process'
-import { mkdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -174,6 +176,98 @@ const ECRANS = [
 ]
 
 /* -------------------------------------------------------------------------- */
+/*  Les visuels : la capture posée dans un téléphone, sur fond de marque       */
+/*                                                                            */
+/*  Une capture brute montre l'application ; elle ne dit pas à quoi elle sert. */
+/*  Ces visuels-là portent une phrase, et c'est elle qu'on lit en faisant      */
+/*  défiler la fiche — l'écran vient l'appuyer, pas l'inverse.                 */
+/*                                                                            */
+/*  1080 × 1920, soit 9:16. Le rapport reste sous la limite de 2:1, et c'est   */
+/*  le format des fiches soignées du Store.                                    */
+/* -------------------------------------------------------------------------- */
+
+const VISUEL_L = 540
+const VISUEL_H = 960
+
+/*  Deux fonds, alternés. Le même violet de bout en bout donnerait un carrousel
+ *  monotone ; six fonds différents feraient six applications. Deux suffisent à
+ *  donner du rythme sans casser l'unité. */
+const FONDS = [
+  {
+    base: 'linear-gradient(160deg, #1b1430 0%, #14101f 55%, #2a1140 100%)',
+    halos: [
+      'width:640px;height:640px;right:-180px;top:-180px;background:radial-gradient(circle,rgba(139,92,246,.42) 0%,rgba(139,92,246,0) 62%)',
+      'width:720px;height:720px;left:-140px;top:300px;background:radial-gradient(circle,rgba(236,72,153,.38) 0%,rgba(236,72,153,0) 62%)',
+    ],
+  },
+  {
+    base: 'linear-gradient(200deg, #2a1140 0%, #14101f 50%, #1b1430 100%)',
+    halos: [
+      'width:680px;height:680px;left:-200px;top:-160px;background:radial-gradient(circle,rgba(236,72,153,.40) 0%,rgba(236,72,153,0) 62%)',
+      'width:700px;height:700px;right:-160px;top:340px;background:radial-gradient(circle,rgba(139,92,246,.40) 0%,rgba(139,92,246,0) 62%)',
+    ],
+  },
+]
+
+/*  Une phrase par écran : ce que l'artiste y gagne, pas ce que l'écran
+ *  contient. « Vos dates, salle par salle » dit mieux le métier que
+ *  « Liste des concerts ». */
+const VISUELS = [
+  ['1-tableau-de-bord', 'Toute votre carrière<br />en un seul écran'],
+  ['2-concerts', 'Vos dates,<br />salle par salle'],
+  ['3-agenda', 'Studio, répètes,<br />réunions'],
+  ['4-taches', 'Ce qu’il reste à faire,<br />et pour quand'],
+  ['5-sorties', 'Votre catalogue,<br />toujours à jour'],
+  ['6-profil', 'La fiche que<br />vous montrez'],
+]
+
+function pageVisuel(titre, imageBase64, fond) {
+  return `<!doctype html>
+<meta charset="utf-8" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700;800&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: ${VISUEL_L}px; height: ${VISUEL_H}px; overflow: hidden; }
+  body { font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+  .scene { position: relative; width: ${VISUEL_L}px; height: ${VISUEL_H}px; overflow: hidden; background: ${fond.base}; }
+  .halo { position: absolute; }
+  .titre {
+    position: absolute; top: 62px; left: 0; right: 0; text-align: center; padding: 0 44px;
+    font-size: 42px; font-weight: 800; line-height: 1.12; letter-spacing: -.02em; color: #fff;
+  }
+  /*  La profondeur est portée par la scène : sans \`perspective\` sur le parent,
+      une rotation aplatit le cadre au lieu de lui donner du volume. */
+  .socle { position: absolute; inset: 0; perspective: 1400px; }
+  .tel {
+    position: absolute; left: 50%; top: 236px; width: 296px; height: 622px;
+    transform: translateX(-50%) rotateY(-9deg) rotateX(2.5deg) rotateZ(-1deg);
+    transform-origin: 50% 30%;
+    border-radius: 40px; background: #0b0812; padding: 9px;
+    box-shadow: 0 60px 90px rgba(0,0,0,.55), 0 0 0 1.5px rgba(255,255,255,.14), 0 0 0 8px rgba(255,255,255,.05);
+  }
+  .ecran { width: 100%; height: 100%; border-radius: 32px; overflow: hidden; background: #fff; position: relative; }
+  /*  \`height: 100%\` autant que \`width\` : sans elle l'image garde ses
+      proportions, ne remplit pas le cadre, et laisse une bande blanche sous la
+      barre d'onglets. \`cover\` ne recadre que si les deux sont contraints. */
+  .ecran img { width: 100%; height: 100%; display: block; object-fit: cover; object-position: top center; }
+  /*  Un reflet oblique, pour que le verre se lise comme du verre. */
+  .ecran::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(115deg, rgba(255,255,255,.20) 0%, rgba(255,255,255,0) 38%);
+  }
+</style>
+<div class="scene">
+  ${fond.halos.map((h) => `<div class="halo" style="${h}"></div>`).join('')}
+  <div class="titre">${titre}</div>
+  <div class="socle">
+    <div class="tel"><div class="ecran"><img src="data:image/png;base64,${imageBase64}" /></div></div>
+  </div>
+</div>`
+}
+
+/* -------------------------------------------------------------------------- */
 
 const SONDE_TS = `import { createApp, watch } from 'vue'
 import { router } from './src/router'
@@ -202,7 +296,7 @@ function attendre(ms) {
   return new Promise((r) => setTimeout(r, ms))
 }
 
-async function serveurPret(url, essais = 40) {
+async function serveurPret(url, essais = 90) {
   for (let i = 0; i < essais; i++) {
     try {
       const r = await fetch(url)
@@ -242,14 +336,24 @@ async function principal() {
   writeFileSync(sondeTs, SONDE_TS)
   writeFileSync(sondeHtml, SONDE_HTML)
 
+  /*  La sortie de Vite est gardée, pas jetée : quand le serveur ne démarre pas,
+   *  c'est la seule chose qui dise pourquoi. La perdre transformait une panne
+   *  explicite — port occupé, dépendance manquante — en un « n'a pas démarré »
+   *  qui n'apprend rien. */
   const vite = spawn('npx', ['vite', '--port', String(PORT), '--strictPort'], {
     cwd: RACINE,
-    stdio: 'ignore',
+    stdio: ['ignore', 'pipe', 'pipe'],
   })
+  let journalVite = ''
+  vite.stdout.on('data', (d) => (journalVite += d))
+  vite.stderr.on('data', (d) => (journalVite += d))
 
   try {
     if (!(await serveurPret(`${BASE}/_fiche.html`))) {
-      throw new Error(`Le serveur de développement n'a pas démarré sur ${BASE}.`)
+      throw new Error(
+        `Le serveur de développement n'a pas démarré sur ${BASE}.\n` +
+          `Sortie de Vite :\n${journalVite.trim() || '(aucune)'}`,
+      )
     }
 
     for (const ecran of ECRANS) {
@@ -266,6 +370,21 @@ async function principal() {
       const fichier = join(SORTIE, `capture-${ecran.nom}.png`)
       await page.screenshot({ path: fichier })
       console.log(`capture-${ecran.nom}.png`.padEnd(30), statSync(fichier).size, 'octets')
+      await page.close()
+    }
+    // ---- les visuels : les captures qu'on vient de produire, mises en scène
+    for (const [i, [nom, titre]] of VISUELS.entries()) {
+      const capture = readFileSync(join(SORTIE, `capture-${nom}.png`)).toString('base64')
+      const page = await navigateur.newPage({
+        viewport: { width: VISUEL_L, height: VISUEL_H },
+        deviceScaleFactor: 2,
+      })
+      await page.setContent(pageVisuel(titre, capture, FONDS[i % FONDS.length]))
+      await page.waitForFunction(() => document.fonts.ready.then(() => true))
+      await attendre(500)
+      const fichier = join(SORTIE, `visuel-${nom}.png`)
+      await page.screenshot({ path: fichier })
+      console.log(`visuel-${nom}.png`.padEnd(30), statSync(fichier).size, 'octets')
       await page.close()
     }
   } finally {
