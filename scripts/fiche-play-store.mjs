@@ -212,8 +212,27 @@ const FONDS = [
 /*  Une phrase par écran : ce que l'artiste y gagne, pas ce que l'écran
  *  contient. « Vos dates, salle par salle » dit mieux le métier que
  *  « Liste des concerts ». */
+/*  Le cadre du téléphone.
+ *
+ *  L'écran doit garder le rapport exact de la capture, sinon \`cover\` remplit le
+ *  cadre en rognant les bords — et il le fait sans bruit : l'image produite a
+ *  l'air correcte, elle a simplement perdu la marge de l'application. C'est
+ *  arrivé, d'où le contrôle plus bas plutôt qu'une note dans un commentaire. */
+const TEL = { largeur: 300, hauteur: 576, cadre: 12, haut: 252 }
+const ECRAN_L = TEL.largeur - 2 * TEL.cadre
+const ECRAN_H = TEL.hauteur - 2 * TEL.cadre
+
+if (ECRAN_L * HAUTEUR !== ECRAN_H * LARGEUR) {
+  const rogne = Math.abs(ECRAN_L - (ECRAN_H * LARGEUR) / HAUTEUR) / 2
+  throw new Error(
+    `Le cadre du téléphone (${ECRAN_L} × ${ECRAN_H}) n'a pas le rapport de la ` +
+      `capture (${LARGEUR} × ${HAUTEUR}) : « cover » rognerait ${rogne.toFixed(1)} px ` +
+      `de chaque côté, et avec eux la marge des pages de l'application.`,
+  )
+}
+
 const VISUELS = [
-  ['1-tableau-de-bord', 'Toute votre carrière,<br />au même endroit'],
+  ['1-tableau-de-bord', 'Pilotez mieux<br />votre carrière'],
   ['2-concerts', 'Vos dates,<br />salle par salle'],
   ['3-agenda', 'Séances studio,<br />interviews, réunions'],
   ['4-taches', 'Ce qu’il reste à faire,<br />et pour quand'],
@@ -239,15 +258,25 @@ function pageVisuel(titre, imageBase64, fond) {
   }
   /*  Le téléphone est droit, sans rotation : incliné, l'écran se lit de biais et
       les copies d'écran perdent en netteté sur les bords. L'ombre portée suffit
-      à le détacher du fond. */
+      à le détacher du fond.
+
+      Les dimensions viennent de TEL, et le rapport de l'écran y est contrôlé :
+      tant qu'il différait de celui de la capture, \`cover\` rognait 14,3 px de
+      chaque bord. La marge intérieure des pages de l'application étant de 18 px,
+      il n'en restait que 3,7 et le contenu touchait le cadre.
+
+      Le corps est donc un peu moins élancé qu'un vrai téléphone (1,92 contre
+      2,1). C'est la conséquence d'un écran en 1:2, imposé lui-même par Google,
+      qui refuse une capture dont le grand côté dépasse le double du petit. */
   .socle { position: absolute; inset: 0; }
   .tel {
-    position: absolute; left: 50%; top: 236px; width: 296px; height: 622px;
+    position: absolute; left: 50%; top: ${TEL.haut}px;
+    width: ${TEL.largeur}px; height: ${TEL.hauteur}px;
     transform: translateX(-50%);
-    border-radius: 40px; background: #0b0812; padding: 9px;
+    border-radius: 38px; background: #0b0812; padding: ${TEL.cadre}px;
     box-shadow: 0 60px 90px rgba(0,0,0,.55), 0 0 0 1.5px rgba(255,255,255,.14), 0 0 0 8px rgba(255,255,255,.05);
   }
-  .ecran { width: 100%; height: 100%; border-radius: 32px; overflow: hidden; background: #fff; position: relative; }
+  .ecran { width: 100%; height: 100%; border-radius: 26px; overflow: hidden; background: #fff; position: relative; }
   /*  \`height: 100%\` autant que \`width\` : sans elle l'image garde ses
       proportions, ne remplit pas le cadre, et laisse une bande blanche sous la
       barre d'onglets. \`cover\` ne recadre que si les deux sont contraints. */

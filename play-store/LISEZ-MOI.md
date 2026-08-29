@@ -13,8 +13,8 @@ L'icône ne vient pas d'ici : c'est `public/icon-512.png`.
 
 ## Visuels ou captures brutes ?
 
-**Envoyez les `visuel-`.** Ce sont les mêmes écrans, posés dans un téléphone en
-perspective sur le violet de la marque, avec une phrase au-dessus. Une capture
+**Envoyez les `visuel-`.** Ce sont les mêmes écrans, posés dans un cadre de
+téléphone sur le violet de la marque, avec une phrase au-dessus. Une capture
 brute montre l'application ; elle ne dit pas à quoi elle sert. La phrase, si —
 et c'est elle qu'on lit en faisant défiler la fiche.
 
