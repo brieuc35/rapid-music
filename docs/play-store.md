@@ -18,7 +18,7 @@ figées dans `android/twa-manifest.json`.
 | --- | --- | --- |
 | Identifiant du paquet | `fr.rapidmusic.app` | **Irréversible.** Le changer imposerait de publier une autre application, sans les installations existantes. |
 | Nom affiché | RapidMusic | sous l'icône, 12 caractères maximum utiles |
-| Nom complet | RapidMusic - carrière musicale | nom dans le paquet Android, visible dans les réglages du téléphone. Identique au titre de la fiche, pour qu'un seul nom circule |
+| Nom complet | RapidMusic - Carrière musicale | nom dans le paquet Android, visible dans les réglages du téléphone. Identique au titre de la fiche, pour qu'un seul nom circule |
 | Barre d'état | `#14101F` | le sombre de l'en-tête, qu'elle surplombe |
 | Barre système du bas | `#FFFFFF` | le blanc de la barre d'onglets, qu'elle prolonge. Voir la réserve ci-dessous |
 | Écran de lancement | `#14101F` | enchaîne sans rupture sur l'écran d'attente de l'application |
@@ -268,7 +268,7 @@ avec sa limite. À recopier tels quels.
 **Titre** — 30 caractères, et il en fait exactement 30 :
 
 ```
-RapidMusic - carrière musicale
+RapidMusic - Carrière musicale
 ```
 
 **Description courte** — 80 caractères, celle qui s'affiche sous le titre :

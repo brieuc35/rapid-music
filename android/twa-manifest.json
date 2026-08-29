@@ -1,7 +1,7 @@
 {
   "packageId": "fr.rapidmusic.app",
   "host": "rapidmusic.fr",
-  "name": "RapidMusic - carrière musicale",
+  "name": "RapidMusic - Carrière musicale",
   "launcherName": "RapidMusic",
   "display": "standalone",
   "themeColor": "#14101F",
