@@ -221,10 +221,22 @@ téléphones**. Comme la signature par Google Play est obligatoire pour toute
 nouvelle application, Google resigne le paquet : l'empreinte à publier est donc
 la sienne, pas celle du magasin de clés créé à l'étape précédente.
 
-1. Envoyer le `.aab` dans la Play Console (un test fermé suffit).
-2. Console → **Test et publication** → **Intégrité de l'application** →
-   *Certificat de la clé de signature de l'application* → copier
-   l'empreinte **SHA-256**.
+1. Envoyer le `.aab` dans la Play Console (un test fermé suffit). **Avant cet
+   envoi, l'empreinte n'existe pas** : Google ne crée sa clé qu'au premier
+   téléversement, et la page de signature n'a rien à afficher.
+2. Ouvrir la page de signature. **Ne pas la chercher dans le menu** : « Intégrité
+   des applis » renvoie désormais vers « Protégé avec Play », qui ne contient pas
+   les certificats. On y va par l'adresse, en gardant ses deux numéros et en
+   remplaçant la fin par `keymanagement` :
+
+   ```
+   https://play.google.com/console/u/0/developers/<compte>/app/<appli>/keymanagement
+   ```
+
+   Puis *Certificat de la clé de signature de l'application* → copier l'empreinte
+   **SHA-256**. Attention à ne pas prendre celle du *certificat de la clé
+   d'importation*, juste en dessous : c'est la nôtre, elle est déjà dans le
+   fichier.
 3. La coller dans `public/.well-known/assetlinks.json` :
 
 ```json
