@@ -221,13 +221,22 @@ téléphones**. Comme la signature par Google Play est obligatoire pour toute
 nouvelle application, Google resigne le paquet : l'empreinte à publier est donc
 la sienne, pas celle du magasin de clés créé à l'étape précédente.
 
-1. Envoyer le `.aab` dans la Play Console (un test fermé suffit). **Avant cet
+1. Envoyer le `.aab` dans la Play Console (un test interne suffit). **Avant cet
    envoi, l'empreinte n'existe pas** : Google ne crée sa clé qu'au premier
-   téléversement, et la page de signature n'a rien à afficher.
-2. Ouvrir la page de signature. **Ne pas la chercher dans le menu** : « Intégrité
-   des applis » renvoie désormais vers « Protégé avec Play », qui ne contient pas
-   les certificats. On y va par l'adresse, en gardant ses deux numéros et en
-   remplaçant la fin par `keymanagement` :
+   téléversement.
+2. Ouvrir la page de signature :
+
+   **Protégé avec Play** (menu de gauche, l'icône bouclier) → carte
+   **« Protection Play Store »** → **« Accéder à la signature d'application
+   Play »**.
+
+   Les certificats sont sur cette sous-page, pas sur la page d'accueil de
+   « Protégé avec Play ». Et surtout, **pas dans le menu** : l'entrée
+   « Intégrité des applis », sous « Tester et publier », affiche « Les paramètres
+   d'intégrité de l'appli ont été déplacés » et renvoie à la page d'accueil, qui
+   ne les contient pas non plus. On tourne en rond.
+
+   L'adresse directe évite tout le parcours, en gardant ses deux numéros :
 
    ```
    https://play.google.com/console/u/0/developers/<compte>/app/<appli>/keymanagement
