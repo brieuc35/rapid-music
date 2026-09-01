@@ -64,6 +64,20 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Les revendications de jetons d'achat. Fermée des deux côtés.
+    //
+    // Elle dit quel compte a acheté quel abonnement. La lire reviendrait à
+    // obtenir la liste des abonnés ; l'écrire reviendrait à s'attribuer l'achat
+    // d'un autre, ou à libérer le sien pour le faire revendiquer ailleurs —
+    // c'est-à-dire à partager un abonnement, ce que cette collection existe
+    // précisément pour empêcher.
+    //
+    // Seule la fonction de vérification y écrit, avec les droits
+    // d'administration, qui passent au-dessus de ces règles.
+    match /jetons/{empreinte} {
+      allow read, write: if false;
+    }
+
     // La trace des courriels envoyés. Fermée des deux côtés, sans exception.
     //
     // Le fourre-tout en fin de fichier la refuserait déjà. Elle est écrite ici

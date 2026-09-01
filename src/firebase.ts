@@ -20,6 +20,7 @@ import { getAuth } from 'firebase/auth'
  *  La consultation hors connexion est assurée par notre propre copie locale
  *  (voir store/sync.ts). */
 import { getFirestore } from 'firebase/firestore/lite'
+import { getFunctions } from 'firebase/functions'
 
 const app = initializeApp({
   apiKey: 'AIzaSyBqMB4pMtmLF1krzhmETlf3pbjrb93uAjk',
@@ -49,3 +50,8 @@ export const db = getFirestore(app)
  *  mention dans la politique de confidentialité. Elle alourdirait aussi le
  *  chargement sans rien apporter à l'artiste. À réintroduire, si besoin, avec
  *  le consentement qui va avec — pas avant. */
+
+/*  Les fonctions serveur, dans la même région qu'elles : sans ce second
+ *  argument le SDK appelle « us-central1 », qui ne les héberge pas, et
+ *  l'appel échoue en 404 sans dire pourquoi. */
+export const functions = getFunctions(app, 'europe-west1')
