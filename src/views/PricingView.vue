@@ -5,18 +5,23 @@
       subtitle="Deux formules : l'essentiel gratuit, la carrière en Pro."
     />
 
-    <!-- Sans objet pour qui a un abonnement enregistré sur le serveur : ce
-         bandeau explique le bouton de démonstration, qui ne lui est pas
-         proposé. -->
-    <div v-if="!isPaidPro" class="notice">
+    <!-- L'abonnement se prend dans l'application Android. Le dire ici plutôt
+         que de laisser découvrir un bouton qui ne fait rien : sur un ordinateur
+         ou un iPhone, il n'y a pas de parcours d'achat, et ce n'est pas une
+         panne. -->
+    <div v-if="!isPaidPro && !achatPossible" class="notice">
       <Icon name="bell" />
       <div>
-        <b>Aucun paiement n'est encaissé.</b>
-        RapidMusic n'est relié à aucun prestataire de paiement : le bouton ci-dessous
-        active Pro en démonstration, pour que vous puissiez juger l'offre. Une facturation
-        réelle exigerait un prestataire tel que Stripe, et une vérification du paiement
-        côté serveur — cette bascule-ci se fait dans le navigateur.
+        <b>L'abonnement se souscrit depuis l'application Android.</b>
+        Installez RapidMusic depuis le Play Store et ouvrez cette page à
+        nouveau : le paiement passe par votre compte Google, avec les moyens de
+        paiement qui y sont déjà enregistrés.
       </div>
+    </div>
+
+    <div v-if="erreurAchat" class="notice notice--danger">
+      <Icon name="bell" />
+      <div>{{ erreurAchat }}</div>
     </div>
 
     <!-- État de l'abonnement en cours.
@@ -93,9 +98,18 @@
           <li v-for="f in proFeatures" :key="f"><Icon name="check" /> {{ f }}</li>
         </ul>
         <div class="plan__foot">
-          <button v-if="!isPro" class="btn btn--primary btn--block" @click="showActivate = true">
-            <Icon name="star" /> Activer Pro
+          <button
+            v-if="!isPro && achatPossible"
+            class="btn btn--primary btn--block"
+            :disabled="achatEnCours"
+            @click="souscrire"
+          >
+            <Icon name="star" />
+            {{ achatEnCours ? 'Un instant…' : 'Passer à Pro' }}
           </button>
+          <span v-else-if="!isPro" class="muted" style="font-size: 13px">
+            Depuis l'application Android
+          </span>
           <span v-else class="badge badge--violet">Votre formule</span>
         </div>
       </div>
@@ -142,29 +156,6 @@
       </div>
     </div>
 
-    <!-- Activation -->
-    <Modal :open="showActivate" title="Activer RapidMusic Pro" @close="showActivate = false">
-      <p style="margin: 0 0 14px; color: var(--text-soft); line-height: 1.6">
-        Pro donne accès aux revenus, aux contrats et aux montants de vos concerts,
-        pour {{ money(PRO_PRICE, true) }} par mois. Le Réseau des professionnels
-        s'y ajoutera à son ouverture, sans supplément.
-      </p>
-      <div class="notice notice--sm">
-        <Icon name="bell" />
-        <div>
-          <b>Aucune coordonnée bancaire n'est demandée et aucun montant n'est prélevé.</b>
-          Cette activation est une démonstration locale, destinée à vous laisser essayer
-          les fonctions concernées.
-        </div>
-      </div>
-      <template #footer>
-        <button class="btn btn--subtle" @click="showActivate = false">Annuler</button>
-        <button class="btn btn--primary" @click="doActivate">
-          <Icon name="check" /> Activer la démonstration
-        </button>
-      </template>
-    </Modal>
-
     <!-- Résiliation -->
     <Modal :open="showCancel" title="Arrêter la démonstration" @close="showCancel = false">
       <p style="margin: 0; color: var(--text-soft); line-height: 1.6">
@@ -197,12 +188,18 @@ import {
   isPro,
   isPaidPro,
   paidSubscription,
-  activatePro,
   cancelPro,
+  relireAbonnement,
   PRO_PRICE,
   FREE_CONTACTS,
 } from '@/store'
 import { money, formatDate } from '@/utils/format'
+import {
+  acheterPro,
+  ErreurAchat,
+  facturationPossible,
+  verifierAupresDuServeur,
+} from '@/utils/facturation-play'
 
 const freeFeatures = [
   'Tableau de bord et indicateurs',
@@ -252,13 +249,43 @@ const comparison = [
   },
 ]
 
-const showActivate = ref(false)
 const showCancel = ref(false)
 
-function doActivate() {
-  activatePro()
-  showActivate.value = false
+/*  Calculé une fois : la disponibilité ne change pas en cours de session, et
+ *  l'interroger dans le gabarit le referait à chaque rendu. */
+const achatPossible = facturationPossible()
+const achatEnCours = ref(false)
+const erreurAchat = ref('')
+
+/**
+ * Achète l'abonnement, puis le fait confirmer par le serveur.
+ *
+ * Les deux étapes comptent, et la seconde davantage : le paiement se joue chez
+ * Google, mais l'accès ne s'ouvre que lorsque la fonction serveur a vérifié
+ * l'achat auprès de lui. Rien de ce qui se passe dans ce fichier ne peut
+ * ouvrir l'accès tout seul — `abonnements/{uid}` est fermé au navigateur.
+ */
+async function souscrire() {
+  achatEnCours.value = true
+  erreurAchat.value = ''
+  try {
+    const jeton = await acheterPro()
+    await verifierAupresDuServeur(jeton)
+    await relireAbonnement()
+  } catch (e) {
+    /*  Un abandon n'est pas une erreur : refermer la fenêtre de paiement est
+     *  un choix, et afficher un message rouge à quelqu'un qui a simplement
+     *  changé d'avis le laisserait croire à une panne. */
+    if (e instanceof DOMException && e.name === 'AbortError') return
+    erreurAchat.value =
+      e instanceof ErreurAchat
+        ? e.message
+        : "L'abonnement n'a pas pu être confirmé. Si le montant a été débité, il sera reconnu au prochain lancement de l'application."
+  } finally {
+    achatEnCours.value = false
+  }
 }
+
 function doCancel() {
   cancelPro()
   showCancel.value = false
@@ -285,10 +312,15 @@ function doCancel() {
   margin-top: 1px;
   color: var(--amber);
 }
-.notice--sm {
-  margin: 0;
-  font-size: 13px;
-  padding: 12px 14px;
+/* Un échec d'achat ne se dit pas dans l'ambre des informations : quelqu'un qui
+   vient de payer doit voir tout de suite que quelque chose n'a pas abouti. */
+.notice--danger {
+  background: var(--red-bg);
+  border-color: #f5c2c2;
+  color: #8a2020;
+}
+.notice--danger svg {
+  color: var(--red);
 }
 
 .current {

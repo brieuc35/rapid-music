@@ -23,6 +23,7 @@ import {
   clearSubscription,
   readSubscription,
 } from './subscription'
+import { jetonDejaAchete, verifierAupresDuServeur } from '@/utils/facturation-play'
 import { auth } from '@/firebase'
 import {
   createUserWithEmailAndPassword,
@@ -405,6 +406,40 @@ export const paidSubscription = abonnementDetail
 /** Accès aux fonctions payantes, par l'une ou l'autre voie. */
 export const isPro = computed(() => abonnementPro.value || demoPro.value)
 
+/** Relit l'abonnement du compte connecté, après un achat par exemple. */
+export async function relireAbonnement(): Promise<void> {
+  const uid = currentUser.value?.uid
+  if (uid) await readSubscription(uid)
+}
+
+/**
+ * Redemande à Google l'état de l'abonnement acheté, au lancement.
+ *
+ * C'est ce qui remplace les avis en temps réel de Google, et c'est suffisant
+ * parce que l'abonnement ne sert qu'à quelqu'un qui ouvre l'application : le
+ * moment où l'état compte est exactement celui où on le rafraîchit.
+ *
+ * Sans cet appel, un abonné perdrait l'accès au bout d'un mois — la date
+ * d'échéance enregistrée à l'achat serait dépassée et rien ne l'aurait
+ * prolongée, malgré des prélèvements bien encaissés. C'est aussi ce qui referme
+ * l'accès après un remboursement ou une résiliation.
+ *
+ * Silencieux de bout en bout : hors de l'application Android il n'y a rien à
+ * demander, et un échec de réseau ne doit pas retarder l'ouverture ni afficher
+ * quoi que ce soit. L'abonnement déjà lu dans Firestore reste valable en
+ * attendant.
+ */
+async function reverifierAchatPlay(uid: string): Promise<void> {
+  try {
+    const jeton = await jetonDejaAchete()
+    if (!jeton) return
+    await verifierAupresDuServeur(jeton)
+    await readSubscription(uid)
+  } catch {
+    /* rien à faire ici : l'état connu reste en place jusqu'au prochain essai */
+  }
+}
+
 /**
  * Nombre de contacts que la formule gratuite permet d'enregistrer.
  *
@@ -530,6 +565,13 @@ onAuthStateChanged(auth, async (user) => {
       ])
       apply(data)
       if (legacy) markLegacyTaken(user.uid)
+
+      /*  Lancée sans l'attendre : elle parle au Play Store puis au serveur, et
+       *  faire patienter l'ouverture de l'application derrière deux allers-retours
+       *  réseau serait payer cher un rafraîchissement dont personne n'a besoin
+       *  dans la seconde. L'abonnement déjà lu s'affiche, celui-ci le corrige
+       *  s'il le faut. */
+      void reverifierAchatPlay(user.uid)
     } else {
       // Ne pas laisser à l'écran les données du compte qui vient de partir.
       apply({})
