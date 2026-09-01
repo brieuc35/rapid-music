@@ -12,7 +12,7 @@
 /* -------------------------------------------------------------------------- */
 
 import { GoogleAuth } from 'google-auth-library'
-import { PRODUIT, type AchatPlay } from './facturation.js'
+import type { AchatPlay } from './facturation.js'
 
 /** Le paquet Android, tel qu'il est déclaré dans android/twa-manifest.json. */
 export const PAQUET = 'fr.rapidmusic.app'
@@ -74,11 +74,13 @@ export async function lireAchat(jeton: string): Promise<AchatPlay> {
  * au moment de l'achat, elle se voit trois jours plus tard, sur tous les
  * abonnés à la fois.
  */
-export async function accuserReception(jeton: string): Promise<void> {
+export async function accuserReception(jeton: string, produit: string): Promise<void> {
   /*  Cet appel-là passe encore par l'ancienne route, qui réclame l'identifiant
-   *  du produit : la version 2 de l'API n'en propose pas d'équivalent. */
+   *  du produit : la version 2 de l'API n'en propose pas d'équivalent. C'est
+   *  pourquoi l'appelant doit d'abord savoir lequel des deux abonnements a été
+   *  acheté. */
   const chemin =
-    `/applications/${PAQUET}/purchases/subscriptions/${PRODUIT}` +
+    `/applications/${PAQUET}/purchases/subscriptions/${produit}` +
     `/tokens/${encodeURIComponent(jeton)}:acknowledge`
   await appeler(chemin, 'POST')
 }

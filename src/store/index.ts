@@ -387,7 +387,22 @@ export function addPost(content: string, category: PostCategory, tags: string[])
 /*    service du paiement — et ce jour-là, rien d'autre ne bougera.            */
 /* -------------------------------------------------------------------------- */
 
+/*  Les deux tarifs, **de secours seulement**.
+ *
+ *  Le prix qui fait foi est celui de la Play Console, et l'application le lui
+ *  demande (`lireTarifs` dans utils/facturation-play.ts). Ces montants-ci ne
+ *  servent qu'à présenter l'offre là où l'on ne peut pas acheter : sur le site,
+ *  sur un ordinateur, sur un iPhone.
+ *
+ *  Les garder à jour reste utile — c'est ce que verront les visiteurs du site —
+ *  mais s'ils divergent de la Console, personne ne paiera le mauvais prix. */
 export const PRO_PRICE = 9.99
+export const PRO_PRICE_ANNUEL = 99
+
+/** Ce que l'année fait économiser, en mois offerts. Calculé, pas annoncé. */
+export const PRO_MOIS_OFFERTS = Math.round(
+  (PRO_PRICE * 12 - PRO_PRICE_ANNUEL) / PRO_PRICE,
+)
 
 /** Démonstration locale, décidée par le navigateur. Sans valeur probante. */
 const demoPro = computed(() => store.subscription.plan === 'pro')

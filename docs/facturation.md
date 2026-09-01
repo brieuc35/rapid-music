@@ -63,26 +63,48 @@ subit rien.
 Rien de ce qui précède ne fonctionne sans ces quatre étapes. Elles se font dans
 les consoles, pas dans le code.
 
-### 1. Créer le produit dans la Play Console
+### 1. Créer les deux produits dans la Play Console
 
-**Monétiser avec Play → Produits → Abonnements → Créer un abonnement.**
+**Monétiser avec Play → Produits → Abonnements → Créer un abonnement**, deux
+fois.
 
-| Champ | Valeur |
-| --- | --- |
-| ID du produit | `pro_mensuel` |
-| Nom | RapidMusic Pro |
-| Période de facturation | mensuelle |
-| Prix | 9,99 € |
+| ID du produit | Nom | Période | Prix |
+| --- | --- | --- | --- |
+| `pro_mensuel` | RapidMusic Pro — au mois | mensuelle | 9,99 € |
+| `pro_annuel` | RapidMusic Pro — à l'année | annuelle | 99 € |
 
-L'identifiant doit être **exactement** `pro_mensuel` : c'est celui que
-demande le navigateur (`src/utils/facturation-play.ts`) et celui que vérifie le
-serveur (`functions/src/facturation.ts`). Une faute de frappe ne se verrait pas
-à la vérification, elle ferait échouer l'achat.
+Les identifiants doivent être **exactement** ceux-ci : ce sont ceux que demande
+le navigateur (`src/utils/facturation-play.ts`) et que vérifie le serveur
+(`functions/src/facturation.ts`). Une faute de frappe ne se verrait pas à la
+vérification, elle ferait échouer l'achat.
 
-Un **essai gratuit** se règle ici, dans les offres de l'abonnement. C'est le
+> **Deux produits, et non deux formules d'un même produit.** Ce n'est pas une
+> préférence, c'est une contrainte du pont de facturation des TWA : il prend
+> toujours la **première** offre du produit demandé
+> (`offerDetails.get(0)`). Réunies sous un seul produit, les deux formules
+> seraient indiscernables depuis le navigateur — l'artiste croirait choisir
+> l'annuel et paierait ce que Google aurait mis en tête de liste.
+
+Un **essai gratuit** se règle dans les offres de chaque abonnement. C'est le
 remplaçant de l'ancienne démonstration locale, retirée en même temps que ce
 travail : garder un bouton qui offrait Pro d'un clic aurait vidé la facturation
 de son sens.
+
+> ⚖️ **À vérifier sur un vrai téléphone.** Le pont prenant toujours la première
+> offre, rien ne garantit que ce soit celle de l'essai gratuit plutôt que le
+> tarif normal — l'ordre n'est pas documenté. Si l'essai ne s'applique pas,
+> c'est là qu'il faudra regarder.
+
+### Les prix ne sont pas dans le code
+
+L'application demande les montants au Play Store (`lireTarifs`) et affiche ceux
+de la Console, dans la devise du téléphone. Changer un prix là-bas suffit.
+
+Les montants de `src/store/index.ts` (`PRO_PRICE`, `PRO_PRICE_ANNUEL`) ne
+servent qu'à présenter l'offre **là où l'on ne peut pas acheter** : sur le site,
+sur un ordinateur, sur un iPhone. Les garder à jour reste utile pour les
+visiteurs, mais s'ils divergent de la Console, personne ne paiera le mauvais
+prix.
 
 ### 2. Inviter le compte de service dans la Play Console
 
@@ -129,9 +151,12 @@ débités.
 
 Ce qui doit se produire :
 
-1. l'écran d'abonnement affiche **« Passer à Pro »** — s'il affiche « Depuis
-   l'application Android », c'est que le paquet n'a pas été refabriqué ;
-2. la fenêtre de paiement Google s'ouvre au prix réglé dans la Console ;
+1. l'écran d'abonnement affiche **« Passer à Pro »** et les deux formules avec
+   leurs prix — s'il affiche « Depuis l'application Android », c'est que le
+   paquet n'a pas été refabriqué ; si les prix sont ceux du code et non ceux de
+   la Console, c'est que `getDetails` n'a pas répondu ;
+2. la fenêtre de paiement Google s'ouvre au prix réglé dans la Console, **et sur
+   la bonne formule** — c'est le point à vérifier deux fois, une pour chaque ;
 3. après paiement, les onglets Revenus et Contrats s'ouvrent ;
 4. dans Firestore, `abonnements/{uid}` porte `plan: "pro"` et une échéance ;
 5. un courriel de confirmation part — le déclencheur `abonnementPro` existait

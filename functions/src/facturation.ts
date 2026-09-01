@@ -15,13 +15,38 @@ import { createHash } from 'node:crypto'
 import type { Abonnement } from './courriels.js'
 
 /**
- * L'identifiant du produit dans la Play Console.
+ * Les deux produits d'abonnement, tels qu'ils sont créés dans la Play Console.
  *
- * Il doit correspondre exactement à celui créé là-bas. Une faute de frappe ne
- * se verrait pas à la vérification — Google répondrait sur un achat valable —
- * mais laisserait passer l'achat d'un autre produit du même compte.
+ * **Deux produits, et non deux formules d'un même produit.** Ce n'est pas un
+ * choix de présentation, c'est une contrainte : le pont de facturation des TWA
+ * prend toujours la première offre du produit demandé
+ * (`offerDetails.get(0)` dans `PlayBillingWrapper`). Réunies sous un seul
+ * produit, les deux formules seraient indiscernables depuis le navigateur —
+ * l'artiste croirait choisir l'annuel et paierait ce que Google aurait mis en
+ * tête de liste.
+ *
+ * Les identifiants doivent correspondre au mot près à ceux de la Console. Une
+ * faute de frappe ne se verrait pas à la vérification : elle ferait échouer
+ * l'achat lui-même.
  */
-export const PRODUIT = 'pro_mensuel'
+export const PRODUIT_MENSUEL = 'pro_mensuel'
+export const PRODUIT_ANNUEL = 'pro_annuel'
+
+const PRODUITS = new Set<string>([PRODUIT_MENSUEL, PRODUIT_ANNUEL])
+
+/** Vrai si cet identifiant est l'un de nos deux abonnements. */
+export function estNotreProduit(id: string | undefined): boolean {
+  return id !== undefined && PRODUITS.has(id)
+}
+
+/**
+ * Lequel des deux abonnements cet achat concerne, ou `null`.
+ *
+ * Sert à l'accusé de réception, qui réclame l'identifiant du produit.
+ */
+export function produitDeLAchat(achat: AchatPlay): string | null {
+  return (achat.lineItems ?? []).map((l) => l.productId).find(estNotreProduit) ?? null
+}
 
 /** Réponse de l'API `purchases.subscriptionsv2`, réduite à ce qu'on en lit. */
 export interface AchatPlay {
@@ -140,7 +165,10 @@ function jour(horodatage: string | undefined): string | undefined {
  */
 function echeance(achat: AchatPlay): string | undefined {
   const dates = (achat.lineItems ?? [])
-    .filter((l) => l.productId === undefined || l.productId === PRODUIT)
+    /*  Une ligne sans identifiant est retenue : le champ est facultatif chez
+     *  Google, et l'écarter fermerait l'accès à quelqu'un qui paie au motif que
+     *  sa réponse est incomplète. */
+    .filter((l) => l.productId === undefined || estNotreProduit(l.productId))
     .map((l) => jour(l.expiryTime))
     .filter((d): d is string => d !== undefined)
   return dates.length ? dates.sort().at(-1) : undefined

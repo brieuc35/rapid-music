@@ -20,24 +20,41 @@ import { functions } from '@/firebase'
 const CANAL = 'https://play.google.com/billing'
 
 /**
- * L'identifiant du produit dans la Play Console.
+ * Les deux abonnements, tels qu'ils sont créés dans la Play Console.
  *
- * Doit correspondre au mot pour mot à `PRODUIT` dans functions/src/facturation.ts.
- * Les deux servent à des choses différentes — ici on demande l'achat, là-bas on
- * vérifie ce qui a été acheté — mais un désaccord entre eux ferait acheter un
+ * Doivent correspondre au mot près à ceux de functions/src/facturation.ts. Les
+ * deux fichiers servent à des choses différentes — ici on demande l'achat,
+ * là-bas on vérifie ce qui a été acheté — mais un désaccord ferait acheter un
  * produit que la vérification refuserait.
+ *
+ * Deux produits distincts et non deux formules d'un même produit : le pont de
+ * facturation prend toujours la première offre, et réunies sous un seul produit
+ * les deux formules seraient indiscernables d'ici.
  */
-export const PRODUIT = 'pro_mensuel'
+export const PRODUIT_MENSUEL = 'pro_mensuel'
+export const PRODUIT_ANNUEL = 'pro_annuel'
 
 /*  Le service de biens numériques n'existe que dans l'application installée
  *  depuis le Play Store. Son absence n'est pas une panne : c'est le cas de tous
  *  les navigateurs ordinaires. */
+interface DetailProduit {
+  itemId: string
+  price: { currency: string; value: string }
+}
+
 interface ServiceBiens {
   listPurchases(): Promise<Array<{ itemId: string; purchaseToken: string }>>
+  getDetails(ids: string[]): Promise<DetailProduit[]>
 }
 
 type FenetreAvecFacturation = Window & {
   getDigitalGoodsService?: (canal: string) => Promise<ServiceBiens>
+}
+
+/** Un prix relevé auprès du Play Store, gardé brut pour rester divisible. */
+export interface Tarif {
+  montant: number
+  devise: string
 }
 
 /** Erreur d'achat portant un message affichable tel quel. */
@@ -79,7 +96,7 @@ async function serviceFacturation(): Promise<ServiceBiens | null> {
  * laisserait croire qu'il fait autorité, et le jour où le prix changerait dans
  * la Console, ce code mentirait sans que rien n'échoue.
  */
-export async function acheterPro(): Promise<string> {
+export async function acheterPro(produit: string): Promise<string> {
   if (!facturationPossible()) {
     throw new ErreurAchat(
       "L'abonnement s'achète depuis l'application Android, installée depuis le Play Store.",
@@ -87,7 +104,7 @@ export async function acheterPro(): Promise<string> {
   }
 
   const demande = new PaymentRequest(
-    [{ supportedMethods: CANAL, data: { sku: PRODUIT } }],
+    [{ supportedMethods: CANAL, data: { sku: produit } }],
     { total: { label: 'Abonnement Pro', amount: { currency: 'EUR', value: '0' } } },
   )
 
@@ -118,10 +135,63 @@ export async function jetonDejaAchete(): Promise<string | null> {
   if (!service) return null
   try {
     const achats = await service.listPurchases()
-    return achats.find((a) => a.itemId === PRODUIT)?.purchaseToken ?? null
+    const notre = new Set([PRODUIT_MENSUEL, PRODUIT_ANNUEL])
+    return achats.find((a) => notre.has(a.itemId))?.purchaseToken ?? null
   } catch {
     return null
   }
+}
+
+/**
+ * Les prix réels, tels que la Play Console les affiche, dans la devise du
+ * téléphone.
+ *
+ * Les demander plutôt que de les écrire dans le code évite la panne silencieuse
+ * la plus probable de tout l'abonnement : un prix changé dans la Console et
+ * oublié ici, l'application annonçant un montant et Google en débitant un
+ * autre. Personne ne s'en apercevrait avant un client mécontent.
+ *
+ * Effet de bord bienvenu : un artiste belge, suisse ou canadien voit sa propre
+ * monnaie, sans que rien n'ait à être prévu pour lui.
+ *
+ * Rend une table vide hors de l'application — le site retombe alors sur les
+ * montants annoncés dans le code, qui n'y servent qu'à présenter l'offre
+ * puisqu'on n'y achète pas.
+ */
+export async function lireTarifs(): Promise<Map<string, Tarif>> {
+  const tarifs = new Map<string, Tarif>()
+  const service = await serviceFacturation()
+  if (!service) return tarifs
+
+  try {
+    const details = await service.getDetails([PRODUIT_MENSUEL, PRODUIT_ANNUEL])
+    for (const d of details) {
+      const montant = Number(d.price?.value)
+      if (!d.price?.currency || !Number.isFinite(montant)) continue
+      tarifs.set(d.itemId, { montant, devise: d.price.currency })
+    }
+  } catch {
+    /*  Le Play Store peut ne pas répondre. Les montants du code prendront le
+     *  relais : mieux vaut un prix peut-être périmé qu'une page sans prix. */
+  }
+  return tarifs
+}
+
+/**
+ * Écrit un montant dans sa devise.
+ *
+ * Le montant est gardé brut plutôt que le texte tout fait de Google, parce
+ * qu'il faut pouvoir le diviser : l'abonnement annuel s'annonce aussi ramené au
+ * mois, et une chaîne « 99,00 € » ne se divise pas.
+ */
+export function ecrireTarif(t: Tarif): string {
+  return new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency: t.devise,
+    /*  Deux décimales au plus : un abonnement se paie en centimes, jamais en
+     *  millièmes, et le douzième d'un prix annuel en produirait. */
+    maximumFractionDigits: 2,
+  }).format(t.montant)
 }
 
 /**

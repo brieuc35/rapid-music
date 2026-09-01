@@ -19,8 +19,11 @@ import {
   clefDuJeton,
   doitAccuserReception,
   jetonUtilisable,
+  estNotreProduit,
   ouvreLAcces,
-  PRODUIT,
+  PRODUIT_ANNUEL,
+  PRODUIT_MENSUEL,
+  produitDeLAchat,
   type AchatPlay,
 } from './facturation.js'
 
@@ -30,7 +33,7 @@ function achat(modif: Partial<AchatPlay> = {}): AchatPlay {
     subscriptionState: 'SUBSCRIPTION_STATE_ACTIVE',
     acknowledgementState: 'ACKNOWLEDGEMENT_STATE_ACKNOWLEDGED',
     startTime: '2026-09-01T08:30:00Z',
-    lineItems: [{ productId: PRODUIT, expiryTime: '2026-10-01T08:30:00Z' }],
+    lineItems: [{ productId: PRODUIT_MENSUEL, expiryTime: '2026-10-01T08:30:00Z' }],
     ...modif,
   }
 }
@@ -148,8 +151,8 @@ test('un achat fermé ne donne rien', () => {
 test('l’échéance retenue est la plus lointaine', () => {
   const a = achat({
     lineItems: [
-      { productId: PRODUIT, expiryTime: '2026-10-01T08:30:00Z' },
-      { productId: PRODUIT, expiryTime: '2026-12-01T08:30:00Z' },
+      { productId: PRODUIT_MENSUEL, expiryTime: '2026-10-01T08:30:00Z' },
+      { productId: PRODUIT_MENSUEL, expiryTime: '2026-12-01T08:30:00Z' },
     ],
   })
   assert.equal(abonnementDepuisAchat(a)?.jusqua, '2026-12-01')
@@ -158,7 +161,7 @@ test('l’échéance retenue est la plus lointaine', () => {
 test('une ligne d’un autre produit est ignorée', () => {
   const a = achat({
     lineItems: [
-      { productId: PRODUIT, expiryTime: '2026-10-01T08:30:00Z' },
+      { productId: PRODUIT_MENSUEL, expiryTime: '2026-10-01T08:30:00Z' },
       { productId: 'autre_chose', expiryTime: '2027-01-01T08:30:00Z' },
     ],
   })
@@ -173,7 +176,7 @@ test('sans échéance connue, l’abonnement reste ouvert', () => {
 })
 
 test('un horodatage illisible ne produit pas de date inventée', () => {
-  const a = achat({ lineItems: [{ productId: PRODUIT, expiryTime: 'la semaine prochaine' }] })
+  const a = achat({ lineItems: [{ productId: PRODUIT_MENSUEL, expiryTime: 'la semaine prochaine' }] })
   assert.equal(abonnementDepuisAchat(a)?.jusqua, undefined)
 })
 
@@ -210,4 +213,53 @@ test('le dernier jour payé reste ouvert', () => {
   const a = abonnementDepuisAchat(achat())
   assert.ok(a)
   assert.equal(estPro(a, '2026-10-01'), true)
+})
+
+/* -------------------------------------------------------------------------- */
+/*  Les deux produits                                                          */
+/*                                                                            */
+/*  Deux produits distincts, et non deux formules d'un même produit : le pont  */
+/*  de facturation des TWA prend toujours la première offre, et réunies sous   */
+/*  un seul produit les deux formules seraient indiscernables depuis le        */
+/*  navigateur.                                                               */
+/* -------------------------------------------------------------------------- */
+
+test('les deux abonnements sont reconnus, et rien d’autre', () => {
+  assert.equal(estNotreProduit(PRODUIT_MENSUEL), true)
+  assert.equal(estNotreProduit(PRODUIT_ANNUEL), true)
+  assert.equal(estNotreProduit('pro_hebdomadaire'), false)
+  assert.equal(estNotreProduit(undefined), false)
+})
+
+test('les deux identifiants diffèrent', () => {
+  //  Une copie malheureuse ferait vendre le mensuel au prix de l'annuel sans
+  //  qu'aucun test ne s'en aperçoive.
+  assert.notEqual(PRODUIT_MENSUEL, PRODUIT_ANNUEL)
+})
+
+test('un abonnement annuel ouvre l’accès comme le mensuel', () => {
+  const a = achat({
+    lineItems: [{ productId: PRODUIT_ANNUEL, expiryTime: '2027-09-01T08:30:00Z' }],
+  })
+  assert.deepEqual(abonnementDepuisAchat(a), {
+    plan: 'pro',
+    depuis: '2026-09-01',
+    jusqua: '2027-09-01',
+  })
+})
+
+test('le produit acheté est identifié, pour l’accusé de réception', () => {
+  assert.equal(produitDeLAchat(achat()), PRODUIT_MENSUEL)
+  assert.equal(
+    produitDeLAchat(achat({ lineItems: [{ productId: PRODUIT_ANNUEL }] })),
+    PRODUIT_ANNUEL,
+  )
+})
+
+test('un produit étranger n’est pas retenu pour l’accusé', () => {
+  //  L'accusé porterait sur un produit qui n'est pas le nôtre : Google
+  //  refuserait, et l'achat serait remboursé sous trois jours.
+  assert.equal(produitDeLAchat(achat({ lineItems: [{ productId: 'autre_chose' }] })), null)
+  assert.equal(produitDeLAchat(achat({ lineItems: [] })), null)
+  assert.equal(produitDeLAchat(achat({ lineItems: undefined })), null)
 })

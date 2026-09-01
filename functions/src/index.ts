@@ -25,6 +25,7 @@ import {
   doitAccuserReception,
   JETONS,
   jetonUtilisable,
+  produitDeLAchat,
 } from './facturation.js'
 import { accuserReception, ErreurPlay, lireAchat } from './play.js'
 import {
@@ -350,7 +351,19 @@ export const verifierAchat = functions
     /*  L'accusé de réception avant l'écriture : s'il échoue, mieux vaut ne pas
      *  avoir ouvert un accès que Google s'apprête à rembourser. */
     if (doitAccuserReception(achat)) {
-      await accuserReception(jeton)
+      const produit = produitDeLAchat(achat)
+      if (produit) {
+        await accuserReception(jeton, produit)
+      } else {
+        /*  Sans identifiant de produit, l'ancienne route de l'accusé n'est pas
+         *  appelable. On ouvre quand même l'accès — cette personne a payé — mais
+         *  en le signalant fort : faute d'accusé, Google remboursera sous trois
+         *  jours et l'accès se refermera de lui-même. Le journal dira pourquoi. */
+        functions.logger.error("Achat sans identifiant de produit : accusé de réception impossible", {
+          uid,
+          lignes: JSON.stringify(achat.lineItems ?? []),
+        })
+      }
     }
 
     /*  `set` sans fusion : le document doit refléter l'état chez Google, pas
