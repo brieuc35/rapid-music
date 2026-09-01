@@ -35,8 +35,10 @@
         <div class="row__main">
           <b style="font-size: 15.5px">Vous êtes abonné à RapidMusic Pro</b>
           <div class="muted" style="font-size: 13.5px; margin-top: 2px">
-            Actif depuis le {{ formatDate(paidSubscription?.depuis || '') }} ·
-            {{ money(PRO_PRICE, true) }} par mois
+            <!-- Sans montant : il dépend de la formule souscrite, et Google en
+                 est la source. L'écrire ici annoncerait un prix mensuel à un
+                 abonné annuel. -->
+            Actif depuis le {{ formatDate(paidSubscription?.depuis || '') }}
             <template v-if="paidSubscription?.jusqua">
               · payé jusqu'au {{ formatDate(paidSubscription.jusqua) }}
             </template>
@@ -87,8 +89,26 @@
         <span class="plan__ribbon">Recommandé</span>
         <div class="plan__head">
           <span class="plan__name">Pro</span>
+
+          <!-- Deux formules, un seul bloc : l'offre est la même, seule la durée
+               d'engagement change. En faire deux cartes ferait croire à deux
+               produits différents. -->
+          <div class="duree" role="group" aria-label="Durée de l'abonnement">
+            <button
+              v-for="f in formules"
+              :key="f.produit"
+              class="duree__choix"
+              :class="{ 'duree__choix--actif': formule === f.produit }"
+              :aria-pressed="formule === f.produit"
+              @click="formule = f.produit"
+            >
+              {{ f.duree }}
+              <b v-if="f.economie" class="duree__gain">{{ f.economie }}</b>
+            </button>
+          </div>
+
           <div class="plan__price">
-            {{ money(PRO_PRICE, true) }}<span>/mois</span>
+            {{ formuleChoisie }}<span>/mois</span>
           </div>
           <p class="plan__lead">
             Vos revenus, vos contrats et les montants de vos concerts.
@@ -98,18 +118,30 @@
           <li v-for="f in proFeatures" :key="f"><Icon name="check" /> {{ f }}</li>
         </ul>
         <div class="plan__foot">
-          <button
-            v-if="!isPro && achatPossible"
-            class="btn btn--primary btn--block"
-            :disabled="achatEnCours"
-            @click="souscrire"
-          >
-            <Icon name="star" />
-            {{ achatEnCours ? 'Un instant…' : 'Passer à Pro' }}
-          </button>
-          <span v-else-if="!isPro" class="muted" style="font-size: 13px">
-            Depuis l'application Android
-          </span>
+          <template v-if="!isPro">
+            <button
+              v-if="achatPossible"
+              class="btn btn--primary btn--block"
+              :disabled="achatEnCours"
+              @click="souscrire"
+            >
+              <Icon name="star" />
+              {{ achatEnCours ? 'Un instant…' : 'Passer à Pro' }}
+            </button>
+            <span v-else class="muted" style="font-size: 13px">
+              Depuis l'application Android
+            </span>
+            <!-- Le prix engagé, redit sous le bouton : l'annuel se paie en une
+                 fois, et le découvrir sur l'écran de Google serait une surprise
+                 désagréable. -->
+            <span
+              v-if="achatPossible && formule === PRODUIT_ANNUEL"
+              class="muted"
+              style="display: block; margin-top: 8px; font-size: 12.5px; text-align: center"
+            >
+              {{ ecrireTarif(tarifAnnuel) }} prélevés une fois par an
+            </span>
+          </template>
           <span v-else class="badge badge--violet">Votre formule</span>
         </div>
       </div>
@@ -179,7 +211,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import PageHeader from '@/components/PageHeader.vue'
 import Icon from '@/components/Icon.vue'
 import Modal from '@/components/Modal.vue'
@@ -191,14 +223,21 @@ import {
   cancelPro,
   relireAbonnement,
   PRO_PRICE,
+  PRO_PRICE_ANNUEL,
+  PRO_MOIS_OFFERTS,
   FREE_CONTACTS,
 } from '@/store'
-import { money, formatDate } from '@/utils/format'
+import { formatDate } from '@/utils/format'
 import {
   acheterPro,
+  ecrireTarif,
   ErreurAchat,
   facturationPossible,
+  lireTarifs,
+  PRODUIT_ANNUEL,
+  PRODUIT_MENSUEL,
   verifierAupresDuServeur,
+  type Tarif,
 } from '@/utils/facturation-play'
 
 const freeFeatures = [
@@ -257,6 +296,58 @@ const achatPossible = facturationPossible()
 const achatEnCours = ref(false)
 const erreurAchat = ref('')
 
+/** La formule choisie. L'annuelle par défaut : c'est la meilleure des deux. */
+const formule = ref<string>(PRODUIT_ANNUEL)
+
+/*  Les prix relevés auprès du Play Store, vides tant qu'il n'a pas répondu —
+ *  ou pour toujours hors de l'application. */
+const tarifsPlay = ref(new Map<string, Tarif>())
+
+onMounted(async () => {
+  tarifsPlay.value = await lireTarifs()
+})
+
+/**
+ * Le prix d'un produit : celui de Google s'il a répondu, celui du code sinon.
+ *
+ * L'ordre compte. Le montant écrit dans le code n'est qu'un pis-aller pour
+ * présenter l'offre là où l'on ne peut pas acheter ; partout où un achat est
+ * possible, c'est le prix réellement débité qui s'affiche.
+ */
+function tarif(produit: string, secours: number): Tarif {
+  return tarifsPlay.value.get(produit) ?? { montant: secours, devise: 'EUR' }
+}
+
+const tarifMensuel = computed(() => tarif(PRODUIT_MENSUEL, PRO_PRICE))
+const tarifAnnuel = computed(() => tarif(PRODUIT_ANNUEL, PRO_PRICE_ANNUEL))
+
+/** L'annuel ramené au mois, pour que les deux formules se comparent d'un coup d'œil. */
+const annuelParMois = computed(() =>
+  ecrireTarif({ montant: tarifAnnuel.value.montant / 12, devise: tarifAnnuel.value.devise }),
+)
+
+const formules = computed(() => [
+  { produit: PRODUIT_MENSUEL, duree: 'Au mois', economie: '' },
+  {
+    produit: PRODUIT_ANNUEL,
+    duree: "À l'année",
+    economie: PRO_MOIS_OFFERTS > 0 ? `${PRO_MOIS_OFFERTS} mois offerts` : '',
+  },
+])
+
+/**
+ * Le prix affiché en grand, toujours ramené au mois.
+ *
+ * Comparer « 9,99 € » et « 99 € » demanderait une division mentale au moment
+ * précis où l'on décide. Le montant réellement prélevé est redit sous le
+ * bouton : l'engagement annuel ne doit pas se découvrir sur l'écran de Google.
+ */
+const formuleChoisie = computed(() =>
+  formule.value === PRODUIT_ANNUEL
+    ? annuelParMois.value
+    : ecrireTarif(tarifMensuel.value),
+)
+
 /**
  * Achète l'abonnement, puis le fait confirmer par le serveur.
  *
@@ -269,7 +360,7 @@ async function souscrire() {
   achatEnCours.value = true
   erreurAchat.value = ''
   try {
-    const jeton = await acheterPro()
+    const jeton = await acheterPro(formule.value)
     await verifierAupresDuServeur(jeton)
     await relireAbonnement()
   } catch (e) {
@@ -312,6 +403,43 @@ function doCancel() {
   margin-top: 1px;
   color: var(--amber);
 }
+/* Le choix de la durée. Deux boutons collés plutôt qu'une liste déroulante :
+   l'écart entre les deux formules est l'argument, et il doit se voir sans
+   qu'on ait à ouvrir quoi que ce soit. */
+.duree {
+  display: flex;
+  gap: 4px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px;
+  margin-bottom: 14px;
+}
+.duree__choix {
+  flex: 1;
+  border: 0;
+  background: none;
+  border-radius: 999px;
+  padding: 7px 10px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-soft);
+  cursor: pointer;
+  line-height: 1.25;
+}
+.duree__choix--actif {
+  background: var(--surface);
+  color: var(--violet-600);
+  box-shadow: 0 1px 3px rgba(20, 16, 31, 0.12);
+}
+.duree__gain {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--green);
+}
+
 /* Un échec d'achat ne se dit pas dans l'ambre des informations : quelqu'un qui
    vient de payer doit voir tout de suite que quelque chose n'a pas abouti. */
 .notice--danger {
