@@ -130,6 +130,18 @@ l'application RapidMusic. Rien de plus.
 **Console Google Cloud → APIs et services → Bibliothèque →** *Google Play
 Android Developer API* → **Activer**, sur le projet `rapidmusic-db075`.
 
+### Les notifications viennent avec
+
+`enableNotifications` est passé à `true` dans `android/twa-manifest.json`, et ce
+n'est pas un choix : Bubblewrap **refuse de construire le paquet** avec la
+facturation activée tant qu'elle est à `false` — « Play Billing requires
+enableNotifications to be true ». La fabrication échoue avant même de commencer.
+
+Concrètement, le paquet déclare l'autorisation de notification et le service qui
+va avec. L'application n'envoie aucune notification et n'en demandera donc
+jamais l'autorisation à l'artiste : aucune fenêtre ne s'ouvrira. Mais
+l'autorisation apparaîtra dans la liste des permissions de la fiche Play Store.
+
 ### 4. Refabriquer et renvoyer le paquet
 
 L'activation de la facturation change le paquet Android : elle ajoute la
