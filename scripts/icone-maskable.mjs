@@ -18,6 +18,7 @@
 import { writeFileSync } from 'node:fs'
 import { deflateSync, crc32 } from 'node:zlib'
 import pw from '/opt/node22/lib/node_modules/playwright/index.js'
+import { DEBUT as DEBUT_HEX, FIN as FIN_HEX, marque, PART_LOGO as PART_PARTAGEE } from './marque.mjs'
 
 const SORTIE = new URL('../public/icon-maskable-512.png', import.meta.url)
 const TAILLE = 512
@@ -26,24 +27,20 @@ const TAILLE = 512
  *  avec 8,5 dp de marge de chaque côté (donc 91 dp), et le lanceur n'affiche que
  *  les 72 dp centraux. La part visible du fichier vaut donc 72/91. */
 const PART_VISIBLE = 72 / 91
-/*  Proportion du disque visible occupée par le dessin. À 66 % il touchait le
- *  bord ; 55 % le laisse respirer sans le rendre timide. */
-const PART_LOGO = 0.55
+/*  Proportion du disque visible occupée par le dessin. Reprise de marque.mjs,
+ *  pour que toutes les icônes s'accordent. */
+const PART_LOGO = PART_PARTAGEE
 
 /*  Fond : le dégradé de la marque. Le violet de départ est celui de
  *  `--brand-gradient` dans src/styles/main.css, pour que l'icône et l'intérieur
  *  de l'application parlent la même langue. L'arrivée est en fuchsia plutôt
  *  qu'en rose : le fond lit alors nettement plus violet, sans devenir plat. */
-const DEBUT = [0x8b, 0x5c, 0xf6]
-const FIN = [0xd9, 0x46, 0xef]
+const hex = (c) => [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16))
+const DEBUT = hex(DEBUT_HEX)
+const FIN = hex(FIN_HEX)
 
-/*  Le dessin de la marque, dans le repère de 24 unités de public/favicon.svg :
- *  une note traversée d'un éclair. Recopié et non importé — le favicon a son
- *  propre cadrage, et les deux fichiers n'ont pas à bouger ensemble. */
-const GLYPHE = `
-  <path d="M9 16.5V5l8-1.5" stroke-width="2.3"/>
-  <circle cx="6" cy="16.5" r="2.6" stroke-width="2.3"/>
-  <path d="M17.5 7.5 14 12.5h3.2L14.5 18l6-7h-3.2z" stroke-width="2"/>`
+/*  Le dessin vient de marque.mjs : un seul endroit pour toutes les icônes. */
+const GLYPHE = marque(2.3)
 
 /*  Le SVG ne porte que le dessin, sur fond transparent : le dégradé, lui, est
  *  calculé pixel par pixel (voir plus bas). Le laisser au rasteriseur le ferait
