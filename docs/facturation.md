@@ -130,6 +130,26 @@ l'application RapidMusic. Rien de plus.
 **Console Google Cloud → APIs et services → Bibliothèque →** *Google Play
 Android Developer API* → **Activer**, sur le projet `rapidmusic-db075`.
 
+### Deux réglages Android que la facturation impose
+
+Aucun des deux n'est un choix : sans eux, le paquet **ne se fabrique pas**. Les
+deux ont été découverts en lisant les journaux d'une fabrication en échec, pas
+dans une documentation.
+
+**`minSdkVersion` passe de 21 à 23.** La bibliothèque de facturation le réclame,
+et le fusionneur de manifestes s'arrête net :
+
+```
+Manifest merger failed : uses-sdk:minSdkVersion 21 cannot be smaller than
+version 23 declared in library [com.google.androidbrowserhelper:billing:1.2.0]
+```
+
+Android propose bien de passer outre (`tools:overrideLibrary`), au prix de
+pannes à l'exécution sur les appareils concernés : autant les écarter
+proprement. Concrètement, l'application n'est plus installable sur Android 5.0
+et 5.1 — moins de 1 % des appareils en service, et aucun ne recevra jamais de
+mise à jour de sécurité.
+
 ### Les notifications viennent avec
 
 `enableNotifications` est passé à `true` dans `android/twa-manifest.json`, et ce
