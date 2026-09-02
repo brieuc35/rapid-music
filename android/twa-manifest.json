@@ -11,7 +11,7 @@
   "navigationDividerColor": "#FFFFFF",
   "navigationDividerColorDark": "#FFFFFF",
   "backgroundColor": "#14101F",
-  "enableNotifications": false,
+  "enableNotifications": true,
   "startUrl": "/",
   "iconUrl": "https://rapidmusic.fr/icon-512.png",
   "maskableIconUrl": "https://rapidmusic.fr/icon-maskable-512.png",
