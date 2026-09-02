@@ -13,8 +13,9 @@ toute mise à jour du site demande un nouvel envoi à l'App Store.
 
 - `capacitor.config.ts` — la configuration, commentée ;
 - `ios/` — le projet Xcode, versionné (ses fichiers produits sont exclus) ;
-- l'icône 1024 × 1024, aux règles d'Apple : opaque, sans coins arrondis
-  (`scripts/icone-ios.mjs`) ;
+- l'icône 1024 × 1024, aux règles d'Apple : opaque, sans coins arrondis. Elle
+  est produite par `scripts/icones.mjs`, avec toutes les autres icônes carrées
+  et à partir du même dessin (`scripts/marque.mjs`) ;
 - `Info.plist` réglé : français, portrait sur iPhone, arm64, conformité à
   l'exportation, et **les deux autorisations photo** — voir plus bas, c'est la
   correction la plus importante ;

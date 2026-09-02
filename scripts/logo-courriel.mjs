@@ -18,6 +18,7 @@
 import { writeFileSync } from 'node:fs'
 import { deflateSync, crc32 } from 'node:zlib'
 import pw from '/opt/node22/lib/node_modules/playwright/index.js'
+import { marque } from './marque.mjs'
 
 const SORTIE = new URL('../functions/src/logo.ts', import.meta.url)
 /*  96 px pour un affichage à 24 : les écrans à forte densité y gagnent, et le
@@ -27,9 +28,7 @@ const TAILLE = 96
 /*  Le dessin de la marque, dans le repère de 24 unités de public/favicon.svg. */
 const SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="${TAILLE}" height="${TAILLE}" viewBox="0 0 24 24">
   <g fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M9 16.5V5l8-1.5" stroke-width="2.3"/>
-    <circle cx="6" cy="16.5" r="2.6" stroke-width="2.3"/>
-    <path d="M17.5 7.5 14 12.5h3.2L14.5 18l6-7h-3.2z" stroke-width="2"/>
+    ${marque(2.3)}
   </g>
 </svg>`
 

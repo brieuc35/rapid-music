@@ -25,6 +25,7 @@ import { mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:f
 import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { marque } from './marque.mjs'
 
 const RACINE = join(dirname(fileURLToPath(import.meta.url)), '..')
 const SORTIE = join(RACINE, 'play-store')
@@ -103,9 +104,7 @@ const MISE_EN_AVANT = `<!doctype html>
   <div class="contenu">
     <div class="marque">
       <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M9 16.5V5l8-1.5" stroke-width="2" />
-        <circle cx="6" cy="16.5" r="2.6" stroke-width="2" />
-        <path d="M17.5 7.5 14 12.5h3.2L14.5 18l6-7h-3.2z" stroke-width="1.8" />
+        ${marque(2)}
       </svg>
     </div>
     <div>
@@ -369,9 +368,18 @@ async function principal() {
    *  c'est la seule chose qui dise pourquoi. La perdre transformait une panne
    *  explicite — port occupé, dépendance manquante — en un « n'a pas démarré »
    *  qui n'apprend rien. */
+  /*  `detached` fait de `npx` le chef de son groupe de processus, ce qui permet
+   *  de tuer le groupe entier à la fin — vite compris.
+   *
+   *  Sans cela, le script ne rendait pas la main : `vite.kill()` ne tue que
+   *  l'enveloppe `npx`, qui ne transmet pas le signal, et le vrai serveur vite
+   *  lui survivait. Ses tuyaux restant ouverts, Node gardait la boucle
+   *  d'évènements en vie — les treize images étaient produites, puis le script
+   *  attendait indéfiniment sans rien dire. */
   const vite = spawn('npx', ['vite', '--port', String(PORT), '--strictPort'], {
     cwd: RACINE,
     stdio: ['ignore', 'pipe', 'pipe'],
+    detached: true,
   })
   let journalVite = ''
   vite.stdout.on('data', (d) => (journalVite += d))
@@ -417,7 +425,14 @@ async function principal() {
       await page.close()
     }
   } finally {
-    vite.kill()
+    /*  Le signe moins vise le groupe et non le seul `npx` : c'est ce qui atteint
+     *  vite. Enveloppé, parce que le groupe a pu disparaître de lui-même si le
+     *  serveur n'a jamais démarré — et une erreur ici masquerait la vraie. */
+    try {
+      process.kill(-vite.pid, 'SIGTERM')
+    } catch {
+      /* déjà parti */
+    }
     rmSync(sondeTs, { force: true })
     rmSync(sondeHtml, { force: true })
     await navigateur.close()

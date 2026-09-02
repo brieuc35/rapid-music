@@ -167,7 +167,8 @@ l'application qui ne se met pas à jour toute seule.
 Le fichier n'est pas retouché à la main : il est produit par
 
 ```sh
-node scripts/icone-maskable.mjs
+node scripts/icones.mjs          # icon-192, icon-512, apple-touch, App Store
+node scripts/icone-maskable.mjs  # l'icône adaptative d'Android
 ```
 
 Les couleurs et les proportions sont des constantes en tête de ce script, avec
