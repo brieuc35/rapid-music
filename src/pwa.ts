@@ -1,5 +1,6 @@
 import { ref } from 'vue'
 import { registerSW } from 'virtual:pwa-register'
+import { dansEnveloppeNative } from './utils/enveloppe-native'
 
 /* -------------------------------------------------------------------------- */
 /*  Mise en cache du programme                                                */
@@ -28,6 +29,15 @@ export const majEnCours = ref(false)
 let appliquer: ((rechargerLaPage?: boolean) => Promise<void>) | null = null
 
 export function inscrireServiceWorker(): void {
+  /*  Rien à faire dans l'application de l'App Store : ses fichiers y sont
+   *  embarqués et ne changent qu'au gré des mises à jour d'Apple. Le bandeau
+   *  « Une nouvelle version est prête » y proposerait de recharger une version
+   *  qui n'existe pas, et l'artiste appuierait sur un bouton sans effet.
+   *
+   *  L'application Android n'est pas concernée : c'est le site lui-même, ouvert
+   *  en plein écran, et le bandeau y sert exactement comme sur le web. */
+  if (dansEnveloppeNative()) return
+
   appliquer = registerSW({
     onNeedRefresh() {
       majDisponible.value = true

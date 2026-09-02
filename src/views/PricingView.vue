@@ -5,13 +5,21 @@
       subtitle="Deux formules : l'essentiel gratuit, la carrière en Pro."
     />
 
-    <!-- L'abonnement se prend dans l'application Android. Le dire ici plutôt
-         que de laisser découvrir un bouton qui ne fait rien : sur un ordinateur
-         ou un iPhone, il n'y a pas de parcours d'achat, et ce n'est pas une
-         panne. -->
+    <!-- Ni bouton ni panne : il n'y a simplement pas de parcours d'achat ici.
+         Le dire vaut mieux que de laisser chercher.
+
+         Deux textes, et la distinction n'est pas cosmétique. Dans l'application
+         de l'App Store, renvoyer vers un paiement extérieur — fût-il celui du
+         Play Store — contrevient à la règle 3.1.1 d'Apple et fait refuser la
+         fiche. On y annonce donc l'absence, sans indiquer d'ailleurs. -->
     <div v-if="!isPaidPro && !achatPossible" class="notice">
       <Icon name="bell" />
-      <div>
+      <div v-if="surIPhone">
+        <b>La formule Pro n'est pas encore disponible sur iPhone.</b>
+        Tout ce que montre la colonne « Gratuit » vous est ouvert, sans limite de
+        durée. Nous vous préviendrons dès que Pro arrivera ici.
+      </div>
+      <div v-else>
         <b>L'abonnement se souscrit depuis l'application Android.</b>
         Installez RapidMusic depuis le Play Store et ouvrez cette page à
         nouveau : le paiement passe par votre compte Google, avec les moyens de
@@ -129,7 +137,7 @@
               {{ achatEnCours ? 'Un instant…' : 'Passer à Pro' }}
             </button>
             <span v-else class="muted" style="font-size: 13px">
-              Depuis l'application Android
+              {{ surIPhone ? 'Bientôt sur iPhone' : "Depuis l'application Android" }}
             </span>
             <!-- Le prix engagé, redit sous le bouton : l'annuel se paie en une
                  fois, et le découvrir sur l'écran de Google serait une surprise
@@ -228,6 +236,7 @@ import {
   FREE_CONTACTS,
 } from '@/store'
 import { formatDate } from '@/utils/format'
+import { surIOS } from '@/utils/enveloppe-native'
 import {
   acheterPro,
   ecrireTarif,
@@ -293,6 +302,10 @@ const showCancel = ref(false)
 /*  Calculé une fois : la disponibilité ne change pas en cours de session, et
  *  l'interroger dans le gabarit le referait à chaque rendu. */
 const achatPossible = facturationPossible()
+
+/*  Dans l'enveloppe App Store : ni bouton d'achat, ni renvoi vers le Play Store.
+ *  Constant pour la session, comme la disponibilité de la facturation. */
+const surIPhone = surIOS()
 const achatEnCours = ref(false)
 const erreurAchat = ref('')
 

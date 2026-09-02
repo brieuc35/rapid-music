@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CAPACITOR_DEBUG</key>
+	<string>$(CAPACITOR_DEBUG)</string>
+	<!-- L'application est en français, et cette valeur décide de la langue par
+	     défaut de la fiche App Store comme des messages système. -->
+	<key>CFBundleDevelopmentRegion</key>
+	<string>fr</string>
+
+	<!-- Les deux autorisations que réclame l'import d'une photo de profil.
+	     Le champ de l'application est un simple `<input type="file">`, mais dans
+	     une enveloppe native c'est le sélecteur d'iOS qui s'ouvre : sans ces
+	     phrases, le système ne demande pas l'autorisation, il TERMINE
+	     l'application. La panne se produirait au premier appui sur « Ajouter une
+	     photo », sur l'appareil de l'examinateur d'Apple comme sur celui des
+	     artistes.
+
+	     Le texte est montré tel quel dans la demande d'autorisation : il dit à
+	     quoi ça sert, pas qu'on en a besoin. -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Pour choisir votre photo de profil d’artiste dans vos photos.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Pour prendre votre photo de profil d’artiste directement.</string>
+
+	<!-- Déclaré une fois ici plutôt que répondu à chaque envoi : l'application
+	     n'utilise que HTTPS, soit un chiffrement exempté. Sans cette clé, App
+	     Store Connect repose la question de conformité à l'exportation à chaque
+	     version, et bloque la diffusion TestFlight tant qu'on n'a pas répondu. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>CFBundleDisplayName</key>
+        <string>RapidMusic</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+    <false/>
+    <key>UISceneConfigurations</key>
+    <dict>
+      <key>UIWindowSceneSessionRoleApplication</key>
+      <array>
+        <dict>
+            <key>UISceneConfigurationName</key>
+            <string>Default Configuration</string>
+            <key>UISceneDelegateClassName</key>
+            <string>$(PRODUCT_MODULE_NAME).SceneDelegate</string>
+            <key>UISceneStoryboardFile</key>
+            <string>Main</string>
+        </dict>
+      </array>
+    </dict>
+	</dict>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIMainStoryboardFile</key>
+	<string>Main</string>
+	<!-- arm64 et non armv7 : le 32 bits a disparu des iPhone avec iOS 11, et
+	     Capacitor laisse cette valeur héritée dans son gabarit. -->
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<string>arm64</string>
+	</array>
+
+	<!-- Portrait seul sur iPhone. L'application a une barre d'onglets en bas et
+	     un en-tête collant en haut : couchée, sur les 393 px de hauteur d'un
+	     iPhone, les deux mangeraient plus du tiers de l'écran et il ne resterait
+	     presque rien pour le contenu. L'iPad, lui, garde ses quatre sens : il a
+	     la place, et sa mise en page passe au format bureau. -->
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UIViewControllerBasedStatusBarAppearance</key>
+	<true/>
+</dict>
+</plist>
