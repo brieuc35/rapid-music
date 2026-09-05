@@ -66,15 +66,6 @@
           <span v-else-if="item.badge" class="nav__badge">{{ item.badge }}</span>
         </RouterLink>
 
-        <!-- Le Réseau garde sa place, mais n'ouvre rien : il n'est pas encore
-             ouvert. Un lien qui mènerait à un fil de démonstration promettrait
-             un service qui n'existe pas. L'entrée reste visible pour annoncer
-             ce qui vient. -->
-        <div class="nav__item nav__item--highlight nav__item--soon" aria-disabled="true">
-          <Icon name="globe" />
-          <span>Réseau</span>
-          <span class="nav__soon">Bientôt</span>
-        </div>
       </nav>
 
       <div class="nav__foot">

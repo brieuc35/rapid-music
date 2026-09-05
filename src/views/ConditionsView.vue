@@ -30,11 +30,11 @@
       offre a changé.
     </p>
 
-    <h2>3. Ce qui est annoncé n'est pas ce qui existe</h2>
+    <h2>3. Ce que vous voyez est ce qui existe</h2>
     <p>
-      Certaines rubriques portent la mention « Bientôt » — l'onglet Réseau, par exemple. Ce sont
-      des intentions, pas des engagements : elles peuvent arriver plus tard, autrement, ou pas du
-      tout. Rien de ce qui vous est demandé aujourd'hui ne dépend d'elles.
+      L'application n'annonce aucune fonction à venir. Ce qui y figure fonctionne ; ce qui n'y
+      figure pas n'est pas promis. Si de nouvelles fonctions arrivent, elles arriveront sans
+      avoir été annoncées, et rien de ce qui vous est demandé aujourd'hui n'en dépend.
     </p>
 
     <h2>4. Votre compte</h2>

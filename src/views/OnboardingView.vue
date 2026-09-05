@@ -118,14 +118,6 @@
                 <em class="onb__price">{{ o.price }}</em>
               </b>
               <small>{{ o.text }}</small>
-              <!-- La mention porte sur le réseau, pas sur la formule : c'est lui
-                   qui n'est pas encore ouvert, le reste de Pro l'est. Placée à
-                   côté de sa phrase, elle ne peut pas se lire comme un doute sur
-                   la formule entière. -->
-              <small v-if="o.later" class="onb__later">
-                <em class="onb__soon">Bientôt</em>
-                {{ o.later }}
-              </small>
             </span>
           </label>
           <p v-if="plan === 'pro'" class="onb__notice">
@@ -192,11 +184,6 @@ const planOptions = [
     /*  Ce qui est disponible le jour même de la souscription : c'est ici qu'on
      *  choisit de payer, rien de ce qui figure sur cette ligne ne doit attendre. */
     text: 'Accès à vos revenus, à vos contrats et aux cachets de vos concerts.',
-    /*  Ce qui viendra s'y ajouter, sur sa propre ligne et portant sa propre
-     *  mention. Mélangé à la phrase ci-dessus, le réseau se lirait comme
-     *  disponible ; annoncé à côté d'une pastille « Bientôt », il ne trompe
-     *  personne — et la mention ne jette plus de doute sur la formule entière. */
-    later: 'Le réseau des professionnels s’y ajoutera à son ouverture.',
   },
 ]
 
@@ -374,29 +361,6 @@ function submit() {
   background: var(--violet-50);
 }
 
-/* Ce qui viendra s'ajouter à la formule, sur sa propre ligne et en retrait :
-   plus discret que ce qui est disponible tout de suite, sans être caché. */
-.onb__later {
-  display: block;
-  margin-top: 5px;
-  color: var(--text-muted);
-}
-/* Petite mention, pas une pastille de premier plan : elle qualifie une ligne
-   secondaire, elle ne doit pas peser plus que le prix juste au-dessus. */
-.onb__soon {
-  font-style: normal;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--text-soft);
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 1px 7px;
-  margin-right: 3px;
-  white-space: nowrap;
-}
 .onb__opt input {
   margin-top: 3px;
   accent-color: var(--violet-600);

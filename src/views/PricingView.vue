@@ -15,9 +15,9 @@
     <div v-if="!isPaidPro && !achatPossible" class="notice">
       <Icon name="bell" />
       <div v-if="surIPhone">
-        <b>La formule Pro n'est pas encore disponible sur iPhone.</b>
+        <b>La formule Pro ne se souscrit pas sur iPhone.</b>
         Tout ce que montre la colonne « Gratuit » vous est ouvert, sans limite de
-        durée. Nous vous préviendrons dès que Pro arrivera ici.
+        durée.
       </div>
       <div v-else>
         <b>L'abonnement se souscrit depuis l'application Android.</b>
@@ -137,7 +137,7 @@
               {{ achatEnCours ? 'Un instant…' : 'Passer à Pro' }}
             </button>
             <span v-else class="muted" style="font-size: 13px">
-              {{ surIPhone ? 'Bientôt sur iPhone' : "Depuis l'application Android" }}
+              {{ surIPhone ? 'Indisponible sur iPhone' : "Depuis l'application Android" }}
             </span>
             <!-- Le prix engagé, redit sous le bouton : l'annuel se paie en une
                  fois, et le découvrir sur l'écran de Google serait une surprise
@@ -187,8 +187,7 @@
                 <span v-else class="ico-no">—</span>
               </td>
               <td style="text-align: center">
-                <span v-if="row.soon" class="ico-soon">Bientôt</span>
-                <Icon v-else name="check" class="ico-yes" />
+                <Icon name="check" class="ico-yes" />
               </td>
             </tr>
           </tbody>
@@ -258,10 +257,6 @@ const freeFeatures = [
   'Profil artiste et fiche label',
 ]
 
-/*  Le Réseau n'y figure pas : il n'est pas encore ouvert, et une fonction
- *  annoncée dans la liste de ce qu'on paie est une fonction promise. Il est
- *  mentionné plus bas, comme ce qui viendra s'ajouter — pas comme une raison de
- *  payer aujourd'hui. */
 const proFeatures = [
   'Tout le gratuit, sans limite',
   'Revenus et royalties : suivi par plateforme et historique',
@@ -286,15 +281,6 @@ const comparison = [
   { label: 'Concerts — cachets', detail: 'Montants négociés et total à venir', free: false },
   { label: 'Royalties & Revenus', detail: 'Suivi, graphiques, import de relevés', free: false },
   { label: 'Contrats', detail: 'Statuts, avances, taux artiste', free: false },
-  {
-    label: 'Réseau',
-    detail: 'Fil du milieu, annuaire des membres, annonces',
-    free: false,
-    // Annoncé sans être compté : la colonne Pro dira « bientôt » et non une
-    // coche. Le retirer du tableau serait plus discret, mais on ne saurait plus
-    // que c'est prévu.
-    soon: true,
-  },
 ]
 
 const showCancel = ref(false)
@@ -610,20 +596,6 @@ function doCancel() {
   padding: 2px 9px;
   white-space: nowrap;
 }
-/* Ni coche ni tiret : un état à part, pour qu'on ne lise pas « compris dans
-   l'abonnement » là où c'est encore à venir. */
-.ico-soon {
-  display: inline-block;
-  background: var(--violet-50);
-  color: var(--violet-700);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  border-radius: 20px;
-  padding: 3px 9px;
-  white-space: nowrap;
-}
 
 /*  Sur un téléphone, les deux colonnes de verdict prenaient 184 px des 322
  *  disponibles pour afficher une coche : le libellé se retrouvait sur quatre
@@ -633,11 +605,6 @@ function doCancel() {
   .ico-part {
     font-size: 11px;
     padding: 2px 7px;
-  }
-  .ico-soon {
-    font-size: 10px;
-    letter-spacing: 0;
-    padding: 3px 7px;
   }
 }
 </style>
