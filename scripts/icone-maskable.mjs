@@ -40,7 +40,7 @@ const DEBUT = hex(DEBUT_HEX)
 const FIN = hex(FIN_HEX)
 
 /*  Le dessin vient de marque.mjs : un seul endroit pour toutes les icônes. */
-const GLYPHE = marque(2.3)
+const GLYPHE = marque()
 
 /*  Le SVG ne porte que le dessin, sur fond transparent : le dégradé, lui, est
  *  calculé pixel par pixel (voir plus bas). Le laisser au rasteriseur le ferait
