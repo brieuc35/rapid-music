@@ -306,28 +306,6 @@ textarea {
   padding: 1px 8px;
 }
 
-/* Une entrée annoncée, pas encore ouverte. Discrète et sans réaction au
-   survol : l'aspect doit dire qu'il n'y a rien à cliquer, sinon on l'essaie
-   plusieurs fois avant de comprendre. */
-.nav__item--soon {
-  cursor: default;
-  opacity: 0.7;
-}
-.nav__item--soon:hover {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(236, 72, 153, 0.3));
-  color: #fff;
-}
-.nav__soon {
-  margin-left: auto;
-  background: rgba(255, 255, 255, 0.16);
-  color: #fff;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  border-radius: 20px;
-  padding: 2px 8px;
-}
 /* Remplace le compteur sur les onglets réservés à l'abonnement Pro. */
 .nav__pro {
   margin-left: auto;
