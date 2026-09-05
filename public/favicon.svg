@@ -8,15 +8,18 @@
   <rect width="64" height="64" rx="16" fill="url(#g)"/>
   <!-- Même dessin que la marque : note traversée d'un éclair.
 
-       L'éclair est plein — c'est à 16 px que ça se voit le plus : au trait, ses
-       branches se rejoignaient et il ne restait qu'une tache.
+       La note est fine, l'éclair est gras — et c'est à 16 px que cet écart
+       compte le plus : à épaisseurs égales, les deux se confondaient en une
+       tache. L'éclair est plein, puis dilaté par un contour de sa propre
+       couleur, avec des angles en `miter` pour garder ses pointes.
 
        Recopié de scripts/marque.mjs, qu'un fichier statique ne peut pas
-       importer. Traits de la note légèrement épaissis pour tenir à 16 px. -->
-  <g transform="translate(13.72 13.93) scale(1.609)" fill="none" stroke="#fff"
+       importer. Le cadrage est ajusté à la mesure de l'encre peinte. -->
+  <g transform="translate(13.20 14.27) scale(1.576)" fill="none" stroke="#fff"
      stroke-linecap="round" stroke-linejoin="round">
-    <path d="M9 16.5V5l8-1.5" stroke-width="2.3"/>
-    <circle cx="6" cy="16.5" r="2.6" stroke-width="2.3"/>
-    <path d="M18.4 6.2 13.6 12.9h3.6L14.4 19.8 20.8 11.4h-3.8z" fill="#fff" stroke="none"/>
+    <path d="M9 16.5V5l8-1.5" stroke-width="1.8"/>
+    <circle cx="6" cy="16.5" r="2.6" stroke-width="1.8"/>
+    <path d="M18.4 6.2 13.6 12.9h3.6L14.4 19.8 20.8 11.4h-3.8z"
+          fill="#fff" stroke="#fff" stroke-width="0.6" stroke-linejoin="miter"/>
   </g>
 </svg>

@@ -104,7 +104,7 @@ const MISE_EN_AVANT = `<!doctype html>
   <div class="contenu">
     <div class="marque">
       <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round">
-        ${marque(2)}
+        ${marque()}
       </svg>
     </div>
     <div>

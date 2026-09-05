@@ -26,16 +26,15 @@ import pw from '/opt/node22/lib/node_modules/playwright/index.js'
 import { DEBUT, FIN, marque, PART_LOGO } from './marque.mjs'
 
 const CIBLES = [
-  { fichier: '../public/icon-192.png', taille: 192, coins: 0.22, opaque: false, trait: 2.3 },
-  { fichier: '../public/icon-512.png', taille: 512, coins: 0.22, opaque: false, trait: 2.3 },
+  { fichier: '../public/icon-192.png', taille: 192, coins: 0.22, opaque: false },
+  { fichier: '../public/icon-512.png', taille: 512, coins: 0.22, opaque: false },
   /*  Coins carrés pour les deux suivantes : iOS pose son propre masque. */
-  { fichier: '../public/apple-touch-icon.png', taille: 180, coins: 0, opaque: true, trait: 2.3 },
+  { fichier: '../public/apple-touch-icon.png', taille: 180, coins: 0, opaque: true },
   {
     fichier: '../ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png',
     taille: 1024,
     coins: 0,
     opaque: true,
-    trait: 2.3,
   },
 ]
 
@@ -52,7 +51,7 @@ function page(c, echelle, dx, dy) {
   </linearGradient></defs>
   ${fond}
   <g transform="translate(${dx} ${dy}) scale(${echelle})" fill="none" stroke="#fff"
-     stroke-linecap="round" stroke-linejoin="round">${marque(c.trait)}</g>
+     stroke-linecap="round" stroke-linejoin="round">${marque()}</g>
 </svg>`
 }
 

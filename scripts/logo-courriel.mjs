@@ -28,7 +28,7 @@ const TAILLE = 96
 /*  Le dessin de la marque, dans le repère de 24 unités de public/favicon.svg. */
 const SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="${TAILLE}" height="${TAILLE}" viewBox="0 0 24 24">
   <g fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round">
-    ${marque(2.3)}
+    ${marque()}
   </g>
 </svg>`
 

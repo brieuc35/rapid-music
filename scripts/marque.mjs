@@ -18,18 +18,29 @@
 /**
  * Le dessin, dans un repère de 24 unités.
  *
- * L'éclair est **plein**, et c'est tout le sujet. Dessiné au trait comme il
- * l'était, ses branches se rejoignent dès que l'icône est petite : le contour se
- * referme sur lui-même et laisse deux trous triangulaires au milieu d'un pâté.
- * Rempli, il garde ses angles à 16 px comme à 1024.
+ * Deux réglages font tout, et ils vont ensemble : la note est fine, l'éclair
+ * est gras. C'est cet écart qui donne à l'éclair son mordant — à épaisseurs
+ * égales, les deux se confondaient en une seule masse.
  *
- * @param trait épaisseur du trait de la note. L'éclair n'en a pas besoin.
+ * **L'éclair est plein**, jamais tracé. Dessiné au trait comme il l'a été, ses
+ * branches se rejoignent dès que l'icône est petite : le contour se referme sur
+ * lui-même et laisse deux trous triangulaires au milieu d'un pâté.
+ *
+ * **Il est ensuite dilaté** par un contour de sa propre couleur, qui l'épaissit
+ * uniformément de la moitié de cette valeur, tout autour. C'est le seul moyen de
+ * le grossir sans le redessiner — et `miter` garde ses pointes vives, là où le
+ * `round` du groupe parent les arrondirait et lui ôterait précisément ce qu'on
+ * cherche.
+ *
+ * @param trait épaisseur du trait de la note.
+ * @param gras  dilatation de l'éclair.
  */
-export function marque(trait = 2.1) {
+export function marque(trait = 1.8, gras = 0.6) {
   return `
   <path d="M9 16.5V5l8-1.5" stroke-width="${trait}"/>
   <circle cx="6" cy="16.5" r="2.6" stroke-width="${trait}"/>
-  <path d="M18.4 6.2 13.6 12.9h3.6L14.4 19.8 20.8 11.4h-3.8z" fill="#fff" stroke="none"/>`
+  <path d="M18.4 6.2 13.6 12.9h3.6L14.4 19.8 20.8 11.4h-3.8z"
+        fill="#fff" stroke="#fff" stroke-width="${gras}" stroke-linejoin="miter"/>`
 }
 
 /**
