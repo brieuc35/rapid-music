@@ -713,6 +713,18 @@ textarea {
   padding: 7px 12px;
   font-size: 13px;
 }
+/* Un bouton qui ne porte qu'une icône. Le rembourrage redevient égal des quatre
+   côtés : avec celui d'un bouton à texte, une icône seule flotte au milieu
+   d'une pilule trop large. Le nom accessible ne vient plus du texte, il faut
+   donc un `aria-label` sur chaque usage. */
+.btn--ico {
+  padding: 7px;
+  aspect-ratio: 1;
+}
+.btn--ico svg {
+  width: 17px;
+  height: 17px;
+}
 .btn--block {
   width: 100%;
   justify-content: center;

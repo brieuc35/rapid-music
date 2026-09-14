@@ -112,7 +112,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive } from 'vue'
+import { ref, computed, onMounted, reactive } from 'vue'
 import PageHeader from '@/components/PageHeader.vue'
 import Icon from '@/components/Icon.vue'
 import Modal from '@/components/Modal.vue'
@@ -121,6 +121,7 @@ import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import { store, upsert, remove, uid } from '@/store'
 import type { StudioSession } from '@/store/types'
 import { money, formatDate, daysFromNow } from '@/utils/format'
+import { useRoute, useRouter } from 'vue-router'
 
 const types: StudioSession['type'][] = [
   'Enregistrement',
@@ -230,6 +231,23 @@ function openNew() {
   Object.assign(editing, emptySession())
   showForm.value = true
 }
+
+/*  Le « + » du tableau de bord mène ici avec `?nouveau` : le formulaire s'ouvre
+ *  de lui-même, sinon l'artiste arriverait devant la liste et devrait chercher
+ *  le bouton une seconde fois — ce que le « + » promettait précisément de lui
+ *  épargner.
+ *
+ *  L'adresse est nettoyée dans la foulée, et c'est nécessaire : sans cela, un
+ *  rechargement de la page ou un retour en arrière rouvrirait le formulaire
+ *  sans que personne ne l'ait demandé. `replace` plutôt que `push`, pour ne pas
+ *  ajouter d'étape à l'historique. */
+const route = useRoute()
+const router = useRouter()
+onMounted(() => {
+  if (route.query.nouveau === undefined) return
+  openNew()
+  router.replace({ path: route.path })
+})
 function openEdit(s: StudioSession) {
   Object.assign(editing, JSON.parse(JSON.stringify(s)))
   showForm.value = true
