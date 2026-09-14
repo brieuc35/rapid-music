@@ -68,7 +68,22 @@
       <div class="card">
         <div class="section-head" style="padding: 18px 20px 0">
           <span class="section-head__title">Agenda</span>
-          <RouterLink to="/studio" class="btn btn--subtle btn--sm">Calendrier</RouterLink>
+          <!--  Deux actions distinctes, et c'est voulu : « Calendrier » emmène
+                voir, le « + » emmène ajouter. Réunies sur un seul bouton, la
+                promesse ne serait pas tenue — on annoncerait un ajout et on
+                déposerait l'artiste devant une liste, à chercher le bouton une
+                seconde fois. -->
+          <div class="hstack" style="gap: 6px">
+            <RouterLink to="/studio" class="btn btn--subtle btn--sm">Calendrier</RouterLink>
+            <RouterLink
+              :to="{ path: '/studio', query: { nouveau: '1' } }"
+              class="btn btn--ghost btn--sm btn--ico"
+              title="Ajouter un évènement"
+              aria-label="Ajouter un évènement"
+            >
+              <Icon name="plus" />
+            </RouterLink>
+          </div>
         </div>
         <div class="list" style="margin-top: 8px">
           <div v-for="s in upcomingSessions.slice(0, 4)" :key="s.id" class="row">
