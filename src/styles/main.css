@@ -63,6 +63,15 @@
 
   /* Elevation */
   --shadow-sm: 0 1px 2px rgba(23, 20, 31, 0.05);
+  /* Les cartes posées sur le fond de page. Elles portaient un filet ET une
+     ombre : deux façons de dire la même chose, et le réglage par défaut de
+     toutes les bibliothèques de composants — ça se reconnaît.
+
+     Elles n'ont plus que l'ombre, en deux couches : la première pose la carte,
+     la seconde l'auréole. Le filet reste déclaré mais transparent, pour que la
+     hauteur de ligne ne bouge pas et que les écrans qui le recolorent — une
+     carte d'alerte, l'abonnement en cours — continuent de fonctionner. */
+  --shadow-card: 0 1px 2px rgba(20, 16, 31, 0.04), 0 8px 24px rgba(20, 16, 31, 0.06);
   --shadow: 0 4px 16px rgba(23, 20, 31, 0.06);
   --shadow-lg: 0 18px 48px rgba(23, 20, 31, 0.14);
 
@@ -715,9 +724,9 @@ textarea {
 
 .card {
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 1px solid transparent;
   border-radius: var(--radius);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-card);
 }
 .card--pad {
   padding: 20px;
@@ -740,10 +749,10 @@ textarea {
 /* Stat cards */
 .stat {
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 1px solid transparent;
   border-radius: var(--radius);
   padding: 18px 20px;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-card);
   position: relative;
   overflow: hidden;
 }
@@ -770,6 +779,10 @@ textarea {
   font-size: 13.5px;
   margin-top: 3px;
 }
+/* La ligne sous le chiffre. Grise par défaut, et c'est le point : quand les
+   quatre tuiles étaient vertes, le vert ne distinguait plus rien — il n'était
+   plus un signal mais une décoration. Il ne reste que là où il dit quelque
+   chose (voir --up et --down ci-dessous), et il se voit enfin. */
 .stat__delta {
   font-size: 12.5px;
   font-weight: 600;
@@ -777,7 +790,10 @@ textarea {
   display: inline-flex;
   align-items: center;
   gap: 3px;
+  color: var(--text-soft);
 }
+/* Réservés à ce qui est un état, pas un décompte : « aucune en retard » mérite
+   le vert, « 90 billets vendus » est un fait. */
 .stat__delta--up {
   color: var(--green);
 }

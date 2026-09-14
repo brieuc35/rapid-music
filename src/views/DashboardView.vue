@@ -16,7 +16,7 @@
         </div>
         <div class="stat__val mono">{{ upcomingConcerts.length }}</div>
         <div class="stat__label">Concerts à venir</div>
-        <div class="stat__delta stat__delta--up">
+        <div class="stat__delta">
           <Icon name="ticket" style="width: 14px; height: 14px" />
           {{ number(totalTickets) }} billets vendus
         </div>
@@ -28,9 +28,7 @@
         </div>
         <div class="stat__val mono">{{ compact(streamsDeLAnnee) }}</div>
         <div class="stat__label">Streams des sorties de {{ anneeEnCours }}</div>
-        <!-- Vert seulement s'il y a eu une sortie : « 0 sortie » annoncé comme
-             une bonne nouvelle serait absurde. -->
-        <div class="stat__delta" :class="{ 'stat__delta--up': sortiesDeLAnnee.length > 0 }">
+        <div class="stat__delta">
           <Icon name="music" style="width: 14px; height: 14px" />
           {{ sortiesDeLAnnee.length }} sortie{{ sortiesDeLAnnee.length > 1 ? 's' : '' }}
           en {{ anneeEnCours }}
@@ -43,7 +41,7 @@
         </div>
         <div class="stat__val mono">{{ pendingContracts }}</div>
         <div class="stat__label">Contrats en attente</div>
-        <div class="stat__delta stat__delta--up">
+        <div class="stat__delta">
           <Icon name="check" style="width: 14px; height: 14px" />
           {{ activeContracts }} actifs
         </div>
