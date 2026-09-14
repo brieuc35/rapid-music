@@ -312,7 +312,8 @@ function confirmDelete() {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 13px 15px;
-  box-shadow: var(--shadow-sm);
+  /*  Pas d'ombre : la bordure fait déjà le travail, et elle est fonctionnelle
+   *  ici — elle change au survol et porte le liseré de retard. */
   transition: border-color 0.15s;
 }
 .task:hover {
@@ -325,7 +326,6 @@ function confirmDelete() {
 }
 .task--done {
   background: var(--bg);
-  box-shadow: none;
 }
 .task--done .task__title {
   text-decoration: line-through;
