@@ -44,9 +44,10 @@ remarque.
 node scripts/fiche-play-store.mjs
 ```
 
-Une seule commande refait les treize images, à l'identique — **et les douze
-captures de la fiche App Store** au passage, dans `app-store/` : les six écrans
-sont pris une seule fois et servent aux trois formats. Le script démarre le
+Une seule commande refait les treize images, à l'identique — **et tout ce que
+la fiche App Store demande en images** au passage, dans `app-store/` : les six
+écrans sont pris une seule fois et servent aux trois formats, et l'illustration
+promotionnelle d'Apple sort du même passage. Le script démarre le
 serveur de développement, le pilote, et l'arrête. Il lui faut **Playwright** —
 absent des dépendances du projet, parce qu'il pèse plus lourd que l'application
 et ne sert qu'ici :

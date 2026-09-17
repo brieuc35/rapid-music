@@ -1,13 +1,15 @@
 # Les images et l'aperçu de la fiche App Store
 
-Treize fichiers, tous à déposer au même endroit : **App Store Connect → votre
-app → la version iOS → Aperçus et captures d'écran**.
+Treize fichiers vont dans **App Store Connect → votre app → la version iOS →
+Aperçus et captures d'écran**. Le quatorzième attend ailleurs — voir plus bas.
 
 | Fichier | Taille | Ce que c'est |
 | --- | --- | --- |
 | `apercu-iphone-886x1920.mp4` | 886 × 1920 | l'aperçu vidéo, 24 s |
 | `iphone-6.9-*.png` | 1320 × 2868 | six captures, iPhone 6,9 pouces |
 | `iphone-6.7-*.png` | 1290 × 2796 | les six mêmes, iPhone 6,7 pouces |
+| `iphone-6.5-*.png` | 1284 × 2778 | les six mêmes, iPhone 6,5 pouces |
+| `illustration-promo-4320x1080.png` | 4320 × 1080 | l'illustration promotionnelle — **pas encore téléversable** |
 
 ## Attention : deux tailles pour le même écran
 
@@ -37,19 +39,57 @@ Deux règles d'Apple ont dicté sa forme :
 La piste audio est muette, et non absente : App Store Connect recale au
 transcodage les fichiers sans piste son.
 
-## Pourquoi deux tailles de captures
+## L'illustration promotionnelle
+
+C'est le pendant Apple de l'image de mise en avant du Play Store. Trois choses
+la distinguent, et il vaut mieux les savoir avant de la chercher.
+
+**Son emplacement n'existe pas tant qu'Apple ne l'ouvre pas.** Il n'apparaît
+dans App Store Connect que si l'équipe éditoriale retient l'application pour
+l'onglet Aujourd'hui. Inutile de le chercher aujourd'hui : le fichier est
+fabriqué d'avance, pour le jour où.
+
+**Aucun texte.** Apple l'interdit ici et pose lui-même le nom de l'application
+par-dessus. D'où l'absence de la signature et des mots-clés qui portent l'image
+du Play Store.
+
+**Elle est recadrée sans qu'on le demande**, et pas toujours au même rapport :
+la même illustration sert de bandeau très large sur une fiche et de vignette
+presque carrée dans l'onglet Aujourd'hui. La composition est donc symétrique et
+tout ce qui compte tient dans le carré central — vérifié en 4:1, en 2:1 et en
+carré.
+
+Pour un bandeau avec du texte — site, dossier de presse, réseaux — c'est
+`play-store/mise-en-avant-1024x500.png` qui sert : même marque, même fond, mais
+la signature et les mots-clés en plus.
+
+## Pourquoi trois tailles de captures
 
 Apple n'accepte **que les dimensions exactes** d'un appareil : pas de mise à
-l'échelle, pas d'« à peu près ». Une image d'un pixel de trop est refusée.
+l'échelle, pas d'« à peu près ». Une image d'un pixel de trop est refusée, et
+le message d'erreur arrive après qu'on a rempli tout le reste du formulaire.
 
-Or la classe « 6,9 pouces » a changé de définition avec les appareils : le
-1320 × 2868 des Pro Max récents a remplacé le 1290 × 2796 des précédents.
-Selon la version d'App Store Connect qu'on a sous les yeux, c'est l'un ou
-l'autre emplacement qui est proposé.
+Or l'emplacement proposé n'est pas le même pour tout le monde : il dépend de la
+version d'App Store Connect et des appareils que l'application déclare. Le
+formulaire a d'abord réclamé du **6,5 pouces** alors que seuls le 6,9 et le 6,7
+existaient ici.
 
-Les deux sont donc produites. **Envoyez celle que le formulaire réclame** ; il
-suffit de remplir l'emplacement de la plus grande taille disponible, Apple
-dérive les autres tout seul.
+| Classe | Dimensions | Appareils |
+| --- | --- | --- |
+| 6,9 pouces | 1320 × 2868 | les Pro Max récents |
+| 6,7 pouces | 1290 × 2796 | ce que le 6,9 réclamait avant eux |
+| 6,5 pouces | 1284 × 2778 | la classe précédente |
+
+Les trois sont donc produites. **Envoyez celle que le formulaire réclame** — il
+l'écrit noir sur blanc dans son message d'erreur. Un seul emplacement suffit :
+Apple dérive les autres tailles tout seul, à partir de la plus grande fournie.
+
+Apple accepte aussi 1242 × 2688 dans le créneau des 6,5 pouces. Si c'est celle
+que votre formulaire exige, elle s'ajoute en une ligne dans le script.
+
+Le lien **« Afficher toutes les tailles dans le gestionnaire des visuels »**, en
+haut à droite de la page, ouvre les autres emplacements — c'est là qu'on trouve
+le 6,9 pouces quand la page n'affiche que le 6,5.
 
 **L'ordre compte** — c'est celui des numéros, et les deux ou trois premières
 sont les seules que la plupart des gens verront. Il se règle par
