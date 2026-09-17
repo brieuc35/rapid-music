@@ -97,15 +97,17 @@ Créer la fiche, puis remplir :
 
 | Quoi | Taille | Commande |
 | --- | --- | --- |
-| Six captures, en deux tailles | 1320 × 2868 et 1290 × 2796 | `node scripts/fiche-play-store.mjs` |
+| Six captures, en trois tailles | 1320 × 2868, 1290 × 2796 et 1284 × 2778 | `node scripts/fiche-play-store.mjs` |
 | L'aperçu vidéo, 24 s | 886 × 1920 | `node scripts/apercu-app-store.mjs` |
 | L'illustration promotionnelle | 4320 × 1080 | `node scripts/fiche-play-store.mjs` |
 
 Les visuels du Play Store ne conviennent pas — Apple n'accepte que les
-dimensions exactes d'un appareil, et 1080 × 1920 n'en est aucune. Les deux
-tailles de captures sont fournies parce que la classe « 6,9 pouces » a changé de
-définition avec les appareils récents, et que l'emplacement proposé dépend de la
-version d'App Store Connect qu'on a sous les yeux.
+dimensions exactes d'un appareil, et 1080 × 1920 n'en est aucune. Trois tailles
+de captures sont fournies parce que l'emplacement proposé dépend de la version
+d'App Store Connect et des appareils que l'application déclare : rien ne
+l'annonce avant l'envoi, et le formulaire a d'abord réclamé du 6,5 pouces.
+**Envoyez celle que le message d'erreur nomme** ; Apple dérive les autres
+tailles de la plus grande fournie.
 
 **Le piège de cet écran** : les captures et l'aperçu se déposent au même
 endroit, sous le même intitulé « Aperçus et captures d'écran », et n'ont pas la

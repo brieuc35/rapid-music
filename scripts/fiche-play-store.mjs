@@ -218,11 +218,21 @@ const ECRANS = [
  *  même partout — seule la toile change.
  *
  *  Google veut du 1080 × 1920. Apple veut les dimensions exactes d'un appareil,
- *  et range les siennes par classe d'écran : le 6,9 pouces couvre aujourd'hui
- *  1320 × 2868, et 1290 × 2796 sert aux Pro Max plus anciens. Les deux sont
- *  produites, parce que l'emplacement réclamé dépend de la version d'App Store
- *  Connect qu'on a sous les yeux, et qu'une image refusée se découvre après
- *  avoir rempli tout le reste du formulaire.
+ *  et range les siennes par classe d'écran :
+ *
+ *    6,9 pouces   1320 × 2868   les Pro Max récents
+ *    6,7 pouces   1290 × 2796   ce que le 6,9 réclamait avant eux
+ *    6,5 pouces   1284 × 2778   la classe précédente
+ *
+ *  Les trois sont produites. Non par excès de zèle : l'emplacement réclamé
+ *  dépend de la version d'App Store Connect et des appareils que l'application
+ *  déclare, et rien ne l'annonce avant l'envoi. Le formulaire a d'abord exigé
+ *  du 6,5 pouces alors que seuls le 6,9 et le 6,7 existaient ici, et l'erreur
+ *  ne se découvre qu'après avoir rempli tout le reste.
+ *
+ *  Apple accepte aussi 1242 × 2688 dans ce même créneau de 6,5 pouces. Le
+ *  1284 × 2778 est préféré : mêmes proportions, plus de pixels, et c'est de la
+ *  plus grande taille fournie qu'Apple dérive les autres.
  *
  *  Les toiles sont décrites à l'échelle 2 : c'est le rendu qui double. */
 const FORMATS = [
@@ -238,6 +248,7 @@ const FORMATS = [
   },
   cadreApple('iphone-6.9', 660, 1434),
   cadreApple('iphone-6.7', 645, 1398),
+  cadreApple('iphone-6.5', 642, 1389),
 ]
 
 /**
