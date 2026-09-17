@@ -53,7 +53,7 @@
           <div v-for="s in sideList" :key="s.id" class="sess">
             <span class="sess__bar" :style="{ background: typeColor(s.type) }" />
             <div class="sess__main">
-              <div class="hstack" style="gap: 8px; justify-content: space-between">
+              <div class="hstack sess__head" style="gap: 8px; justify-content: space-between">
                 <b style="font-size: 14px">{{ s.title }}</b>
                 <span class="badge badge--plain" :style="{ color: typeColor(s.type), background: typeColor(s.type) + '1f' }">{{ s.type }}</span>
               </div>
@@ -365,6 +365,19 @@ function confirmDelete() {
   .cal-head {
     margin-bottom: 12px;
   }
+  /*  Un point de moins, et le mois tient sur une ligne.
+   *
+   *  Une fois le calendrier rendu à sa vraie largeur, l'en-tête n'avait plus
+   *  que 132 px pour le titre, et « Septembre 2026 » — le plus long des douze
+   *  mois — en réclamait 133. Il passait donc sur deux lignes pour un pixel,
+   *  entre deux flèches restées, elles, sur une seule.
+   *
+   *  `nowrap` va avec : sans lui, la même mesure se rejouerait au prochain
+   *  réglage de taille, et en silence. */
+  .cal-title {
+    font-size: 16px;
+    white-space: nowrap;
+  }
   .cal-grid {
     gap: 5px;
   }
@@ -423,6 +436,33 @@ function confirmDelete() {
 .sess__main {
   flex: 1;
   min-width: 0;
+}
+/*  Le titre et le badge de type tenaient sur une ligne qui refusait de se
+ *  replier : « Enregistrement » ne se coupe pas, et le badge le répète. La
+ *  ligne réclamait 368 px, la carte des évènements avec elle — et comme les
+ *  deux cartes de l'écran partagent la même colonne, le calendrier de la carte
+ *  voisine était étiré jusqu'à sortir de l'écran. Sur un téléphone de 360 px,
+ *  ce que fait la plupart des Android, la colonne du dimanche et le bouton
+ *  « Aujourd'hui » étaient coupés.
+ *
+ *  Le coupable n'était donc pas le calendrier, qui sait déjà se resserrer : sa
+ *  carte descend à 282 px toute seule.
+ *
+ *  Le badge passe à la ligne quand il ne tient plus. `overflow-wrap` ne sert
+ *  qu'en dernier recours, pour un titre d'un seul mot plus large que l'écran ;
+ *  il compte surtout parce qu'il abaisse la largeur minimale du titre, que le
+ *  repli seul laissait à la taille du plus long mot.
+ *
+ *  Le repli se déclenche sur tous les téléphones, pas seulement les étroits :
+ *  dès qu'un titre est long, il ne tient pas sur la même ligne que son badge.
+ *  Avant, il se repliait sur lui-même en deux lignes étriquées à côté du
+ *  badge ; il prend maintenant toute la largeur, et le badge se pose dessous.
+ *  Les titres courts gardent leur badge à côté d'eux. */
+.sess__head {
+  flex-wrap: wrap;
+}
+.sess__head > b {
+  overflow-wrap: anywhere;
 }
 .icon-sm {
   width: 30px;
