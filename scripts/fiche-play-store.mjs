@@ -27,35 +27,21 @@
 /*  fichier temporaire et effacée à la fin — elle ne part jamais en ligne.     */
 /* -------------------------------------------------------------------------- */
 
-import { spawn } from 'node:child_process'
-import { mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
-import { createRequire } from 'node:module'
-import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { mkdirSync, readFileSync, statSync } from 'node:fs'
+import { join } from 'node:path'
 import { marque } from './marque.mjs'
+import {
+  attendre,
+  chargerPlaywright,
+  demarrerApp,
+  filtreAVenir,
+  PAGE,
+  poserLaScene,
+  RACINE,
+} from './sonde.mjs'
 
-const RACINE = join(dirname(fileURLToPath(import.meta.url)), '..')
 const SORTIE = join(RACINE, 'play-store')
-const PORT = 5177
-const BASE = `http://localhost:${PORT}`
-
-/*  Playwright n'est pas une dépendance du projet : il pèse plus lourd que
- *  l'application et ne sert qu'ici. Il est pris là où l'environnement l'a
- *  installé. */
-const require = createRequire(import.meta.url)
-let pw
-for (const chemin of ['playwright', '/opt/node22/lib/node_modules/playwright/index.js']) {
-  try {
-    pw = require(chemin)
-    break
-  } catch {
-    /* essai suivant */
-  }
-}
-if (!pw) {
-  console.error("Playwright est introuvable. Installez-le : npm i -D playwright")
-  process.exit(1)
-}
+const pw = chargerPlaywright()
 
 /* -------------------------------------------------------------------------- */
 /*  L'image de mise en avant                                                   */
@@ -135,48 +121,14 @@ const LARGEUR = 360
 const HAUTEUR = 720
 const ECHELLE = 3
 
-/*  Des tâches réalistes : la démonstration livre un écran vide, qui ne montre
- *  rien de ce que fait l'application. Rien n'est inventé — ce sont des tâches
- *  que le formulaire de l'application produit telles quelles. */
-const TACHES = [
-  ['Relancer le Trabendo pour le contrat', 2, 'Haute', 'Contrat'],
-  ['Envoyer les visuels à la presse', 5, 'Haute', 'Promotion'],
-  ['Réserver le studio pour le mix', 9, 'Normale', 'Studio'],
-  ['Déclarer les titres à la SACEM', 14, 'Normale', 'Administratif'],
-  ['Préparer la setlist de la tournée', 21, 'Basse', 'Concert'],
-]
-
+/*  La mise en scène vient de la sonde : l'aperçu vidéo montre les mêmes écrans
+ *  et doit les montrer pareil. Seul le filtre des concerts est propre à cet
+ *  écran-là. */
 const ECRANS = [
   { route: '/tableau-de-bord', nom: '1-tableau-de-bord' },
-  {
-    route: '/concerts',
-    nom: '2-concerts',
-    // Une date passée en tête de liste n'est pas ce qu'on montre d'une tournée.
-    async apres(page) {
-      const filtre = page.locator('button:has-text("À venir")').first()
-      if (await filtre.count()) await filtre.click()
-    },
-  },
+  { route: '/concerts', nom: '2-concerts', apres: filtreAVenir },
   { route: '/studio', nom: '3-agenda' },
-  {
-    route: '/taches',
-    nom: '4-taches',
-    async apres(page) {
-      await page.evaluate((taches) => {
-        const jour = (n) => {
-          const d = new Date()
-          d.setDate(d.getDate() + n)
-          return d.toISOString().slice(0, 10)
-        }
-        window.__store.tasks.push(
-          ...taches.map(([title, j, priority, category], i) => ({
-            id: 'fiche-' + i, title, done: false, due: jour(j),
-            priority, category, notes: '', doneAt: '',
-          })),
-        )
-      }, TACHES)
-    },
-  },
+  { route: '/taches', nom: '4-taches' },
   { route: '/sorties', nom: '5-sorties' },
   { route: '/mon-profil', nom: '6-profil' },
 ]
@@ -365,46 +317,6 @@ function pageVisuel(f, titre, imageBase64, fond) {
 
 /* -------------------------------------------------------------------------- */
 
-const SONDE_TS = `import { createApp, watch } from 'vue'
-import { router } from './src/router'
-import App from './src/App.vue'
-import './src/styles/main.css'
-import { currentUser, store, authReady } from './src/store'
-
-// Firebase annonce d'abord \`null\` : poser la session avant qu'il ait répondu
-// la ferait effacer aussitôt.
-watch(authReady, (pret) => {
-  if (!pret) return
-  currentUser.value = { uid: 'fiche', email: 'fiche@exemple.fr', emailVerified: true }
-  store.onboarded = true
-})
-window.__store = store
-createApp(App).use(router).mount('#app')
-`
-
-const SONDE_HTML = `<!doctype html>
-<html lang="fr"><head><meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" /><title>fiche</title></head>
-<body><div id="app"></div><script type="module" src="/_fiche.ts"></script></body></html>
-`
-
-function attendre(ms) {
-  return new Promise((r) => setTimeout(r, ms))
-}
-
-async function serveurPret(url, essais = 90) {
-  for (let i = 0; i < essais; i++) {
-    try {
-      const r = await fetch(url)
-      if (r.ok) return true
-    } catch {
-      /* pas encore là */
-    }
-    await attendre(500)
-  }
-  return false
-}
-
 async function principal() {
   mkdirSync(SORTIE, { recursive: true })
   const navigateur = await pw.chromium.launch({
@@ -427,49 +339,19 @@ async function principal() {
   }
 
   // ---- les captures : il faut l'application, donc le serveur
-  const sondeTs = join(RACINE, '_fiche.ts')
-  const sondeHtml = join(RACINE, '_fiche.html')
-  writeFileSync(sondeTs, SONDE_TS)
-  writeFileSync(sondeHtml, SONDE_HTML)
-
-  /*  La sortie de Vite est gardée, pas jetée : quand le serveur ne démarre pas,
-   *  c'est la seule chose qui dise pourquoi. La perdre transformait une panne
-   *  explicite — port occupé, dépendance manquante — en un « n'a pas démarré »
-   *  qui n'apprend rien. */
-  /*  `detached` fait de `npx` le chef de son groupe de processus, ce qui permet
-   *  de tuer le groupe entier à la fin — vite compris.
-   *
-   *  Sans cela, le script ne rendait pas la main : `vite.kill()` ne tue que
-   *  l'enveloppe `npx`, qui ne transmet pas le signal, et le vrai serveur vite
-   *  lui survivait. Ses tuyaux restant ouverts, Node gardait la boucle
-   *  d'évènements en vie — les treize images étaient produites, puis le script
-   *  attendait indéfiniment sans rien dire. */
-  const vite = spawn('npx', ['vite', '--port', String(PORT), '--strictPort'], {
-    cwd: RACINE,
-    stdio: ['ignore', 'pipe', 'pipe'],
-    detached: true,
-  })
-  let journalVite = ''
-  vite.stdout.on('data', (d) => (journalVite += d))
-  vite.stderr.on('data', (d) => (journalVite += d))
+  const app = await demarrerApp()
 
   try {
-    if (!(await serveurPret(`${BASE}/_fiche.html`))) {
-      throw new Error(
-        `Le serveur de développement n'a pas démarré sur ${BASE}.\n` +
-          `Sortie de Vite :\n${journalVite.trim() || '(aucune)'}`,
-      )
-    }
-
     for (const ecran of ECRANS) {
       const page = await navigateur.newPage({
         viewport: { width: LARGEUR, height: HAUTEUR },
         deviceScaleFactor: ECHELLE,
       })
       page.on('pageerror', (e) => console.error(`  ${ecran.nom} :`, e.message))
-      await page.goto(`${BASE}/_fiche.html#${ecran.route}`)
+      await page.goto(`${PAGE}#${ecran.route}`)
       await page.waitForSelector('.tabbar', { timeout: 20000 })
       await attendre(1000)
+      await poserLaScene(page)
       if (ecran.apres) await ecran.apres(page)
       await attendre(600)
       const fichier = join(SORTIE, `capture-${ecran.nom}.png`)
@@ -500,16 +382,7 @@ async function principal() {
       }
     }
   } finally {
-    /*  Le signe moins vise le groupe et non le seul `npx` : c'est ce qui atteint
-     *  vite. Enveloppé, parce que le groupe a pu disparaître de lui-même si le
-     *  serveur n'a jamais démarré — et une erreur ici masquerait la vraie. */
-    try {
-      process.kill(-vite.pid, 'SIGTERM')
-    } catch {
-      /* déjà parti */
-    }
-    rmSync(sondeTs, { force: true })
-    rmSync(sondeHtml, { force: true })
+    app.arreter()
     await navigateur.close()
   }
 

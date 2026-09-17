@@ -1,14 +1,43 @@
-# Les captures d'écran de la fiche App Store
+# Les images et l'aperçu de la fiche App Store
 
-Douze fichiers, six écrans en deux tailles. À téléverser dans **App Store
-Connect → votre app → la version iOS → Aperçus et captures d'écran**.
+Treize fichiers, tous à déposer au même endroit : **App Store Connect → votre
+app → la version iOS → Aperçus et captures d'écran**.
 
-| Fichier | Taille | Emplacement |
+| Fichier | Taille | Ce que c'est |
 | --- | --- | --- |
-| `iphone-6.9-*.png` | 1320 × 2868 | iPhone 6,9 pouces |
-| `iphone-6.7-*.png` | 1290 × 2796 | iPhone 6,7 pouces |
+| `apercu-iphone-886x1920.mp4` | 886 × 1920 | l'aperçu vidéo, 24 s |
+| `iphone-6.9-*.png` | 1320 × 2868 | six captures, iPhone 6,9 pouces |
+| `iphone-6.7-*.png` | 1290 × 2796 | les six mêmes, iPhone 6,7 pouces |
 
-## Pourquoi deux tailles
+## Attention : deux tailles pour le même écran
+
+C'est le piège de cette page. Les captures et l'aperçu s'y déposent ensemble,
+sous le même intitulé, et **n'ont pas la même taille**. Un aperçu aux
+dimensions des captures est refusé.
+
+En contrepartie, un seul aperçu suffit : le 886 × 1920 couvre toute la gamme
+récente — 6,9 / 6,5 / 6,3 / 6,1 pouces.
+
+## L'aperçu vidéo
+
+Vingt-quatre secondes, sans son, une légende par écran. Il traverse le tableau
+de bord, les concerts, l'agenda, les tâches, les sorties et les contacts, puis
+finit sur la marque.
+
+Il est **facultatif** — la fiche est valable sans lui. Mais c'est la seule
+chose de la page qui bouge, et sur iPhone il se lance tout seul.
+
+Deux règles d'Apple ont dicté sa forme :
+
+- **entre 15 et 30 secondes**, sinon l'envoi est refusé ;
+- **aucun matériel à l'image**. D'où l'absence de cadre de téléphone, alors que
+  les captures, elles, en ont un : Apple l'accepte sur une image fixe et le
+  refuse en vidéo.
+
+La piste audio est muette, et non absente : App Store Connect recale au
+transcodage les fichiers sans piste son.
+
+## Pourquoi deux tailles de captures
 
 Apple n'accepte **que les dimensions exactes** d'un appareil : pas de mise à
 l'échelle, pas d'« à peu près ». Une image d'un pixel de trop est refusée.
@@ -32,30 +61,41 @@ L'interface change ; une fiche qui montre une version d'il y a trois mois se
 remarque.
 
 ```sh
-node scripts/fiche-play-store.mjs
+node scripts/fiche-play-store.mjs    # les images — Play Store et App Store
+node scripts/apercu-app-store.mjs    # l'aperçu vidéo
 ```
 
-La même commande refait **tout** : les treize images du Play Store et ces douze
-là. Les six captures d'écran sont prises une seule fois et servent aux trois
-formats — seul l'habillage change. Il lui faut **Playwright**, absent des
-dépendances du projet parce qu'il pèse plus lourd que l'application et ne sert
-qu'ici :
+La première commande refait **toutes** les images : les treize du Play Store et
+les douze d'ici. Les six écrans sont pris une seule fois et servent aux trois
+formats — seul l'habillage change.
+
+Il leur faut deux outils, tenus hors des dépendances du projet parce qu'ils
+pèsent plus lourd que l'application et ne servent qu'ici :
 
 ```sh
-npm i -D playwright && npx playwright install chromium
+npm i -D playwright @ffmpeg-installer/ffmpeg && npx playwright install chromium
 ```
+
+`ffmpeg` ne sert qu'à l'aperçu. S'il est déjà installé sur la machine, il est
+trouvé tout seul.
 
 ## Ce qui figure sur les images
 
 Les données de démonstration livrées avec l'application — l'artiste NOVA, ses
-concerts, ses sorties. Rien n'est inventé : ce sont les écrans réels, avec les
-chiffres réels de cette démonstration.
+concerts, ses sorties. Ce sont les écrans réels, avec les chiffres réels de
+cette démonstration ; rien n'est promis à personne.
 
-Deux écrans ont demandé une mise en scène, décrite dans le script :
+Une mise en scène s'y ajoute, décrite dans `scripts/sonde.mjs` :
 
-- **Tâches** — la démonstration le laisse vide, et une capture d'écran vide ne
-  montre pas ce que fait l'application. Cinq tâches sont ajoutées, telles que le
-  formulaire de l'application les produirait.
+- **Des dates à venir.** La démonstration livrée avec l'application porte des
+  dates écrites en dur, en 2026 ; elles reculent dans le passé à mesure que le
+  temps passe, et l'agenda finissait par afficher « aucun évènement à venir ».
+  Concerts, séances de studio et tâches sont donc datés par rapport au jour où
+  l'on fabrique la fiche : elle restera pleine dans un an.
+- **Les coordonnées de l'artiste.** Elles existent dans la démonstration mais
+  n'arrivent jamais à l'écran, et c'est voulu — personne ne doit hériter du
+  courriel de NOVA en créant son compte. Sans elles, l'écran de profil affichait
+  cinq « Non renseigné ».
 - **Concerts** — le filtre « À venir » est activé : une date passée en tête de
   liste n'est pas ce qu'on montre d'un agenda de tournée.
 

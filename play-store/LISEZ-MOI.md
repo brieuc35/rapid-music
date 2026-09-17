@@ -58,13 +58,24 @@ npm i -D playwright && npx playwright install chromium
 ## Ce qui figure sur les images
 
 Les données de démonstration livrées avec l'application — l'artiste NOVA, ses
-concerts, ses sorties. Rien n'est inventé : ce sont les écrans réels, avec les
-chiffres réels de cette démonstration.
+concerts, ses sorties. Ce sont les écrans réels, avec les chiffres réels de
+cette démonstration ; rien n'est promis à personne.
 
-Deux écrans ont demandé une mise en scène, décrite dans le script :
+Une mise en scène s'y ajoute, décrite dans `scripts/sonde.mjs` :
 
-- **Tâches** — la démonstration le laisse vide, et une capture d'écran vide ne
-  montre pas ce que fait l'application. Cinq tâches sont ajoutées, telles que le
-  formulaire de l'application les produirait.
+- **Des dates à venir.** La démonstration porte des dates écrites en dur, en
+  2026 ; elles reculent dans le passé à mesure que le temps passe, et l'agenda
+  finissait par afficher « aucun évènement à venir ». Concerts, séances de
+  studio et tâches sont donc datés par rapport au jour où l'on fabrique la
+  fiche : elle restera pleine dans un an.
+- **Les coordonnées de l'artiste**, qui existent dans la démonstration mais
+  n'arrivent jamais à l'écran — et c'est voulu, personne ne doit hériter du
+  courriel de NOVA en créant son compte.
 - **Concerts** — le filtre « À venir » est activé : une date passée en tête de
   liste n'est pas ce qu'on montre d'un agenda de tournée.
+
+## Et une vidéo ?
+
+Google ne prend pas de fichier : seulement un lien YouTube. L'aperçu vidéo
+fabriqué pour Apple — `app-store/apercu-iphone-886x1920.mp4` — pourrait servir,
+à condition de le mettre d'abord en ligne sur YouTube.
