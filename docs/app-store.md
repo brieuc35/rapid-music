@@ -92,11 +92,18 @@ Créer la fiche, puis remplir :
 
 ### 5. Les captures d'écran
 
-**Les visuels du Play Store ne conviennent pas** : Apple impose ses propres
-dimensions, et 1080 × 1920 sera refusé. Il faut du **1290 × 2796** (iPhone 6,9").
+**Déjà produites**, dans [`app-store/`](../app-store/) : six écrans en deux
+tailles, 1320 × 2868 et 1290 × 2796. Le mode d'emploi est dans
+[`app-store/LISEZ-MOI.md`](../app-store/LISEZ-MOI.md).
 
-`scripts/fiche-play-store.mjs` sait les produire à ces dimensions — c'est une
-adaptation des constantes, pas une réécriture.
+Les visuels du Play Store ne conviennent pas — Apple n'accepte que les
+dimensions exactes d'un appareil, et 1080 × 1920 n'en est aucune. Les deux
+tailles sont fournies parce que la classe « 6,9 pouces » a changé de définition
+avec les appareils récents, et que l'emplacement proposé dépend de la version
+d'App Store Connect qu'on a sous les yeux.
+
+`node scripts/fiche-play-store.mjs` refait la série entière, les deux magasins
+compris.
 
 ### 6. TestFlight, puis la révision
 

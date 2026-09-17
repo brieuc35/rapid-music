@@ -1,5 +1,5 @@
 /* -------------------------------------------------------------------------- */
-/*  Les images de la fiche Play Store                                          */
+/*  Les images des fiches de magasin                                           */
 /*                                                                            */
 /*    node scripts/fiche-play-store.mjs                                        */
 /*                                                                            */
@@ -8,6 +8,13 @@
 /*    — six captures d'écran de téléphone, 1080 × 2160 ;                       */
 /*    — six visuels : la capture posée dans un cadre de téléphone, sur le      */
 /*      violet de la marque et sous une phrase, 1080 × 1920.                   */
+/*                                                                            */
+/*  Et dans app-store/ : les six mêmes écrans aux deux tailles qu'Apple        */
+/*  accepte, 1320 × 2868 et 1290 × 2796.                                       */
+/*                                                                            */
+/*  Le nom du fichier est resté celui du seul magasin qu'il servait au départ. */
+/*  Le renommer casserait la commande écrite dans trois documents, pour un      */
+/*  gain de rangement.                                                        */
 /*                                                                            */
 /*  Pourquoi un script et non des captures faites à la main : l'interface      */
 /*  change souvent, et une fiche montrant une version d'il y a trois mois se   */
@@ -185,8 +192,88 @@ const ECRANS = [
 /*  le format des fiches soignées du Store.                                    */
 /* -------------------------------------------------------------------------- */
 
-const VISUEL_L = 540
-const VISUEL_H = 960
+/*  Les formats produits. Un par emplacement de magasin, et le dessin est le
+ *  même partout — seule la toile change.
+ *
+ *  Google veut du 1080 × 1920. Apple veut les dimensions exactes d'un appareil,
+ *  et range les siennes par classe d'écran : le 6,9 pouces couvre aujourd'hui
+ *  1320 × 2868, et 1290 × 2796 sert aux Pro Max plus anciens. Les deux sont
+ *  produites, parce que l'emplacement réclamé dépend de la version d'App Store
+ *  Connect qu'on a sous les yeux, et qu'une image refusée se découvre après
+ *  avoir rempli tout le reste du formulaire.
+ *
+ *  Les toiles sont décrites à l'échelle 2 : c'est le rendu qui double. */
+const FORMATS = [
+  {
+    magasin: 'play-store',
+    prefixe: 'visuel',
+    l: 540,
+    h: 960,
+    /*  Figé, et non calculé comme les suivants : ces images sont déjà en ligne
+     *  sur la fiche Google. Les recalculer les changerait sans raison. */
+    tel: { largeur: 300, hauteur: 576, cadre: 12, haut: 252 },
+    titre: { haut: 62, taille: 42, marge: 44 },
+  },
+  cadreApple('iphone-6.9', 660, 1434),
+  cadreApple('iphone-6.7', 645, 1398),
+]
+
+/**
+ * Compose un format Apple à partir de sa seule toile.
+ *
+ * Les toiles d'Apple sont bien plus élancées que celle de Google — 1:2,17
+ * contre 1:1,78 — et y reporter les nombres du Play Store laisserait le
+ * téléphone perdu au milieu du vide. Tout est donc tiré de la toile : le
+ * téléphone occupe la même part de la largeur, et se centre dans ce qui reste
+ * sous le titre.
+ *
+ * L'écran fait exactement le double en hauteur de sa largeur, comme la capture.
+ * C'est cette égalité que le contrôle plus bas vérifie, pour tous les formats.
+ */
+function cadreApple(prefixe, l, h) {
+  const largeur = Math.round(l * 0.72)
+  const cadre = Math.round(largeur * 0.03)
+  const ecranL = largeur - 2 * cadre
+  const hauteur = 2 * ecranL + 2 * cadre
+
+  const titre = { haut: Math.round(h * 0.055), taille: Math.round(l * 0.078), marge: Math.round(l * 0.09) }
+  //  Deux lignes de titre, plus un peu d'air avant le téléphone.
+  const basDuTitre = titre.haut + Math.round(titre.taille * 1.12 * 2)
+
+  return {
+    magasin: 'app-store',
+    prefixe,
+    l,
+    h,
+    tel: { largeur, hauteur, cadre, haut: Math.round(basDuTitre + (h - basDuTitre - hauteur) / 2) },
+    titre,
+  }
+}
+
+/*  Le rognage se ferait sans bruit : `cover` remplit toujours le cadre, et rien
+ *  dans l'image produite ne dirait que les bords ont sauté. D'où ce contrôle,
+ *  plutôt qu'une note dans un commentaire.
+ *
+ *  Il ne peut pas échouer sur les formats Apple : `cadreApple` y dérive la
+ *  hauteur de l'écran de sa largeur, le rapport y est donc vrai par
+ *  construction — ce qui vaut mieux qu'une vérification. Il protège l'entrée
+ *  figée du Play Store, dont les quatre nombres sont indépendants, et il
+ *  protégera de la même façon tout format qu'on écrirait à la main plus tard. */
+for (const f of FORMATS) {
+  const ecranL = f.tel.largeur - 2 * f.tel.cadre
+  const ecranH = f.tel.hauteur - 2 * f.tel.cadre
+  if (ecranL * HAUTEUR !== ecranH * LARGEUR) {
+    const rogne = Math.abs(ecranL - (ecranH * LARGEUR) / HAUTEUR) / 2
+    throw new Error(
+      `${f.prefixe} : le cadre du téléphone (${ecranL} × ${ecranH}) n'a pas le rapport ` +
+        `de la capture (${LARGEUR} × ${HAUTEUR}) : « cover » rognerait ${rogne.toFixed(1)} px ` +
+        `de chaque côté, et avec eux la marge des pages de l'application.`,
+    )
+  }
+  if (f.tel.hauteur + f.tel.haut > f.h) {
+    throw new Error(`${f.prefixe} : le téléphone dépasse le bas de la toile.`)
+  }
+}
 
 /*  Deux fonds, alternés. Le même violet de bout en bout donnerait un carrousel
  *  monotone ; six fonds différents feraient six applications. Deux suffisent à
@@ -211,25 +298,6 @@ const FONDS = [
 /*  Une phrase par écran : ce que l'artiste y gagne, pas ce que l'écran
  *  contient. « Vos dates, salle par salle » dit mieux le métier que
  *  « Liste des concerts ». */
-/*  Le cadre du téléphone.
- *
- *  L'écran doit garder le rapport exact de la capture, sinon \`cover\` remplit le
- *  cadre en rognant les bords — et il le fait sans bruit : l'image produite a
- *  l'air correcte, elle a simplement perdu la marge de l'application. C'est
- *  arrivé, d'où le contrôle plus bas plutôt qu'une note dans un commentaire. */
-const TEL = { largeur: 300, hauteur: 576, cadre: 12, haut: 252 }
-const ECRAN_L = TEL.largeur - 2 * TEL.cadre
-const ECRAN_H = TEL.hauteur - 2 * TEL.cadre
-
-if (ECRAN_L * HAUTEUR !== ECRAN_H * LARGEUR) {
-  const rogne = Math.abs(ECRAN_L - (ECRAN_H * LARGEUR) / HAUTEUR) / 2
-  throw new Error(
-    `Le cadre du téléphone (${ECRAN_L} × ${ECRAN_H}) n'a pas le rapport de la ` +
-      `capture (${LARGEUR} × ${HAUTEUR}) : « cover » rognerait ${rogne.toFixed(1)} px ` +
-      `de chaque côté, et avec eux la marge des pages de l'application.`,
-  )
-}
-
 const VISUELS = [
   ['1-tableau-de-bord', 'Pilotez mieux<br />votre carrière'],
   ['2-concerts', 'Vos dates,<br />salle par salle'],
@@ -239,7 +307,7 @@ const VISUELS = [
   ['6-profil', 'Votre profil<br />d’artiste'],
 ]
 
-function pageVisuel(titre, imageBase64, fond) {
+function pageVisuel(f, titre, imageBase64, fond) {
   return `<!doctype html>
 <meta charset="utf-8" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -247,13 +315,13 @@ function pageVisuel(titre, imageBase64, fond) {
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700;800&display=swap" rel="stylesheet" />
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { width: ${VISUEL_L}px; height: ${VISUEL_H}px; overflow: hidden; }
+  html, body { width: ${f.l}px; height: ${f.h}px; overflow: hidden; }
   body { font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-  .scene { position: relative; width: ${VISUEL_L}px; height: ${VISUEL_H}px; overflow: hidden; background: ${fond.base}; }
+  .scene { position: relative; width: ${f.l}px; height: ${f.h}px; overflow: hidden; background: ${fond.base}; }
   .halo { position: absolute; }
   .titre {
-    position: absolute; top: 62px; left: 0; right: 0; text-align: center; padding: 0 44px;
-    font-size: 42px; font-weight: 800; line-height: 1.12; letter-spacing: -.02em; color: #fff;
+    position: absolute; top: ${f.titre.haut}px; left: 0; right: 0; text-align: center;
+    padding: 0 ${f.titre.marge}px; font-size: ${f.titre.taille}px; font-weight: 800; line-height: 1.12; letter-spacing: -.02em; color: #fff;
   }
   /*  Le téléphone est droit, sans rotation : incliné, l'écran se lit de biais et
       les copies d'écran perdent en netteté sur les bords. L'ombre portée suffit
@@ -269,13 +337,13 @@ function pageVisuel(titre, imageBase64, fond) {
       qui refuse une capture dont le grand côté dépasse le double du petit. */
   .socle { position: absolute; inset: 0; }
   .tel {
-    position: absolute; left: 50%; top: ${TEL.haut}px;
-    width: ${TEL.largeur}px; height: ${TEL.hauteur}px;
+    position: absolute; left: 50%; top: ${f.tel.haut}px;
+    width: ${f.tel.largeur}px; height: ${f.tel.hauteur}px;
     transform: translateX(-50%);
-    border-radius: 38px; background: #0b0812; padding: ${TEL.cadre}px;
+    border-radius: ${Math.round(f.tel.cadre * 3.2)}px; background: #0b0812; padding: ${f.tel.cadre}px;
     box-shadow: 0 60px 90px rgba(0,0,0,.55), 0 0 0 1.5px rgba(255,255,255,.14), 0 0 0 8px rgba(255,255,255,.05);
   }
-  .ecran { width: 100%; height: 100%; border-radius: 26px; overflow: hidden; background: #fff; position: relative; }
+  .ecran { width: 100%; height: 100%; border-radius: ${Math.round(f.tel.cadre * 2.2)}px; overflow: hidden; background: #fff; position: relative; }
   /*  \`height: 100%\` autant que \`width\` : sans elle l'image garde ses
       proportions, ne remplit pas le cadre, et laisse une bande blanche sous la
       barre d'onglets. \`cover\` ne recadre que si les deux sont contraints. */
@@ -409,20 +477,27 @@ async function principal() {
       console.log(`capture-${ecran.nom}.png`.padEnd(30), statSync(fichier).size, 'octets')
       await page.close()
     }
-    // ---- les visuels : les captures qu'on vient de produire, mises en scène
-    for (const [i, [nom, titre]] of VISUELS.entries()) {
-      const capture = readFileSync(join(SORTIE, `capture-${nom}.png`)).toString('base64')
-      const page = await navigateur.newPage({
-        viewport: { width: VISUEL_L, height: VISUEL_H },
-        deviceScaleFactor: 2,
-      })
-      await page.setContent(pageVisuel(titre, capture, FONDS[i % FONDS.length]))
-      await page.waitForFunction(() => document.fonts.ready.then(() => true))
-      await attendre(500)
-      const fichier = join(SORTIE, `visuel-${nom}.png`)
-      await page.screenshot({ path: fichier })
-      console.log(`visuel-${nom}.png`.padEnd(30), statSync(fichier).size, 'octets')
-      await page.close()
+    // ---- les visuels : les captures qu'on vient de produire, mises en scène.
+    //      Les mêmes six écrans, habillés une fois par emplacement de magasin.
+    for (const f of FORMATS) {
+      const dossier = join(RACINE, f.magasin)
+      mkdirSync(dossier, { recursive: true })
+
+      for (const [i, [nom, titre]] of VISUELS.entries()) {
+        const capture = readFileSync(join(SORTIE, `capture-${nom}.png`)).toString('base64')
+        const page = await navigateur.newPage({
+          viewport: { width: f.l, height: f.h },
+          deviceScaleFactor: 2,
+        })
+        await page.setContent(pageVisuel(f, titre, capture, FONDS[i % FONDS.length]))
+        await page.waitForFunction(() => document.fonts.ready.then(() => true))
+        await attendre(500)
+        const bref = `${f.prefixe}-${nom}.png`
+        const fichier = join(dossier, bref)
+        await page.screenshot({ path: fichier })
+        console.log(bref.padEnd(34), `${f.l * 2}×${f.h * 2}`.padEnd(11), statSync(fichier).size, 'octets')
+        await page.close()
+      }
     }
   } finally {
     /*  Le signe moins vise le groupe et non le seul `npx` : c'est ce qui atteint
