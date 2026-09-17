@@ -90,20 +90,29 @@ Créer la fiche, puis remplir :
   Google. Les réponses de [`securite-des-donnees.md`](securite-des-donnees.md) se
   transposent presque telles quelles.
 
-### 5. Les captures d'écran
+### 5. Les captures d'écran et l'aperçu
 
-**Déjà produites**, dans [`app-store/`](../app-store/) : six écrans en deux
-tailles, 1320 × 2868 et 1290 × 2796. Le mode d'emploi est dans
+**Déjà produits**, dans [`app-store/`](../app-store/). Le mode d'emploi est dans
 [`app-store/LISEZ-MOI.md`](../app-store/LISEZ-MOI.md).
+
+| Quoi | Taille | Commande |
+| --- | --- | --- |
+| Six captures, en deux tailles | 1320 × 2868 et 1290 × 2796 | `node scripts/fiche-play-store.mjs` |
+| L'aperçu vidéo, 24 s | 886 × 1920 | `node scripts/apercu-app-store.mjs` |
 
 Les visuels du Play Store ne conviennent pas — Apple n'accepte que les
 dimensions exactes d'un appareil, et 1080 × 1920 n'en est aucune. Les deux
-tailles sont fournies parce que la classe « 6,9 pouces » a changé de définition
-avec les appareils récents, et que l'emplacement proposé dépend de la version
-d'App Store Connect qu'on a sous les yeux.
+tailles de captures sont fournies parce que la classe « 6,9 pouces » a changé de
+définition avec les appareils récents, et que l'emplacement proposé dépend de la
+version d'App Store Connect qu'on a sous les yeux.
 
-`node scripts/fiche-play-store.mjs` refait la série entière, les deux magasins
-compris.
+**Le piège de cet écran** : les captures et l'aperçu se déposent au même
+endroit, sous le même intitulé « Aperçus et captures d'écran », et n'ont pas la
+même taille. Un aperçu en 1320 × 2868 est refusé ; il lui faut 886 × 1920, qui
+couvre en revanche toute la gamme récente d'un seul fichier.
+
+L'aperçu est facultatif. Il n'y a pas d'équivalent côté Google, qui ne prend
+qu'un lien YouTube et aucun fichier.
 
 ### 6. TestFlight, puis la révision
 
