@@ -99,6 +99,7 @@ Créer la fiche, puis remplir :
 | --- | --- | --- |
 | Six captures, en deux tailles | 1320 × 2868 et 1290 × 2796 | `node scripts/fiche-play-store.mjs` |
 | L'aperçu vidéo, 24 s | 886 × 1920 | `node scripts/apercu-app-store.mjs` |
+| L'illustration promotionnelle | 4320 × 1080 | `node scripts/fiche-play-store.mjs` |
 
 Les visuels du Play Store ne conviennent pas — Apple n'accepte que les
 dimensions exactes d'un appareil, et 1080 × 1920 n'en est aucune. Les deux
@@ -113,6 +114,12 @@ couvre en revanche toute la gamme récente d'un seul fichier.
 
 L'aperçu est facultatif. Il n'y a pas d'équivalent côté Google, qui ne prend
 qu'un lien YouTube et aucun fichier.
+
+**L'illustration promotionnelle ne se téléverse pas encore.** Son emplacement
+n'apparaît dans App Store Connect que si l'équipe éditoriale d'Apple retient
+l'application pour l'onglet Aujourd'hui. Le fichier est fabriqué d'avance, sans
+texte — Apple l'interdit là et pose lui-même le nom de l'application
+par-dessus.
 
 ### 6. TestFlight, puis la révision
 

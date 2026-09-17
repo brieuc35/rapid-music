@@ -44,7 +44,7 @@ const SORTIE = join(RACINE, 'play-store')
 const pw = chargerPlaywright()
 
 /* -------------------------------------------------------------------------- */
-/*  L'image de mise en avant                                                   */
+/*  L'image de mise en avant du Play Store                                     */
 /* -------------------------------------------------------------------------- */
 
 /*  Hauteurs du spectre sonore, figées : une image tirée au hasard changerait à
@@ -108,6 +108,76 @@ const MISE_EN_AVANT = `<!doctype html>
         <span class="puce">Contrats</span><span class="puce">Contacts</span>
       </div>
     </div>
+  </div>
+</div>`
+
+/* -------------------------------------------------------------------------- */
+/*  L'illustration promotionnelle de l'App Store                               */
+/*                                                                            */
+/*  Le pendant Apple de l'image de mise en avant, à trois différences près.    */
+/*                                                                            */
+/*  Elle ne se téléverse pas quand on veut : l'emplacement n'apparaît dans     */
+/*  App Store Connect que si l'équipe éditoriale d'Apple retient l'application */
+/*  pour l'onglet Aujourd'hui. Elle est donc fabriquée d'avance, pour le jour  */
+/*  où — et elle sert en attendant partout ailleurs qu'un bandeau large sert.  */
+/*                                                                            */
+/*  Aucun texte : Apple l'interdit ici, et pose lui-même le nom de             */
+/*  l'application par-dessus. D'où l'absence de la signature et des mots-clés  */
+/*  qui portent l'image du Play Store — ce qui reste doit tenir tout seul.     */
+/*                                                                            */
+/*  Recadrée sans qu'on le demande, et pas toujours au même rapport : la même  */
+/*  illustration sert de bandeau très large sur une fiche et de vignette       */
+/*  presque carrée dans l'onglet Aujourd'hui. Tout ce qui compte tient donc    */
+/*  dans le carré central, et la composition est symétrique — un recadrage     */
+/*  centré y trouve la même image, quelle que soit sa largeur.                 */
+/* -------------------------------------------------------------------------- */
+
+const PROMO_L = 4320
+const PROMO_H = 1080
+
+/*  Quarante-cinq hauteurs, du bord vers le centre, puis leur miroir : le
+ *  spectre est ainsi symétrique, et le carré central en attrape le sommet. */
+const SPECTRE_DEMI = [
+  22, 48, 30, 66, 42, 88, 56, 112, 70, 138, 84, 166, 100, 194, 118, 224,
+  136, 252, 120, 208, 104, 176, 92, 204, 116, 240, 142, 276, 168, 310,
+  196, 342, 224, 368, 250, 390, 272, 406, 290, 418, 304, 426, 314, 430, 320,
+]
+const SPECTRE_LARGE = [...SPECTRE_DEMI, ...[...SPECTRE_DEMI].reverse()]
+
+const PROMO_APPLE = `<!doctype html>
+<meta charset="utf-8" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: ${PROMO_L}px; height: ${PROMO_H}px; overflow: hidden; }
+  .toile { position: relative; width: ${PROMO_L}px; height: ${PROMO_H}px; overflow: hidden;
+    background: linear-gradient(180deg, #1b1430 0%, #14101f 58%, #0d0a16 100%); }
+  .lueur { position: absolute; border-radius: 50%; }
+  /*  Deux lueurs de part et d'autre, à distance égale du centre : c'est ce qui
+      garde l'image équilibrée quand elle est recadrée en carré. */
+  .lueur-g { width: 1500px; height: 1500px; left: 1410px; top: -700px;
+    background: radial-gradient(circle, rgba(139,92,246,.50) 0%, rgba(139,92,246,0) 62%); }
+  .lueur-d { width: 1500px; height: 1500px; right: 1410px; bottom: -700px;
+    background: radial-gradient(circle, rgba(236,72,153,.46) 0%, rgba(236,72,153,0) 62%); }
+  .spectre { position: absolute; inset: auto 0 0 0; height: ${PROMO_H}px;
+    display: flex; align-items: flex-end; gap: 14px; padding: 0 30px; opacity: .17; }
+  .spectre i { flex: 1; border-radius: 10px 10px 0 0;
+    background: linear-gradient(180deg, #ec4899 0%, rgba(139,92,246,0) 100%); }
+  /*  La marque, seule au centre, et rien d'autre : c'est tout ce qui doit
+      survivre au recadrage le plus serré. */
+  .marque { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: 400px; height: 400px; border-radius: 104px;
+    background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+    display: grid; place-items: center;
+    box-shadow: 0 60px 160px rgba(236,72,153,.5), 0 0 0 3px rgba(255,255,255,.1) inset; }
+  .marque svg { width: 228px; height: 228px; }
+</style>
+<div class="toile">
+  <div class="lueur lueur-g"></div><div class="lueur lueur-d"></div>
+  <div class="spectre">${SPECTRE_LARGE.map((h) => `<i style="height:${h}px"></i>`).join('')}</div>
+  <div class="marque">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round">
+      ${marque()}
+    </svg>
   </div>
 </div>`
 
@@ -335,6 +405,22 @@ async function principal() {
     const fichier = join(SORTIE, 'mise-en-avant-1024x500.png')
     await page.screenshot({ path: fichier })
     console.log('mise-en-avant-1024x500.png'.padEnd(30), statSync(fichier).size, 'octets')
+    await page.close()
+  }
+
+  // ---- l'illustration promotionnelle d'Apple : pas de serveur non plus
+  {
+    mkdirSync(join(RACINE, 'app-store'), { recursive: true })
+    const page = await navigateur.newPage({
+      viewport: { width: PROMO_L, height: PROMO_H },
+      deviceScaleFactor: 1,
+    })
+    await page.setContent(PROMO_APPLE)
+    await attendre(500)
+    const bref = `illustration-promo-${PROMO_L}x${PROMO_H}.png`
+    const fichier = join(RACINE, 'app-store', bref)
+    await page.screenshot({ path: fichier })
+    console.log(bref.padEnd(30), statSync(fichier).size, 'octets')
     await page.close()
   }
 

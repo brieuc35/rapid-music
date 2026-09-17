@@ -1,13 +1,14 @@
 # Les images et l'aperçu de la fiche App Store
 
-Treize fichiers, tous à déposer au même endroit : **App Store Connect → votre
-app → la version iOS → Aperçus et captures d'écran**.
+Treize fichiers vont dans **App Store Connect → votre app → la version iOS →
+Aperçus et captures d'écran**. Le quatorzième attend ailleurs — voir plus bas.
 
 | Fichier | Taille | Ce que c'est |
 | --- | --- | --- |
 | `apercu-iphone-886x1920.mp4` | 886 × 1920 | l'aperçu vidéo, 24 s |
 | `iphone-6.9-*.png` | 1320 × 2868 | six captures, iPhone 6,9 pouces |
 | `iphone-6.7-*.png` | 1290 × 2796 | les six mêmes, iPhone 6,7 pouces |
+| `illustration-promo-4320x1080.png` | 4320 × 1080 | l'illustration promotionnelle — **pas encore téléversable** |
 
 ## Attention : deux tailles pour le même écran
 
@@ -36,6 +37,30 @@ Deux règles d'Apple ont dicté sa forme :
 
 La piste audio est muette, et non absente : App Store Connect recale au
 transcodage les fichiers sans piste son.
+
+## L'illustration promotionnelle
+
+C'est le pendant Apple de l'image de mise en avant du Play Store. Trois choses
+la distinguent, et il vaut mieux les savoir avant de la chercher.
+
+**Son emplacement n'existe pas tant qu'Apple ne l'ouvre pas.** Il n'apparaît
+dans App Store Connect que si l'équipe éditoriale retient l'application pour
+l'onglet Aujourd'hui. Inutile de le chercher aujourd'hui : le fichier est
+fabriqué d'avance, pour le jour où.
+
+**Aucun texte.** Apple l'interdit ici et pose lui-même le nom de l'application
+par-dessus. D'où l'absence de la signature et des mots-clés qui portent l'image
+du Play Store.
+
+**Elle est recadrée sans qu'on le demande**, et pas toujours au même rapport :
+la même illustration sert de bandeau très large sur une fiche et de vignette
+presque carrée dans l'onglet Aujourd'hui. La composition est donc symétrique et
+tout ce qui compte tient dans le carré central — vérifié en 4:1, en 2:1 et en
+carré.
+
+Pour un bandeau avec du texte — site, dossier de presse, réseaux — c'est
+`play-store/mise-en-avant-1024x500.png` qui sert : même marque, même fond, mais
+la signature et les mots-clés en plus.
 
 ## Pourquoi deux tailles de captures
 
