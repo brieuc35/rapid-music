@@ -18,8 +18,20 @@
 /*                                                                            */
 /*  Chaque image est prise une par une, le défilement étant posé à la main     */
 /*  avant chaque prise. Filmer la fenêtre aurait été plus court à écrire, mais */
-/*  aurait rendu un résultat différent à chaque fabrication, au rythme de la   */
-/*  machine ; ici les 720 images sont les mêmes à chaque fois.                 */
+/*  aurait rendu une vidéo au rythme de la machine : scènes plus ou moins      */
+/*  longues, défilement plus ou moins rapide, durée totale imprévisible — donc */
+/*  hors des quinze à trente secondes qu'Apple impose, un jour sur deux.       */
+/*  Ici la composition est posée, pas subie : chaque scène dure le nombre      */
+/*  d'images qu'on lui donne, et le défilement est à la même place à la même   */
+/*  image.                                                                     */
+/*                                                                            */
+/*  Le fichier produit n'est pas pour autant identique au bit près d'une       */
+/*  fabrication à l'autre — mesuré, deux fabrications de suite donnent deux    */
+/*  empreintes. Le rendu du texte et l'encodage des images laissent passer     */
+/*  d'infimes écarts. Ce qui est garanti, c'est le contenu et la minuterie,    */
+/*  pas les octets : un `git status` qui signale l'aperçu modifié ne prouve    */
+/*  donc rien sur ce qu'on vient de changer. Les images fixes, elles, sont     */
+/*  bien reproductibles au bit près.                                           */
 /* -------------------------------------------------------------------------- */
 
 import { execFileSync } from 'node:child_process'
