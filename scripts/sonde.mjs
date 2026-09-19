@@ -116,7 +116,7 @@ const AGENDA = [
   ['Mix — « Gravité »', 'La Frette Studios', 6, '14:00', '20:00', 'Mix', 900, 'Manon L.'],
   ['Point presse — sortie du single', 'Halo Records', 9, '11:00', '12:30', 'Réunion', 0, '—'],
   ['Enregistrement voix — « Solstice »', 'Studio Ferber', 16, '10:00', '17:00', 'Enregistrement', 700, 'Thomas R.'],
-  ['Mastering — EP « Horizon »', 'Translab', 24, '11:00', '15:00', 'Mastering', 1100, 'Chab'],
+  ['Mastering — EP « Horizon »', 'Translab', 24, '11:00', '15:00', 'Mastering', 1100, 'Karim B.'],
 ]
 
 /**

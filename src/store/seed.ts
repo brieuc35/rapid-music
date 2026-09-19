@@ -267,7 +267,7 @@ export function seedData(): AppData {
         endTime: '15:00',
         type: 'Mastering',
         cost: 1200,
-        engineer: 'Chab',
+        engineer: 'Karim B.',
         notes: 'Master final avant pressage.',
       },
       {
