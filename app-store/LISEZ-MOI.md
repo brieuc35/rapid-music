@@ -10,7 +10,8 @@ Aperçus et captures d'écran**. Le quatorzième attend ailleurs — voir plus b
 | `iphone-6.7-*.png` | 1290 × 2796 | les six mêmes, iPhone 6,7 pouces |
 | `iphone-6.5-*.png` | 1284 × 2778 | les six mêmes, iPhone 6,5 pouces |
 | `illustration-promo-4320x1080.png` | 4320 × 1080 | l'illustration promotionnelle — **pas encore téléversable** |
-| `verification-abonnement.png` | 860 × 3874 | la capture d'examen de l'abonnement — **va ailleurs**, voir ci-dessous |
+| `verification-abonnement-640x920.png` | 640 × 920 | capture d'examen de l'abonnement — **va ailleurs**, voir ci-dessous |
+| `verification-abonnement-1284x2778.png` | 1284 × 2778 | la même, en plus net, si le formulaire l'accepte |
 
 ## Attention : deux tailles pour le même écran
 
@@ -55,8 +56,17 @@ pas sur le site, qui n'y montre aucun bouton d'achat et ne prouverait donc rien.
 Le script pose pour cela le pont natif qu'un iPhone fournit ; la page, elle, est
 la vraie, et les montants viennent de `src/store/index.ts`.
 
-Pleine hauteur, et non la hauteur d'un écran : les deux formules, leurs prix et
-le tableau comparatif tiennent sur une seule image.
+**Commencez par le 640 × 920.** C'est la taille qu'Apple documente pour cet
+emplacement, et celle qui passe quand les autres sont refusées. Le 1284 × 2778
+est une taille d'écran d'iPhone, que l'aide d'App Store Connect dit accepter
+aussi : bien plus net, à essayer si le formulaire le veut bien.
+
+Ce champ ne se contente pas d'une image lisible : **il veut des dimensions**, et
+refuse le reste sans dire laquelle il attendait. Une première version pleine
+hauteur, lisible et complète, a été rejetée pour cette seule raison.
+
+Le cadrage tombe sur la formule payante : c'est le bouton d'achat et son prix
+que le vérificateur doit voir, pas le tableau comparatif.
 
 ## L'illustration promotionnelle
 

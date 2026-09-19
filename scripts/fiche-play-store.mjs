@@ -183,6 +183,26 @@ const PROMO_APPLE = `<!doctype html>
 </div>`
 
 /* -------------------------------------------------------------------------- */
+/*  Les captures d'examen de l'abonnement                                      */
+/*                                                                            */
+/*  Deux tailles, et c'est une leçon payée : ce champ d'App Store Connect ne   */
+/*  se contente pas d'une image lisible, il veut des dimensions précises, et   */
+/*  refuse le reste sans dire laquelle il attendait.                           */
+/*                                                                            */
+/*  640 × 920 est la taille qu'Apple documente pour cet emplacement. Le        */
+/*  1284 × 2778 est une taille d'écran d'iPhone, que l'aide dit accepter       */
+/*  aussi — gardée en second parce qu'elle est bien plus nette, et qu'entre    */
+/*  les deux on aura le choix plutôt qu'un aller-retour.                       */
+/* -------------------------------------------------------------------------- */
+
+const EXAMENS = [
+  { nom: 'verification-abonnement-640x920.png', l: 640, h: 920, echelle: 1 },
+  /*  428 × 926 est la taille logique d'un iPhone 14 Pro Max ; à l'échelle 3,
+   *  elle tombe juste sur 1284 × 2778. */
+  { nom: 'verification-abonnement-1284x2778.png', l: 428, h: 926, echelle: 3 },
+]
+
+/* -------------------------------------------------------------------------- */
 /*  Les captures d'écran                                                       */
 /* -------------------------------------------------------------------------- */
 
@@ -457,22 +477,30 @@ async function principal() {
       console.log(`capture-${ecran.nom}.png`.padEnd(30), statSync(fichier).size, 'octets')
       await page.close()
     }
-    /*  ---- la capture d'examen de l'abonnement Apple
+    /*  ---- les captures d'examen de l'abonnement Apple
      *
-     *  App Store Connect la réclame pour chacun des deux abonnements : c'est
-     *  par elle que le vérificateur trouve l'achat dans l'application. Le site
+     *  App Store Connect les réclame pour chacun des deux abonnements : c'est
+     *  par elles que le vérificateur trouve l'achat dans l'application. Le site
      *  ne conviendrait pas — il n'y montre pas de bouton d'achat —, d'où le
      *  faux pont natif.
      *
-     *  Pleine hauteur, et non la seule hauteur de l'écran : les deux formules,
-     *  leurs prix et le tableau comparatif tiennent alors sur une image, et le
-     *  vérificateur voit d'un coup ce qu'il a à vérifier. */
-    {
+     *  Deux tailles, parce que ce champ-là est réputé difficile. Le 640 × 920
+     *  est celui qu'Apple documente pour cet emplacement, et celui qui passe
+     *  quand les autres sont refusés ; le 1284 × 2778 est une taille d'écran
+     *  d'iPhone, que l'aide d'App Store Connect dit accepter aussi. Une
+     *  première version pleine hauteur a été refusée par le formulaire : cet
+     *  emplacement ne se contente pas d'une image lisible, il veut des
+     *  dimensions.
+     *
+     *  La hauteur d'un écran, donc, et non la page entière — et cadrée sur la
+     *  formule payante : c'est le bouton d'achat et son prix que le
+     *  vérificateur doit voir, pas le tableau comparatif. */
+    for (const e of EXAMENS) {
       const page = await navigateur.newPage({
-        viewport: { width: 430, height: 932 },
-        deviceScaleFactor: 2,
+        viewport: { width: e.l, height: e.h },
+        deviceScaleFactor: e.echelle,
       })
-      page.on('pageerror', (e) => console.error('  abonnement :', e.message))
+      page.on('pageerror', (err) => console.error(`  ${e.nom} :`, err.message))
       await simulerIPhone(page)
       await page.goto(`${PAGE}#/abonnement`)
       await page.waitForSelector('.tabbar', { timeout: 20000 })
@@ -480,18 +508,31 @@ async function principal() {
       /*  Le temps que les tarifs soient demandés au greffon et la page remise à
        *  jour : sans cette pause, l'image montre la page avant ses prix. */
       await attendre(2500)
-      /*  La barre d'onglets est en position fixe : sur une capture pleine
-       *  hauteur, elle ne suit pas le bas de l'image, elle se pose à la hauteur
-       *  d'un écran et masque ce qui se trouve là — ici, deux lignes de ce que
-       *  l'abonnement apporte. Elle n'a rien à faire sur une image qui sert à
-       *  montrer l'offre. */
-      await page.addStyleTag({ content: '.tabbar { display: none !important }' })
-      await attendre(200)
+      /*  Cadrage sur la carte Pro, mesuré et non deviné : sa position dépend de
+       *  la hauteur de la carte gratuite au-dessus, qui change avec la largeur.
+       *
+       *  La barre supérieure est retranchée parce qu'elle est fixe : posée à
+       *  seize pixels du haut de la fenêtre, la carte passait dessous et y
+       *  perdait son en-tête — le mot « PRO » et le ruban « Recommandé »,
+       *  c'est-à-dire ce qui dit de quelle formule il s'agit. */
+      await page.evaluate(() => {
+        const pro = document.querySelector('.plan--pro')
+        if (!pro) return
+        const barre = document.querySelector('.topbar')
+        const haut = barre ? barre.getBoundingClientRect().height : 0
+        window.scrollTo(0, pro.getBoundingClientRect().top + window.scrollY - haut - 12)
+      })
+      await attendre(400)
       const dossier = join(RACINE, 'app-store')
       mkdirSync(dossier, { recursive: true })
-      const fichier = join(dossier, 'verification-abonnement.png')
-      await page.screenshot({ path: fichier, fullPage: true })
-      console.log('verification-abonnement.png'.padEnd(30), statSync(fichier).size, 'octets')
+      const fichier = join(dossier, e.nom)
+      await page.screenshot({ path: fichier })
+      console.log(
+        e.nom.padEnd(36),
+        `${e.l * e.echelle}×${e.h * e.echelle}`.padEnd(11),
+        statSync(fichier).size,
+        'octets',
+      )
       await page.close()
     }
 
