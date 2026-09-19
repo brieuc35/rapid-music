@@ -90,9 +90,10 @@ Créer la fiche, puis remplir :
 - l'adresse des règles de confidentialité :
   <https://rapidmusic.fr/#/confidentialite> ;
 - la **classification d'âge** ;
-- le questionnaire **App Privacy** — l'équivalent du « Sécurité des données » de
-  Google. Les réponses de [`securite-des-donnees.md`](securite-des-donnees.md) se
-  transposent presque telles quelles.
+- le questionnaire **Confidentialité de l'app** — l'équivalent du « Sécurité des
+  données » de Google. Les réponses sont écrites case par case dans
+  [`securite-des-donnees.md`](securite-des-donnees.md), section « Le
+  questionnaire d'Apple ».
 
 ### 5. Les captures d'écran et l'aperçu
 

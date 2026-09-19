@@ -1,11 +1,16 @@
-# Le formulaire « Sécurité des données » de la Play Console
+# Ce que l'application collecte, et comment le déclarer
+
+Les deux magasins posent la même question dans des formulaires différents :
+**Sécurité des données** chez Google, **Confidentialité de l'app** chez Apple.
+Les faits sont les mêmes ; seules les cases changent de nom. Ce document établit
+les faits une fois, puis les range pour chacun des deux.
 
 Réponses à recopier, établies en relisant le code — pas de mémoire. Chaque
 réponse indique **d'où elle vient**, pour qu'elle puisse être revérifiée le jour
 où l'application changera.
 
-> Ce formulaire engage le compte développeur. Une déclaration fausse est un
-> motif de retrait. Deux réponses relèvent d'un jugement plutôt que d'un fait :
+> Ces formulaires engagent le compte développeur. Une déclaration fausse est un
+> motif de retrait. Trois réponses relèvent d'un jugement plutôt que d'un fait :
 > elles sont signalées par ⚖️ et expliquées.
 
 ## Ce que l'application collecte, en fait
@@ -71,14 +76,19 @@ existe). Reste à préciser l'obligation et la finalité.
 
 | Type | Collecté | Obligatoire ? | Finalités |
 | --- | --- | --- | --- |
-| Informations de paiement | **Non** | — | aucun paiement dans l'application Android |
-| Historique d'achats | **Non** | — | idem |
+| Informations de paiement | **Non** | — | la carte est vue par le magasin, jamais par nous |
+| Historique d'achats | **Oui** | Facultatif | Fonctionnalité |
 | Solvabilité | **Non** | — | — |
 | Autres informations financières | **Oui** | Facultatif | Fonctionnalité |
 
 « Autres informations financières » couvre les cachets de concerts, les montants
 et taux des contrats, et les revenus de streaming. Ce sont les **revenus** de
 l'artiste, pas des moyens de paiement — la distinction compte.
+
+« Historique d'achats » est passé à Oui le jour où la facturation est arrivée.
+`abonnements/{uid}` garde la formule en cours et ses dates : c'est un achat
+enregistré chez nous, donc déclaré. Les moyens de paiement, eux, restent hors
+de portée — Google et Apple encaissent, nous ne recevons qu'un verdict.
 
 ### Photos et vidéos
 
@@ -140,6 +150,57 @@ Deux points valent d'être notés, parce qu'on pourrait croire le contraire :
   identifiant matériel. Le compte est identifié par un numéro Firebase, déclaré
   plus haut sous « ID utilisateur ».
 
+## Le questionnaire d'Apple
+
+Les mêmes faits, rangés autrement. App Store Connect pose trois questions par
+type collecté, et les trois ont ici la même réponse partout :
+
+| Question d'Apple | Réponse | Pourquoi |
+| --- | --- | --- |
+| Utilisées pour le suivi ? | **Non**, sans exception | rien ne part vers un courtier en données, et rien ne sert à la publicité d'une autre application. C'est ce qui dispense l'application de demander l'autorisation de suivi |
+| Liées à l'utilisateur ? | **Oui**, sans exception | tout est enregistré sous le compte de l'artiste ; rien n'est anonymisé |
+| Finalité | **Fonctionnalité de l'app** | la seule. Ni analyse, ni personnalisation, ni marketing |
+
+Les types à cocher :
+
+| Catégorie d'Apple | Collecté | Ce que c'est ici |
+| --- | --- | --- |
+| Coordonnées → Nom | **Oui** | nom de scène, obligatoire ; nom réel, facultatif |
+| Coordonnées → Adresse e-mail | **Oui** | l'identifiant de connexion |
+| Coordonnées → Numéro de téléphone | **Oui** | champ du profil |
+| Coordonnées → Autres coordonnées | **Oui** | liens Instagram, Spotify, site web |
+| Coordonnées → Adresse physique | Non | seule une ville en texte libre existe |
+| Informations financières → Autres | **Oui** | cachets, montants de contrats, revenus de streaming |
+| Informations financières → Paiement | Non | la carte est vue par Apple, jamais par nous |
+| Contacts | **Oui** | le carnet professionnel saisi à la main |
+| Contenu utilisateur → Photos ou vidéos | **Oui** | la photo de profil |
+| Contenu utilisateur → Autre contenu | **Oui** | concerts, sorties, contrats, tâches, agenda, notes |
+| Identifiants → ID utilisateur | **Oui** | l'identifiant Firebase |
+| Identifiants → ID d'appareil | Non | aucun identifiant matériel ni publicitaire |
+| Achats → Historique des achats | **Oui** | la formule en cours et ses dates |
+| Données d'utilisation | Non | aucune mesure d'audience |
+| Diagnostics | Non | aucun rapport de plantage |
+| Position, Santé, Informations sensibles, Historique de navigation, Historique des recherches, Autres données | Non | — |
+
+⚖️ **La position.** La ville de l'artiste est un champ de texte qu'il remplit
+lui-même ; aucun service de localisation n'est appelé, et l'application ne
+demande jamais cette autorisation. « Position » reste donc à Non. La ville est
+déclarée là où elle est vraiment — dans le contenu que l'utilisateur saisit.
+
+⚖️ **Les contacts.** Le répertoire du téléphone n'est **jamais** lu, mais
+l'application enregistre des fiches professionnelles avec noms, adresses et
+téléphones. C'est bien de l'information de contact conservée sur nos serveurs,
+donc déclarée. Ne pas la déclarer sous prétexte qu'elle est tapée à la main
+serait risqué. Même raisonnement que pour Google.
+
+L'adresse de la politique de confidentialité, réclamée avant tout examen :
+<https://rapidmusic.fr/#/confidentialite>
+
+Le champ « URL des choix de confidentialité » est facultatif et reste vide :
+il attend une page où l'on modifie ou retire un consentement, et il n'y a pas
+de consentement à retirer ici. La suppression du compte, elle, se fait dans
+l'application.
+
 ## Pratiques de sécurité
 
 | Question | Réponse |
@@ -175,12 +236,14 @@ sans lever la moindre erreur — deux tests l'interdisent.
 
 ## Après l'envoi
 
-Google réexamine la fiche à chaque nouvelle version. Ces réponses tiennent tant
-que l'application ne change pas de nature. **Trois évènements imposent de
-rouvrir cette page** :
+Les deux magasins réexaminent la fiche à chaque nouvelle version, et une
+déclaration corrigée d'un seul côté est une déclaration fausse de l'autre. Ces
+réponses tiennent tant que l'application ne change pas de nature. **Trois
+évènements imposent de rouvrir cette page** :
 
-- brancher un paiement — « Informations de paiement » et « Historique d'achats »
-  entrent dans le tableau ;
+- ~~brancher un paiement~~ — **fait.** « Historique d'achats » est entré dans le
+  tableau ; « Informations de paiement » est resté à Non, parce que les magasins
+  encaissent et ne nous montrent jamais de carte ;
 - ajouter une mesure d'audience — « Interactions » aussi, et un bandeau de
   consentement avec ;
 - ouvrir le Réseau entre artistes — les publications deviennent visibles par
