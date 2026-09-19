@@ -50,9 +50,16 @@ indisponibilité passagère, sans indiquer d'ailleurs.
 > l'application**. La panne se produirait au premier appui sur « Ajouter une
 > photo », sur l'appareil de l'examinateur d'Apple comme sur ceux des artistes.
 
-## Ce qu'il reste à faire, sur un Mac
+## Ce qu'il reste à faire
 
-Tout ce qui suit demande macOS : Xcode n'existe pas ailleurs.
+Xcode n'existe que sur macOS. Deux chemins, donc :
+
+- **sur un Mac**, la suite décrit les étapes ;
+- **sans Mac**, le workflow [`ios.yml`](../.github/workflows/ios.yml) loue celui
+  de GitHub à la minute et fait tout : fabrication, signature, envoi. Le mode
+  d'emploi est dans [`ios-sans-mac.md`](ios-sans-mac.md), et il tourne déjà
+  sans le moindre secret — il compile alors l'application sans l'envoyer, ce
+  qui suffit à vérifier que le code Swift est juste.
 
 ### 1. Le compte développeur — 99 €/an
 
