@@ -1,0 +1,345 @@
+name: Application iPhone (.ipa)
+
+# Fabrique et envoie l'enveloppe iOS, sans Mac.
+#
+# Xcode n'existe que sur macOS, et rien ne permet d'envoyer une application iOS
+# depuis un ordinateur sous Windows ou Linux. Les serveurs de GitHub en louent
+# un à la minute : c'est le seul chemin vers l'App Store pour qui n'a pas de
+# Mac, et il rend autonome pour toutes les mises à jour suivantes.
+#
+# ⚠️ Une minute de macOS est facturée dix minutes sur le quota GitHub. Une
+# fabrication en prend une quinzaine, soit cent cinquante au compteur. Le
+# déclenchement automatique est donc limité à ce qui touche au projet iOS.
+#
+# Deux modes, selon que les secrets de signature existent ou non :
+#
+#   sans secret  → l'application est seulement compilée. Elle ne peut pas être
+#                  envoyée, mais c'est déjà l'essentiel : la compilation est la
+#                  seule chose qui dise si le code Swift est juste. Le greffon
+#                  d'achat intégré, notamment, n'a jamais pu être compilé
+#                  ailleurs.
+#   avec secrets → archive signée, .ipa exporté, et envoi sur demande.
+#
+# Secrets attendus, dans Réglages → Secrets and variables → Actions :
+#
+#   APPLE_CERTIFICAT_P12   le certificat de distribution, en base64
+#   APPLE_CERTIFICAT_MDP   le mot de passe choisi à son export
+#   APPLE_EQUIPE           l'identifiant d'équipe (dix caractères)
+#   APPLE_CLE              le contenu du fichier .p8 de la clef d'API
+#   APPLE_ID_CLE           l'identifiant de cette clef
+#   APPLE_ID_EDITEUR       l'identifiant de l'éditeur
+#
+# Les trois derniers sont ceux qui servent déjà à vérifier les achats côté
+# serveur — mêmes valeurs, voir docs/facturation.md. Les trois premiers sont
+# propres à la fabrication, et docs/ios-sans-mac.md explique comment les
+# obtenir sans Mac.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version affichée (ex. 1.0). Vide = celle du projet Xcode."
+        required: false
+        type: string
+      televerser:
+        description: "Envoyer à App Store Connect une fois l'archive faite"
+        required: false
+        default: false
+        type: boolean
+  # Sur modification du projet iOS : une erreur de compilation y est autrement
+  # invisible jusqu'au jour où l'on veut publier — et ce jour-là, elle arrive
+  # au pire moment.
+  push:
+    paths:
+      - 'ios/**'
+      - 'capacitor.config.ts'
+      - '.github/workflows/ios.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  ipa:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Installer les dépendances
+        run: npm ci
+
+      # Les deux commandes vont ensemble. `sync` recopie ce que `build` vient de
+      # produire ; sans `build`, on enverrait à Apple la version précédente du
+      # site, et rien ne le signalerait. Le dossier recopié est d'ailleurs
+      # écarté du dépôt (voir ios/.gitignore) : sans cette étape, l'application
+      # n'aurait aucune page à afficher.
+      - name: Fabriquer le site et le recopier dans le projet iOS
+        run: |
+          npm run build
+          npx cap sync ios
+
+      - name: Outils disponibles
+        run: |
+          xcodebuild -version
+          echo "---"
+          xcodebuild -project ios/App/App.xcodeproj -list
+
+      # ----------------------------------------------------------------------
+      #  Signature
+      # ----------------------------------------------------------------------
+
+      - name: Installer le certificat de signature
+        id: signature
+        env:
+          P12: ${{ secrets.APPLE_CERTIFICAT_P12 }}
+          P12_MDP: ${{ secrets.APPLE_CERTIFICAT_MDP }}
+          EQUIPE: ${{ secrets.APPLE_EQUIPE }}
+          CLE: ${{ secrets.APPLE_CLE }}
+          ID_CLE: ${{ secrets.APPLE_ID_CLE }}
+          ID_EDITEUR: ${{ secrets.APPLE_ID_EDITEUR }}
+        run: |
+          set -euo pipefail
+
+          # En `if`, et non en `[ … ] && var=…` : sous `set -e`, un tel
+          # enchaînement dont le test est faux vaut un échec et arrête le
+          # script. Tous les secrets présents, la dernière ligne aurait donc
+          # interrompu la fabrication — l'exact contraire du but.
+          manquants=""
+          for nom in APPLE_CERTIFICAT_P12 APPLE_CERTIFICAT_MDP APPLE_EQUIPE \
+                     APPLE_CLE APPLE_ID_CLE APPLE_ID_EDITEUR; do
+            case "$nom" in
+              APPLE_CERTIFICAT_P12) valeur="$P12" ;;
+              APPLE_CERTIFICAT_MDP) valeur="$P12_MDP" ;;
+              APPLE_EQUIPE)         valeur="$EQUIPE" ;;
+              APPLE_CLE)            valeur="$CLE" ;;
+              APPLE_ID_CLE)         valeur="$ID_CLE" ;;
+              APPLE_ID_EDITEUR)     valeur="$ID_EDITEUR" ;;
+            esac
+            if [ -z "$valeur" ]; then manquants="$manquants $nom"; fi
+          done
+
+          if [ -n "$manquants" ]; then
+            echo "signe=non" >> "$GITHUB_OUTPUT"
+            echo "Secrets absents :$manquants"
+            echo "L'application sera compilée sans être signée."
+            exit 0
+          fi
+
+          # Le certificat, décodé. Les blancs sont retirés d'abord : un
+          # presse-papier en ajoute volontiers, et le décodeur les refuse alors
+          # qu'ils ne changent rien au contenu.
+          FICHIER="$RUNNER_TEMP/certificat.p12"
+          if ! printf '%s' "$P12" | tr -d '[:space:]' | base64 -d > "$FICHIER" 2>/dev/null; then
+            echo "::error::APPLE_CERTIFICAT_P12 n'est pas du base64 exploitable. Le secret doit contenir le certificat encodé, et rien d'autre."
+            NETTOYE=$(printf '%s' "$P12" | tr -d '[:space:]')
+            echo "Diagnostic — aucune valeur secrète n'est révélée :"
+            echo "  longueur sans les blancs : ${#NETTOYE}   (attendu : un multiple de 4)"
+            echo "  reste modulo 4           : $(( ${#NETTOYE} % 4 ))"
+            echo "  douze premiers signes    : $(printf '%s' "$NETTOYE" | cut -c1-12)   (attendu : commence par MII)"
+            exit 1
+          fi
+
+          # Un trousseau temporaire, et non celui de la session : il disparaît
+          # avec le serveur, et son mot de passe ne sert qu'ici. Le certificat
+          # ne survit donc pas à la fabrication.
+          TROUSSEAU="$RUNNER_TEMP/signature.keychain-db"
+          MDP_TROUSSEAU=$(uuidgen)
+          security create-keychain -p "$MDP_TROUSSEAU" "$TROUSSEAU"
+          security set-keychain-settings -lut 21600 "$TROUSSEAU"
+          security unlock-keychain -p "$MDP_TROUSSEAU" "$TROUSSEAU"
+
+          if ! security import "$FICHIER" -P "$P12_MDP" -A -t cert -f pkcs12 -k "$TROUSSEAU" 2>/dev/null; then
+            echo "::error::Le certificat a bien été décodé, mais il refuse ce mot de passe. Revoir APPLE_CERTIFICAT_MDP — c'est celui choisi au moment de fabriquer le .p12, pas celui du compte Apple."
+            exit 1
+          fi
+
+          # Sans cette ligne, la signature s'arrête sur une demande
+          # d'autorisation que personne ne peut valider : le trousseau
+          # protège sa clef privée, et aucun écran n'existe ici pour dire oui.
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$MDP_TROUSSEAU" "$TROUSSEAU" > /dev/null
+
+          # Le trousseau temporaire d'abord, celui de la session ensuite : sans
+          # cette liste, xcodebuild ne regarde que le second et ne trouve rien.
+          security list-keychains -d user -s "$TROUSSEAU" login.keychain-db
+
+          echo "Certificats de signature disponibles :"
+          security find-identity -v -p codesigning "$TROUSSEAU" | sed 's/[0-9A-F]\{40\}/…/'
+
+          if ! security find-identity -v -p codesigning "$TROUSSEAU" | grep -q 'Apple Distribution\|iPhone Distribution'; then
+            echo "::error::Aucun certificat de distribution dans ce .p12. Un certificat de développement ne permet pas d'envoyer à l'App Store : il faut un « Apple Distribution »."
+            exit 1
+          fi
+
+          # La clef d'API, là où xcodebuild et altool vont la chercher, sous le
+          # nom qu'ils attendent. Le dossier n'existe pas d'emblée.
+          mkdir -p "$HOME/.appstoreconnect/private_keys"
+          CHEMIN_CLE="$HOME/.appstoreconnect/private_keys/AuthKey_$ID_CLE.p8"
+          printf '%s' "$CLE" > "$CHEMIN_CLE"
+          chmod 600 "$CHEMIN_CLE"
+          if ! grep -q 'BEGIN PRIVATE KEY' "$CHEMIN_CLE"; then
+            echo "::error::APPLE_CLE ne ressemble pas à une clef .p8. Le secret doit contenir le fichier entier, « BEGIN PRIVATE KEY » compris."
+            exit 1
+          fi
+
+          echo "signe=oui" >> "$GITHUB_OUTPUT"
+          echo "cle=$CHEMIN_CLE" >> "$GITHUB_OUTPUT"
+          echo "Certificat en place : l'archive sera signée."
+
+      # ----------------------------------------------------------------------
+      #  Fabrication
+      # ----------------------------------------------------------------------
+
+      # Le numéro d'exécution, qui ne recule jamais. Apple refuse un envoi dont
+      # le numéro n'est pas supérieur au précédent, et c'est l'oubli le plus
+      # courant quand on le règle à la main.
+      - name: Fixer la version et le numéro de fabrication
+        id: version
+        run: |
+          echo "build=${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+          if [ -n "${{ inputs.version }}" ]; then
+            echo "marketing=MARKETING_VERSION=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+            echo "Version ${{ inputs.version }} (fabrication ${{ github.run_number }})"
+          else
+            echo "marketing=" >> "$GITHUB_OUTPUT"
+            echo "Version : celle du projet (fabrication ${{ github.run_number }})"
+          fi
+
+      # Sans certificat, on compile quand même. C'est le seul contrôle qui dise
+      # si le code Swift est juste — et le greffon d'achat intégré n'a jamais pu
+      # être compilé ailleurs, faute de Mac.
+      - name: Compiler sans signer
+        if: steps.signature.outputs.signe == 'non'
+        run: |
+          set -euo pipefail
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -resultBundlePath "$RUNNER_TEMP/resultat.xcresult" \
+            CURRENT_PROJECT_VERSION=${{ steps.version.outputs.build }} \
+            ${{ steps.version.outputs.marketing }} \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
+
+      # `-allowProvisioningUpdates` laisse Xcode fabriquer et récupérer le
+      # profil de provisionnement tout seul, en s'authentifiant avec la clef
+      # d'API. Un profil se régénère sans conséquence, contrairement à un
+      # certificat : celui-ci est fourni, parce qu'Apple n'en autorise que
+      # deux par compte et qu'un serveur qui en créerait un à chaque
+      # fabrication aurait épuisé le quota au troisième essai.
+      - name: Archiver
+        if: steps.signature.outputs.signe == 'oui'
+        run: |
+          set -euo pipefail
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            -resultBundlePath "$RUNNER_TEMP/resultat.xcresult" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "${{ steps.signature.outputs.cle }}" \
+            -authenticationKeyID "${{ secrets.APPLE_ID_CLE }}" \
+            -authenticationKeyIssuerID "${{ secrets.APPLE_ID_EDITEUR }}" \
+            DEVELOPMENT_TEAM="${{ secrets.APPLE_EQUIPE }}" \
+            CURRENT_PROJECT_VERSION=${{ steps.version.outputs.build }} \
+            ${{ steps.version.outputs.marketing }} \
+            archive
+
+      - name: Exporter le .ipa
+        if: steps.signature.outputs.signe == 'oui'
+        id: export
+        run: |
+          set -euo pipefail
+
+          # `app-store-connect` a remplacé `app-store` avec Xcode 15.3. Les
+          # deux sont acceptés selon les versions, et laquelle dépend du serveur
+          # du jour — d'où l'essai puis le repli, plutôt qu'un pari.
+          ecrire_options() {
+            cat > "$RUNNER_TEMP/ExportOptions.plist" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>$1</string>
+            <key>teamID</key><string>${{ secrets.APPLE_EQUIPE }}</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>uploadSymbols</key><true/>
+            <key>destination</key><string>export</string>
+          </dict>
+          </plist>
+          PLIST
+          }
+
+          exporter() {
+            xcodebuild -exportArchive \
+              -archivePath "$RUNNER_TEMP/App.xcarchive" \
+              -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+              -exportPath "$RUNNER_TEMP/export" \
+              -allowProvisioningUpdates \
+              -authenticationKeyPath "${{ steps.signature.outputs.cle }}" \
+              -authenticationKeyID "${{ secrets.APPLE_ID_CLE }}" \
+              -authenticationKeyIssuerID "${{ secrets.APPLE_ID_EDITEUR }}"
+          }
+
+          ecrire_options app-store-connect
+          if ! exporter; then
+            echo "Export refusé avec « app-store-connect » ; nouvel essai avec « app-store »."
+            ecrire_options app-store
+            exporter
+          fi
+
+          IPA=$(find "$RUNNER_TEMP/export" -name '*.ipa' | head -1)
+          if [ -z "$IPA" ]; then
+            echo "::error::Aucun .ipa produit par l'export."
+            ls -R "$RUNNER_TEMP/export" || true
+            exit 1
+          fi
+          echo "ipa=$IPA" >> "$GITHUB_OUTPUT"
+          ls -lh "$IPA"
+
+      - name: Envoyer à App Store Connect
+        if: steps.signature.outputs.signe == 'oui' && inputs.televerser
+        run: |
+          set -euo pipefail
+          # `--apiKey` ne prend que l'identifiant : le fichier est cherché sous
+          # ~/.appstoreconnect/private_keys, où l'étape de signature l'a posé.
+          xcrun altool --upload-app \
+            -f "${{ steps.export.outputs.ipa }}" \
+            -t ios \
+            --apiKey "${{ secrets.APPLE_ID_CLE }}" \
+            --apiIssuer "${{ secrets.APPLE_ID_EDITEUR }}"
+          echo "Envoyé. Comptez cinq à trente minutes de traitement avant que la"
+          echo "fabrication apparaisse dans App Store Connect."
+
+      - name: Déposer le .ipa
+        if: steps.signature.outputs.signe == 'oui'
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapidmusic-ios-${{ steps.version.outputs.build }}
+          path: ${{ steps.export.outputs.ipa }}
+          if-no-files-found: error
+          retention-days: 30
+
+      # Le journal d'Xcode est long et la panne s'y cache. Gardé seulement en
+      # cas d'échec, il évite de relancer quinze minutes de macOS pour relire ce
+      # qui vient de défiler. `xcresult` est le format qu'Xcode ouvre d'un
+      # double-clic, avec les erreurs déjà triées.
+      - name: Garder le journal en cas d'échec
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: journal-xcode-${{ github.run_number }}
+          path: ${{ runner.temp }}/resultat.xcresult
+          if-no-files-found: ignore
+          retention-days: 7
