@@ -8,22 +8,25 @@
     <!-- Ni bouton ni panne : il n'y a simplement pas de parcours d'achat ici.
          Le dire vaut mieux que de laisser chercher.
 
-         Deux textes, et la distinction n'est pas cosmétique. Dans l'application
-         de l'App Store, renvoyer vers un paiement extérieur — fût-il celui du
-         Play Store — contrevient à la règle 3.1.1 d'Apple et fait refuser la
-         fiche. On y annonce donc l'absence, sans indiquer d'ailleurs. -->
+         Deux textes, et la distinction n'est pas cosmétique. L'abonnement se
+         souscrit dans les deux applications ; sur le site, il ne se souscrit
+         pas. Reste le cas de l'application iPhone dont la facturation ne
+         répond pas : on ne renvoie alors vers aucun autre magasin. Dans
+         l'application de l'App Store, indiquer un paiement extérieur — fût-il
+         celui du Play Store — contrevient à la règle 3.1.1 d'Apple et fait
+         refuser la fiche. -->
     <div v-if="!isPaidPro && !achatPossible" class="notice">
       <Icon name="bell" />
       <div v-if="surIPhone">
-        <b>La formule Pro ne se souscrit pas sur iPhone.</b>
-        Tout ce que montre la colonne « Gratuit » vous est ouvert, sans limite de
-        durée.
+        <b>L'abonnement n'est pas disponible pour le moment.</b>
+        Réessayez dans un instant. Tout ce que montre la colonne « Gratuit »
+        reste ouvert, sans limite de durée.
       </div>
       <div v-else>
-        <b>L'abonnement se souscrit depuis l'application Android.</b>
-        Installez RapidMusic depuis le Play Store et ouvrez cette page à
-        nouveau : le paiement passe par votre compte Google, avec les moyens de
-        paiement qui y sont déjà enregistrés.
+        <b>L'abonnement se souscrit depuis l'application.</b>
+        Installez RapidMusic depuis le Play Store ou l'App Store et ouvrez cette
+        page à nouveau : le paiement passe par le compte du magasin, avec les
+        moyens de paiement qui y sont déjà enregistrés.
       </div>
     </div>
 
@@ -137,7 +140,7 @@
               {{ achatEnCours ? 'Un instant…' : 'Passer à Pro' }}
             </button>
             <span v-else class="muted" style="font-size: 13px">
-              {{ surIPhone ? 'Indisponible sur iPhone' : "Depuis l'application Android" }}
+              {{ surIPhone ? 'Indisponible pour le moment' : "Depuis l'application" }}
             </span>
             <!-- Le prix engagé, redit sous le bouton : l'annuel se paie en une
                  fois, et le découvrir sur l'écran de Google serait une surprise
@@ -237,6 +240,7 @@ import {
 import { formatDate } from '@/utils/format'
 import { surIOS } from '@/utils/enveloppe-native'
 import {
+  AchatAnnule,
   acheterPro,
   ecrireTarif,
   ErreurAchat,
@@ -246,7 +250,7 @@ import {
   PRODUIT_MENSUEL,
   verifierAupresDuServeur,
   type Tarif,
-} from '@/utils/facturation-play'
+} from '@/utils/facturation'
 
 const freeFeatures = [
   'Tableau de bord et indicateurs',
@@ -359,13 +363,19 @@ async function souscrire() {
   achatEnCours.value = true
   erreurAchat.value = ''
   try {
-    const jeton = await acheterPro(formule.value)
-    await verifierAupresDuServeur(jeton)
+    const { jeton, magasin } = await acheterPro(formule.value)
+    await verifierAupresDuServeur(jeton, magasin)
     await relireAbonnement()
   } catch (e) {
     /*  Un abandon n'est pas une erreur : refermer la fenêtre de paiement est
      *  un choix, et afficher un message rouge à quelqu'un qui a simplement
-     *  changé d'avis le laisserait croire à une panne. */
+     *  changé d'avis le laisserait croire à une panne.
+     *
+     *  Les deux magasins l'annoncent autrement : Google lève l'`AbortError` de
+     *  `PaymentRequest`, Apple rend un état que le greffon traduit en
+     *  `AchatAnnule`. Ne guetter que le premier aurait affiché une erreur à
+     *  tous ceux qui renoncent sur iPhone. */
+    if (e instanceof AchatAnnule) return
     if (e instanceof DOMException && e.name === 'AbortError') return
     erreurAchat.value =
       e instanceof ErreurAchat

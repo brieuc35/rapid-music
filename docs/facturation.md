@@ -1,12 +1,14 @@
 # L'abonnement payant
 
-RapidMusic Pro se vend **dans l'application Android**, par la facturation
-Google Play. Le site ne propose pas d'achat : sur un ordinateur ou un iPhone,
-l'écran d'abonnement l'explique au lieu d'afficher un bouton qui ne mènerait
-nulle part.
+RapidMusic Pro se vend **dans les deux applications** : par la facturation
+Google Play sur Android, par l'achat intégré d'Apple sur iPhone. Le site ne
+propose pas d'achat — sur un ordinateur, l'écran d'abonnement l'explique au lieu
+d'afficher un bouton qui ne mènerait nulle part.
 
-C'est un choix, avec ses conséquences : Google prélève 15 %, et personne d'autre
-qu'un utilisateur Android ne peut souscrire.
+Les deux magasins prélèvent leur commission, et chacun impose son chemin.
+Renvoyer d'une application vers l'autre est exclu : indiquer un paiement
+extérieur dans l'application de l'App Store contrevient à la règle 3.1.1
+d'Apple et fait refuser la fiche.
 
 ## Comment ça tient debout
 
@@ -15,14 +17,33 @@ en `allow write: if false` pour tout le monde, sans exception (voir
 `firestore.rules`). Un achat suit donc ce chemin :
 
 ```
-  l'application     →  Google Play      : paiement, puis un jeton d'achat
-  l'application     →  verifierAchat    : « voici mon jeton »
-  verifierAchat     →  Google Play      : « que vaut ce jeton ? »
+  l'application     →  le magasin       : paiement, puis un jeton d'achat
+  l'application     →  verifierAchat    : « voici mon jeton, et mon magasin »
+  verifierAchat     →  le magasin       : « que vaut ce jeton ? »
   verifierAchat     →  abonnements/{uid}: écrit, avec les droits d'administration
 ```
 
 Tout ce qui se passe dans le navigateur est contournable par qui sait ouvrir une
 console. Seule la dernière étape fait foi.
+
+Le magasin voyage avec le jeton parce que les deux reçus ne se vérifient pas au
+même endroit et que rien dans leur forme ne permet de les distinguer à coup sûr.
+Le champ est **facultatif**, et vaut Play s'il manque : les applications Android
+déjà installées ne l'envoient pas, et l'exiger aurait coupé l'abonnement de tous
+les abonnés en place au premier déploiement.
+
+### Les deux moitiés, fichier par fichier
+
+| | Android | iPhone |
+| --- | --- | --- |
+| Achat, côté application | `src/utils/facturation-play.ts` | `src/utils/facturation-apple.ts` + `ios/.../AchatPro.swift` |
+| Choix du magasin | `src/utils/facturation.ts` | idem |
+| Appel au magasin, côté serveur | `functions/src/play.ts` | `functions/src/apple.ts` |
+| Ce que la réponse veut dire | `functions/src/facturation.ts` | `functions/src/facturation-apple.ts` |
+
+Les deux derniers ne touchent ni au réseau ni à Firestore : c'est ce qui permet
+de les éprouver par des tests, y compris sur les cas qu'on ne sait pas
+provoquer — un remboursement, un prélèvement en échec, un abonnement suspendu.
 
 ### À qui appartient un achat
 
@@ -58,7 +79,7 @@ l'abonnement compte est celui où l'artiste ouvre l'application, c'est-à-dire
 exactement celui où on le rafraîchit. Un abonné qui n'ouvre pas l'application ne
 subit rien.
 
-## Ce qu'il faut régler, une fois
+## Ce qu'il faut régler côté Google, une fois
 
 Rien de ce qui précède ne fonctionne sans ces quatre étapes. Elles se font dans
 les consoles, pas dans le code.
@@ -172,7 +193,7 @@ n'en sait rien.
    workflow**, en augmentant le numéro de version ;
 2. téléverser le résultat en test interne.
 
-## Vérifier que ça marche
+## Vérifier l'achat sur Android
 
 Sur un vrai téléphone, avec l'application installée depuis le Play Store — rien
 de tout cela ne fonctionne ailleurs.
@@ -197,11 +218,105 @@ Ce qui doit se produire :
 En cas d'échec, les journaux des fonctions disent lequel des quatre réglages
 manque : `functions.logger` y écrit le code renvoyé par Google.
 
+## Ce qu'il faut régler côté Apple
+
+Quatre choses, dans cet ordre. Rien ne fonctionne tant que les quatre ne sont
+pas faites, et les symptômes se ressemblent.
+
+### 1. Créer les deux abonnements dans App Store Connect
+
+**Votre app → Monétisation → Abonnements.** Il faut d'abord créer un **groupe
+d'abonnements** — appelez-le « RapidMusic Pro » — puis les deux produits
+dedans :
+
+| Identifiant | Durée |
+| --- | --- |
+| `pro_mensuel` | 1 mois |
+| `pro_annuel` | 1 an |
+
+**Les identifiants doivent être exactement ceux-là.** Ce sont les mêmes que côté
+Google, et ils sont écrits dans trois fichiers : `facturation.ts` côté serveur,
+`facturation-play.ts` côté application, et `AchatPro.swift`. Une faute de frappe
+ne se verrait pas à la vérification — elle ferait échouer l'achat lui-même.
+
+Les deux dans **le même groupe** : c'est ce qui permet de passer du mensuel à
+l'annuel sans repayer, et Apple s'occupe du prorata.
+
+Chaque abonnement réclame un prix, une durée, un nom affiché, une description,
+et **une capture d'écran de l'écran d'abonnement** pour l'examen.
+
+### 2. Créer la clef d'API
+
+**App Store Connect → Utilisateurs et accès → Intégrations → Clés.** Créez une
+clef avec le rôle **In-App Purchase**.
+
+Le fichier `.p8` ne se télécharge **qu'une seule fois**. Apple ne le redonne
+jamais. Perdu, il faut révoquer la clef et recommencer.
+
+Notez aussi l'**ID de la clef** et l'**ID de l'émetteur**, affichés sur la même
+page.
+
+### 3. Déposer les trois secrets
+
+C'est une clef privée : elle signe les requêtes au nom de l'éditeur, et qui
+l'a peut lire l'état des abonnements de tous les clients. **Elle n'entre pas
+dans le dépôt.**
+
+```sh
+firebase functions:secrets:set APPLE_CLE < AuthKey_XXXXXXXXXX.p8
+firebase functions:secrets:set APPLE_ID_CLE
+firebase functions:secrets:set APPLE_ID_EDITEUR
+firebase deploy --only functions
+```
+
+Le premier prend le contenu entier du fichier, en-têtes `BEGIN PRIVATE KEY`
+comprises.
+
+### 4. Refabriquer l'application iPhone
+
+Le greffon d'achat est du code natif : il n'arrive pas par une mise à jour du
+site. Il faut reconstruire et renvoyer le paquet.
+
+```sh
+npm run build && npx cap sync ios
+npx cap open ios
+```
+
+Puis **Product → Archive → Distribute App**. Le numéro de build doit augmenter.
+
+## Vérifier l'achat sur iPhone
+
+Sur un vrai iPhone, avec un **compte de bac à sable** (App Store Connect →
+Utilisateurs et accès → Sandbox). Les achats y sont réels du point de vue de
+l'application, sans être débités, et les durées y sont accélérées — un mois dure
+quelques minutes, ce qui permet de voir un renouvellement pour de bon.
+
+Ce qui doit se produire :
+
+1. l'écran d'abonnement affiche **« Passer à Pro »** et les prix venus de
+   l'App Store — s'il affiche « Indisponible pour le moment », c'est que le
+   greffon natif n'a pas été trouvé, donc que le paquet n'a pas été refabriqué ;
+2. la fenêtre d'Apple s'ouvre **sur la bonne formule** ;
+3. après paiement, les onglets Revenus et Contrats s'ouvrent ;
+4. dans Firestore, `abonnements/{uid}` porte `plan: "pro"` et une échéance ;
+5. en réinstallant l'application, l'abonnement **revient tout seul** au
+   lancement — c'est la « restauration des achats » qu'Apple exige, et dont
+   l'absence vaut un refus à l'examen.
+
+Le bac à sable n'est pas qu'un confort : **les examinateurs d'Apple achètent
+dedans**. `lireAbonnement` interroge donc la production puis le bac à sable, et
+sans ce second essai l'abonnement échouerait pendant l'examen — alors qu'en
+production tout marcherait.
+
 ## Ce qui reste possible plus tard
 
-- **Vendre aussi sur le site**, avec Stripe, pour les iPhone et les ordinateurs.
-  Google ne l'interdit pas : ce qu'il impose, c'est que l'achat **fait dans
-  l'application** passe par lui. La seule règle est de ne pas pousser depuis
-  l'application vers le paiement du site.
-- **Les avis en temps réel** de Google, si la revérification au lancement se
-  révélait insuffisante.
+- **Vérifier la signature du reçu Apple en local**, avec `SignedDataVerifier`
+  de la bibliothèque d'Apple. Cela prouverait que le reçu vient bien d'Apple,
+  pour cette application, avant même de l'interroger. Il faut embarquer les
+  certificats racine d'Apple dans le dépôt, qui se téléchargent sur
+  `apple.com/certificateauthority`. Ce n'est pas ce qui protège l'accès
+  aujourd'hui — l'appel authentifié à Apple s'en charge, et la revendication
+  empêche qu'un achat serve deux fois.
+- **Les avis en temps réel** des deux magasins, si la revérification au
+  lancement se révélait insuffisante.
+

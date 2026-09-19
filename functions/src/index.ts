@@ -27,6 +27,16 @@ import {
   jetonUtilisable,
   produitDeLAchat,
 } from './facturation.js'
+import { abonnementDepuisApple, identifiantAbonnement, reçuAttendu } from './facturation-apple.js'
+import {
+  APPLE_CLE,
+  APPLE_ID_CLE,
+  APPLE_ID_EDITEUR,
+  ErreurApple,
+  identifiantDuRecu,
+  lireAbonnement,
+  PAQUET as PAQUET_IOS,
+} from './apple.js'
 import { accuserReception, ErreurPlay, lireAchat } from './play.js'
 import {
   CHAMP_COMPTE,
@@ -251,31 +261,154 @@ export const oubli = functions
 /* -------------------------------------------------------------------------- */
 
 /**
- * Vérifie un achat Google Play et ouvre — ou referme — l'accès payant.
+ * Ce que le magasin a répondu, réduit à ce dont la suite a besoin.
+ *
+ * Les deux magasins ne racontent pas la même chose de la même façon, mais la
+ * décision qui suit est identique : à quoi rattacher cet achat, et ouvre-t-il
+ * l'accès ? D'où cette forme commune, dans laquelle chacun se traduit.
+ *
+ * `revendication` n'est pas toujours le jeton reçu. Chez Apple, le reçu change
+ * à chaque renouvellement mensuel ; ce qui ne change jamais, c'est
+ * l'identifiant d'abonnement d'origine, et c'est lui qu'il faut revendiquer —
+ * autrement la revendication serait à refaire tous les mois et ne protégerait
+ * plus rien.
+ */
+interface Verdict {
+  revendication: string
+  abonnement: Abonnement | null
+  /** Ce qu'il reste à faire une fois l'achat rattaché à un compte. */
+  finaliser?: () => Promise<void>
+  /** Pour le journal, quand rien ne s'ouvre. */
+  etat: string
+}
+
+/** Interroge Google, et traduit sa réponse. */
+async function verdictPlay(jeton: string, uid: string): Promise<Verdict> {
+  let achat
+  try {
+    achat = await lireAchat(jeton)
+  } catch (e) {
+    /*  Un 404 veut dire que Google ne connaît pas ce jeton : c'est un refus,
+     *  pas une panne, et il ne sert à rien de le réessayer. Tout le reste —
+     *  compte non invité dans la Play Console, indisponibilité — est une
+     *  panne de notre côté, qu'il faut voir dans les journaux et qui mérite
+     *  d'être retentée. */
+    const statut = e instanceof ErreurPlay ? e.statut : 0
+    functions.logger.error(`Achat illisible : ${String(e)}`, { uid, statut })
+    if (statut === 404 || statut === 400) {
+      throw new functions.https.HttpsError('not-found', "Cet achat est introuvable chez Google.")
+    }
+    throw new functions.https.HttpsError('unavailable', "La vérification a échoué, réessayez.")
+  }
+
+  return {
+    revendication: jeton,
+    abonnement: abonnementDepuisAchat(achat),
+    etat: achat.subscriptionState ?? '(sans état)',
+    /*  L'accusé de réception après la revendication, mais avant l'écriture :
+     *  s'il échoue, mieux vaut ne pas avoir ouvert un accès que Google
+     *  s'apprête à rembourser. */
+    finaliser: async () => {
+      if (!doitAccuserReception(achat)) return
+      const produit = produitDeLAchat(achat)
+      if (produit) {
+        await accuserReception(jeton, produit)
+        return
+      }
+      /*  Sans identifiant de produit, l'ancienne route de l'accusé n'est pas
+       *  appelable. On ouvre quand même l'accès — cette personne a payé — mais
+       *  en le signalant fort : faute d'accusé, Google remboursera sous trois
+       *  jours et l'accès se refermera de lui-même. Le journal dira pourquoi. */
+      functions.logger.error("Achat sans identifiant de produit : accusé de réception impossible", {
+        uid,
+        lignes: JSON.stringify(achat.lineItems ?? []),
+      })
+    },
+  }
+}
+
+/** Interroge Apple, et traduit sa réponse. */
+async function verdictApple(jeton: string, uid: string): Promise<Verdict> {
+  /*  L'identifiant est lu dans le reçu sans vérifier sa signature : ce n'est
+   *  donc pas une preuve, seulement une affirmation du téléphone. Elle est
+   *  aussitôt soumise à Apple, et c'est la réponse d'Apple qui fait foi. */
+  const id = identifiantDuRecu(jeton)
+  if (!id) {
+    throw new functions.https.HttpsError('invalid-argument', "Ce reçu d'achat est illisible.")
+  }
+
+  let etat
+  try {
+    etat = await lireAbonnement(id)
+  } catch (e) {
+    const statut = e instanceof ErreurApple ? e.statut : 0
+    functions.logger.error(`Abonnement Apple illisible : ${String(e)}`, { uid, statut })
+    if (statut === 404 || statut === 400) {
+      throw new functions.https.HttpsError('not-found', "Cet achat est introuvable chez Apple.")
+    }
+    throw new functions.https.HttpsError('unavailable', "La vérification a échoué, réessayez.")
+  }
+
+  /*  Le paquet est vérifié autant que le produit : un reçu signé par Apple l'est
+   *  pour *une* application, et sans ce contrôle le reçu d'une autre
+   *  application de l'App Store ouvrirait l'abonnement ici. Le reçu contrôlé
+   *  est celui qu'Apple vient de nous rendre, pas celui qu'on a reçu du
+   *  téléphone. */
+  if (!reçuAttendu(etat.transaction, PAQUET_IOS)) {
+    functions.logger.warn("Reçu Apple étranger à l'application ou à nos produits", {
+      uid,
+      paquet: etat.transaction?.bundleId ?? '(absent)',
+      produit: etat.transaction?.productId ?? '(absent)',
+    })
+    throw new functions.https.HttpsError('not-found', "Cet achat ne concerne pas cette application.")
+  }
+
+  return {
+    /*  L'identifiant d'origine, tel qu'Apple vient de le confirmer, et non
+     *  celui lu dans le reçu du téléphone : on ne revendique que ce qui a été
+     *  vérifié. */
+    revendication: identifiantAbonnement(etat.transaction) ?? id,
+    abonnement: abonnementDepuisApple(etat),
+    etat: `statut ${etat.status ?? '(absent)'}`,
+  }
+}
+
+/**
+ * Vérifie un achat et ouvre — ou referme — l'accès payant.
  *
  * C'est le point de confiance de tout l'abonnement. Le navigateur ne peut pas
  * écrire dans `abonnements/{uid}` : les règles de sécurité le lui interdisent
  * sans exception. Il ne peut que présenter un jeton d'achat ici, et c'est cette
- * fonction — qui parle à Google avec les droits d'administration — qui tranche.
+ * fonction — qui parle aux magasins avec des droits qu'il n'a pas — qui
+ * tranche.
+ *
+ * Deux magasins vendent le même abonnement, et la fonction sert les deux. Seule
+ * la question posée au magasin diffère ; le rattachement à un compte et
+ * l'écriture du droit sont communs.
  *
  * Trois refus, dans cet ordre :
  *
  *   1. sans compte connecté, rien. Un achat s'attache à quelqu'un ;
  *   2. sans jeton, rien ;
- *   3. si le jeton a déjà été revendiqué par un autre compte, rien — voir
- *      `facturation.ts` : Google ne dit pas à qui appartient un achat, et sans
- *      cette revendication un même jeton ouvrirait autant de comptes qu'on
- *      voudrait.
+ *   3. si l'achat a déjà été revendiqué par un autre compte, rien — voir
+ *      `facturation.ts` : aucun des deux magasins ne dit à qui appartient un
+ *      achat, et sans cette revendication un même jeton ouvrirait autant de
+ *      comptes qu'on voudrait.
  *
  * Elle sert aussi bien au premier achat qu'aux relectures : l'application la
- * rappelle à chaque lancement avec le jeton qu'elle retrouve auprès du Play
- * Store. C'est ce qui prolonge l'abonnement au renouvellement, et c'est ce qui
- * le referme après un remboursement ou une résiliation — sans quoi un abonné
+ * rappelle à chaque lancement avec le jeton qu'elle retrouve auprès du magasin.
+ * C'est ce qui prolonge l'abonnement au renouvellement, et c'est ce qui le
+ * referme après un remboursement ou une résiliation — sans quoi un abonné
  * perdrait l'accès au bout d'un mois malgré ses paiements.
  */
 export const verifierAchat = functions
   .region(REGION)
-  .runWith({ serviceAccount: COMPTE })
+  .runWith({
+    serviceAccount: COMPTE,
+    /*  Les secrets d'Apple seulement : Google reconnaît le compte de service de
+     *  la fonction, Apple ne connaît pas Google Cloud et réclame une clef. */
+    secrets: [APPLE_CLE, APPLE_ID_CLE, APPLE_ID_EDITEUR],
+  })
   .https.onCall(async (data, context) => {
     const uid = context.auth?.uid
     if (!uid) {
@@ -287,30 +420,22 @@ export const verifierAchat = functions
       throw new functions.https.HttpsError('invalid-argument', "Le jeton d'achat manque.")
     }
 
+    /*  Play par défaut, et non un refus : les applications Android déjà
+     *  installées n'envoient pas ce champ, et elles continueront de ne pas
+     *  l'envoyer pendant des mois. Exiger le magasin aurait coupé l'abonnement
+     *  de tous les abonnés en place au premier déploiement. */
+    const magasin = data?.magasin === 'apple' ? 'apple' : 'play'
+
     const db = getFirestore()
     const doc = db.doc(`abonnements/${uid}`)
 
-    let achat
-    try {
-      achat = await lireAchat(jeton)
-    } catch (e) {
-      /*  Un 404 veut dire que Google ne connaît pas ce jeton : c'est un refus,
-       *  pas une panne, et il ne sert à rien de le réessayer. Tout le reste —
-       *  compte non invité dans la Play Console, indisponibilité — est une
-       *  panne de notre côté, qu'il faut voir dans les journaux et qui mérite
-       *  d'être retentée. */
-      const statut = e instanceof ErreurPlay ? e.statut : 0
-      functions.logger.error(`Achat illisible : ${String(e)}`, { uid, statut })
-      if (statut === 404 || statut === 400) {
-        throw new functions.https.HttpsError('not-found', "Cet achat est introuvable chez Google.")
-      }
-      throw new functions.https.HttpsError('unavailable', "La vérification a échoué, réessayez.")
-    }
+    const verdict =
+      magasin === 'apple' ? await verdictApple(jeton, uid) : await verdictPlay(jeton, uid)
 
     /*  La revendication, dans une transaction : deux appels simultanés avec le
      *  même jeton doivent aboutir à un seul propriétaire. Une lecture suivie
      *  d'une écriture les laisserait tous les deux passer. */
-    const revendication = db.doc(`${JETONS}/${clefDuJeton(jeton)}`)
+    const revendication = db.doc(`${JETONS}/${clefDuJeton(verdict.revendication)}`)
     try {
       await db.runTransaction(async (t) => {
         const vu = await t.get(revendication)
@@ -338,38 +463,24 @@ export const verifierAchat = functions
       throw new functions.https.HttpsError('unavailable', "La vérification a échoué, réessayez.")
     }
 
-    const abonnement = abonnementDepuisAchat(achat)
-
-    if (!abonnement) {
+    if (!verdict.abonnement) {
       /*  Expiré, suspendu, remboursé, mis en pause : le document disparaît et
        *  l'accès se referme. Effacer un document absent ne coûte rien. */
       await doc.delete()
-      functions.logger.info('Abonnement refermé', { uid, etat: achat.subscriptionState })
+      functions.logger.info('Abonnement refermé', { uid, magasin, etat: verdict.etat })
       return { pro: false }
     }
 
-    /*  L'accusé de réception avant l'écriture : s'il échoue, mieux vaut ne pas
-     *  avoir ouvert un accès que Google s'apprête à rembourser. */
-    if (doitAccuserReception(achat)) {
-      const produit = produitDeLAchat(achat)
-      if (produit) {
-        await accuserReception(jeton, produit)
-      } else {
-        /*  Sans identifiant de produit, l'ancienne route de l'accusé n'est pas
-         *  appelable. On ouvre quand même l'accès — cette personne a payé — mais
-         *  en le signalant fort : faute d'accusé, Google remboursera sous trois
-         *  jours et l'accès se refermera de lui-même. Le journal dira pourquoi. */
-        functions.logger.error("Achat sans identifiant de produit : accusé de réception impossible", {
-          uid,
-          lignes: JSON.stringify(achat.lineItems ?? []),
-        })
-      }
-    }
+    if (verdict.finaliser) await verdict.finaliser()
 
-    /*  `set` sans fusion : le document doit refléter l'état chez Google, pas
-     *  s'accumuler avec ce qu'il contenait avant. Une échéance retirée par
-     *  Google doit disparaître ici aussi. */
-    await doc.set(abonnement)
-    functions.logger.info('Abonnement ouvert', { uid, jusqua: abonnement.jusqua ?? '(sans échéance)' })
-    return { pro: true, jusqua: abonnement.jusqua ?? null }
+    /*  `set` sans fusion : le document doit refléter l'état chez le magasin,
+     *  pas s'accumuler avec ce qu'il contenait avant. Une échéance retirée par
+     *  le magasin doit disparaître ici aussi. */
+    await doc.set(verdict.abonnement)
+    functions.logger.info('Abonnement ouvert', {
+      uid,
+      magasin,
+      jusqua: verdict.abonnement.jusqua ?? '(sans échéance)',
+    })
+    return { pro: true, jusqua: verdict.abonnement.jusqua ?? null }
   })
