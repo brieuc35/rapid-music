@@ -12,6 +12,7 @@
     "test": "tsc && node --test lib/*.test.js"
   },
   "dependencies": {
+    "@apple/app-store-server-library": "^3.1.0",
     "firebase-admin": "^13.0.2",
     "firebase-functions": "^6.3.0",
     "google-auth-library": "^10.9.1",

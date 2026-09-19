@@ -23,7 +23,7 @@ import {
   clearSubscription,
   readSubscription,
 } from './subscription'
-import { jetonDejaAchete, verifierAupresDuServeur } from '@/utils/facturation-play'
+import { jetonDejaAchete, verifierAupresDuServeur } from '@/utils/facturation'
 import { auth } from '@/firebase'
 import {
   createUserWithEmailAndPassword,
@@ -428,27 +428,27 @@ export async function relireAbonnement(): Promise<void> {
 }
 
 /**
- * Redemande à Google l'état de l'abonnement acheté, au lancement.
+ * Redemande au magasin l'état de l'abonnement acheté, au lancement.
  *
- * C'est ce qui remplace les avis en temps réel de Google, et c'est suffisant
+ * C'est ce qui remplace les avis en temps réel des magasins, et c'est suffisant
  * parce que l'abonnement ne sert qu'à quelqu'un qui ouvre l'application : le
  * moment où l'état compte est exactement celui où on le rafraîchit.
  *
  * Sans cet appel, un abonné perdrait l'accès au bout d'un mois — la date
  * d'échéance enregistrée à l'achat serait dépassée et rien ne l'aurait
  * prolongée, malgré des prélèvements bien encaissés. C'est aussi ce qui referme
- * l'accès après un remboursement ou une résiliation.
+ * l'accès après un remboursement ou une résiliation, et ce qui rend son
+ * abonnement à quelqu'un qui change de téléphone.
  *
- * Silencieux de bout en bout : hors de l'application Android il n'y a rien à
- * demander, et un échec de réseau ne doit pas retarder l'ouverture ni afficher
- * quoi que ce soit. L'abonnement déjà lu dans Firestore reste valable en
- * attendant.
+ * Silencieux de bout en bout : hors des applications il n'y a rien à demander,
+ * et un échec de réseau ne doit pas retarder l'ouverture ni afficher quoi que
+ * ce soit. L'abonnement déjà lu dans Firestore reste valable en attendant.
  */
-async function reverifierAchatPlay(uid: string): Promise<void> {
+async function reverifierAchat(uid: string): Promise<void> {
   try {
-    const jeton = await jetonDejaAchete()
-    if (!jeton) return
-    await verifierAupresDuServeur(jeton)
+    const achat = await jetonDejaAchete()
+    if (!achat) return
+    await verifierAupresDuServeur(achat.jeton, achat.magasin)
     await readSubscription(uid)
   } catch {
     /* rien à faire ici : l'état connu reste en place jusqu'au prochain essai */
@@ -581,12 +581,12 @@ onAuthStateChanged(auth, async (user) => {
       apply(data)
       if (legacy) markLegacyTaken(user.uid)
 
-      /*  Lancée sans l'attendre : elle parle au Play Store puis au serveur, et
+      /*  Lancée sans l'attendre : elle parle au magasin puis au serveur, et
        *  faire patienter l'ouverture de l'application derrière deux allers-retours
        *  réseau serait payer cher un rafraîchissement dont personne n'a besoin
        *  dans la seconde. L'abonnement déjà lu s'affiche, celui-ci le corrige
        *  s'il le faut. */
-      void reverifierAchatPlay(user.uid)
+      void reverifierAchat(user.uid)
     } else {
       // Ne pas laisser à l'écran les données du compte qui vient de partir.
       apply({})

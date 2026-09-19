@@ -33,11 +33,15 @@ ici : les fichiers sont embarqués et ne changent qu'au gré d'Apple. Le bouton
 « Recharger » ne rechargerait rien. Le service worker n'est donc pas inscrit
 dans l'enveloppe.
 
-**L'abonnement.** Sur le site, la page invite à installer l'application Android
-pour souscrire. Dans l'application de l'App Store, cette phrase serait absurde —
-et surtout, orienter vers un paiement extérieur contrevient à la **règle 3.1.1**
-d'Apple et fait refuser la fiche. L'enveloppe iOS annonce donc l'absence de
-l'offre Pro, sans indiquer d'ailleurs.
+**L'abonnement.** Il se souscrit dans les deux applications, mais pas par le
+même chemin : Google Play sur Android, l'achat intégré d'Apple sur iPhone. Sur
+le site, il ne se souscrit pas, et la page invite à installer l'application.
+
+Ce qui reste interdit, c'est de renvoyer d'un magasin vers l'autre : indiquer un
+paiement extérieur dans l'application de l'App Store contrevient à la **règle
+3.1.1** d'Apple et fait refuser la fiche. Le seul cas où l'enveloppe iOS
+n'affiche pas de bouton — le greffon natif introuvable — annonce donc une
+indisponibilité passagère, sans indiquer d'ailleurs.
 
 > Les deux autorisations photo méritent une mention à part. Le champ d'import est
 > un simple `<input type="file">`, mais dans une enveloppe native c'est le
@@ -142,13 +146,19 @@ serait plus commode, et c'est exactement ce qui déclenche la règle 4.2.
 
 ## Et le paiement ?
 
-Il n'y en a pas sur iOS, et c'est un choix pour l'instant.
+**Il y en a un.** L'achat intégré d'Apple est en place : un greffon StoreKit 2
+dans `ios/App/CapApp-SPM/Sources/CapApp-SPM/AchatPro.swift`, et la même fonction
+serveur que pour Google, qui interroge cette fois l'App Store.
 
-La facturation Google Play (voir [`facturation.md`](facturation.md)) ne
-fonctionne évidemment pas ici. Apple impose son propre système d'achat intégré,
-avec son code, son serveur de vérification et sa commission de 15 %. C'est un
-chantier de l'ampleur de celui d'Android.
+Tout est décrit dans [`facturation.md`](facturation.md) : les deux abonnements à
+créer dans App Store Connect, la clef d'API à générer, les trois secrets à
+déposer, et comment l'éprouver en bac à sable.
 
-En attendant, l'application iOS n'offre que la formule gratuite, ce qui est
-autorisé — à condition de ne renvoyer vers aucun paiement extérieur, ce que le
-code respecte.
+Deux points valent d'être connus avant l'examen :
+
+- **la restauration des achats est obligatoire.** Elle est faite au lancement, à
+  partir de `currentEntitlements` : quelqu'un qui réinstalle retrouve son
+  abonnement sans repayer. Son absence vaut un refus ;
+- **les examinateurs achètent en bac à sable.** Le serveur interroge donc la
+  production puis le bac à sable ; sans ce second essai, l'abonnement échouerait
+  pendant l'examen alors qu'en production tout marcherait.
