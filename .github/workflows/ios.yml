@@ -65,10 +65,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # 22, et non 20 comme les autres workflows : le CLI de Capacitor refuse
+      # de démarrer en deçà — « The Capacitor CLI requires NodeJS >=22.0.0 ».
+      # Le site se fabriquait pourtant très bien, et l'échec ne tombait qu'à
+      # `cap sync`, une étape plus loin. À ne pas ramener à 20 par souci
+      # d'uniformité : c'est le seul workflow qui appelle Capacitor.
       - name: Configurer Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Installer les dépendances
