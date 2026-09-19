@@ -193,6 +193,39 @@ export async function poserLaScene(page) {
   )
 }
 
+/**
+ * Fait croire à la page qu'elle tourne dans l'application iPhone.
+ *
+ * L'écran d'abonnement ne montre son bouton d'achat que là : sur le site, il
+ * explique au lieu de proposer. Or App Store Connect réclame une capture de cet
+ * écran-là pour l'examen de l'abonnement — une capture du site ne montrerait
+ * pas ce qu'on lui demande de vérifier.
+ *
+ * Rien n'est inventé pour autant. Ce faux pont ne fait qu'apporter ce qu'un
+ * vrai iPhone apporte ; la page, elle, est la vraie. Et le greffon ne rend
+ * **aucun tarif**, exprès : l'application retombe alors sur les montants écrits
+ * dans `src/store/index.ts`, qui sont ceux qu'on a réglés dans la console. Un
+ * tarif écrit ici serait un chiffre inventé de plus, à tenir à jour.
+ *
+ * À appeler avant `goto` : le pont doit être en place au démarrage de
+ * l'application, pas après.
+ */
+export async function simulerIPhone(page) {
+  await page.addInitScript(() => {
+    window.Capacitor = {
+      isNativePlatform: () => true,
+      getPlatform: () => 'ios',
+      Plugins: {
+        AchatPro: {
+          tarifs: async () => ({ tarifs: [] }),
+          abonnementEnCours: async () => ({}),
+          acheter: async () => ({ annule: true }),
+        },
+      },
+    }
+  })
+}
+
 /*  Une date passée en tête de liste n'est pas ce qu'on montre d'une tournée. */
 export async function filtreAVenir(page) {
   const filtre = page.locator('button:has-text("À venir")').first()

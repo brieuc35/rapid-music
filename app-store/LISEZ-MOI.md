@@ -10,6 +10,7 @@ Aperçus et captures d'écran**. Le quatorzième attend ailleurs — voir plus b
 | `iphone-6.7-*.png` | 1290 × 2796 | les six mêmes, iPhone 6,7 pouces |
 | `iphone-6.5-*.png` | 1284 × 2778 | les six mêmes, iPhone 6,5 pouces |
 | `illustration-promo-4320x1080.png` | 4320 × 1080 | l'illustration promotionnelle — **pas encore téléversable** |
+| `verification-abonnement.png` | 860 × 3874 | la capture d'examen de l'abonnement — **va ailleurs**, voir ci-dessous |
 
 ## Attention : deux tailles pour le même écran
 
@@ -38,6 +39,24 @@ Deux règles d'Apple ont dicté sa forme :
 
 La piste audio est muette, et non absente : App Store Connect recale au
 transcodage les fichiers sans piste son.
+
+## La capture d'examen de l'abonnement
+
+Celle-ci ne va pas sur la fiche. Elle se dépose dans **App Store Connect →
+Monétisation → Abonnements → chacun des deux abonnements → Informations
+destinées à l'équipe de vérification → Capture d'écran**.
+
+Elle est **obligatoire**, et sa raison d'être est étroite : c'est par elle que
+le vérificateur trouve l'achat dans l'application. La même image sert pour
+`pro_mensuel` et pour `pro_annuel`.
+
+C'est l'écran d'abonnement tel qu'il s'affiche **dans l'application iPhone** —
+pas sur le site, qui n'y montre aucun bouton d'achat et ne prouverait donc rien.
+Le script pose pour cela le pont natif qu'un iPhone fournit ; la page, elle, est
+la vraie, et les montants viennent de `src/store/index.ts`.
+
+Pleine hauteur, et non la hauteur d'un écran : les deux formules, leurs prix et
+le tableau comparatif tiennent sur une seule image.
 
 ## L'illustration promotionnelle
 

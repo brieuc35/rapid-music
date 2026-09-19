@@ -38,6 +38,7 @@ import {
   PAGE,
   poserLaScene,
   RACINE,
+  simulerIPhone,
 } from './sonde.mjs'
 
 const SORTIE = join(RACINE, 'play-store')
@@ -456,6 +457,44 @@ async function principal() {
       console.log(`capture-${ecran.nom}.png`.padEnd(30), statSync(fichier).size, 'octets')
       await page.close()
     }
+    /*  ---- la capture d'examen de l'abonnement Apple
+     *
+     *  App Store Connect la réclame pour chacun des deux abonnements : c'est
+     *  par elle que le vérificateur trouve l'achat dans l'application. Le site
+     *  ne conviendrait pas — il n'y montre pas de bouton d'achat —, d'où le
+     *  faux pont natif.
+     *
+     *  Pleine hauteur, et non la seule hauteur de l'écran : les deux formules,
+     *  leurs prix et le tableau comparatif tiennent alors sur une image, et le
+     *  vérificateur voit d'un coup ce qu'il a à vérifier. */
+    {
+      const page = await navigateur.newPage({
+        viewport: { width: 430, height: 932 },
+        deviceScaleFactor: 2,
+      })
+      page.on('pageerror', (e) => console.error('  abonnement :', e.message))
+      await simulerIPhone(page)
+      await page.goto(`${PAGE}#/abonnement`)
+      await page.waitForSelector('.tabbar', { timeout: 20000 })
+      await poserLaScene(page)
+      /*  Le temps que les tarifs soient demandés au greffon et la page remise à
+       *  jour : sans cette pause, l'image montre la page avant ses prix. */
+      await attendre(2500)
+      /*  La barre d'onglets est en position fixe : sur une capture pleine
+       *  hauteur, elle ne suit pas le bas de l'image, elle se pose à la hauteur
+       *  d'un écran et masque ce qui se trouve là — ici, deux lignes de ce que
+       *  l'abonnement apporte. Elle n'a rien à faire sur une image qui sert à
+       *  montrer l'offre. */
+      await page.addStyleTag({ content: '.tabbar { display: none !important }' })
+      await attendre(200)
+      const dossier = join(RACINE, 'app-store')
+      mkdirSync(dossier, { recursive: true })
+      const fichier = join(dossier, 'verification-abonnement.png')
+      await page.screenshot({ path: fichier, fullPage: true })
+      console.log('verification-abonnement.png'.padEnd(30), statSync(fichier).size, 'octets')
+      await page.close()
+    }
+
     // ---- les visuels : les captures qu'on vient de produire, mises en scène.
     //      Les mêmes six écrans, habillés une fois par emplacement de magasin.
     for (const f of FORMATS) {
