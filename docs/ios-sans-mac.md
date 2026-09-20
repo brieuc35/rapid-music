@@ -95,8 +95,23 @@ GitHub : sans lui, on recopie les trois valeurs de la facturation et l'envoi
 **App Store Connect → Utilisateurs et accès → Intégrations → App Store Connect
 API → Clés d'équipe → +**
 
-Rôle : **App Manager**. C'est le moindre rôle qui permette d'envoyer un paquet ;
-« Developer » convient aussi, « Marketing » ou « Finance » non.
+Rôle : **Admin**. Rien de moins ne passe.
+
+C'est contre-intuitif pour une clef qui ne fait qu'envoyer des paquets, et
+pourtant : la signature de distribution par le nuage réclame ce rôle, et Apple
+le tient pour une restriction voulue. « App Manager » et « Developer » échouent
+tous deux, sur un message qui ne nomme jamais le rôle :
+
+```
+error: exportArchive Cloud signing permission error
+error: exportArchive No profiles for 'fr.rapidmusic.app' were found
+```
+
+La seconde ligne égare : le profil n'est pas introuvable, il n'a jamais pu être
+créé faute de droits.
+
+Le compte étant le vôtre, vous en êtes le titulaire et pouvez créer cette clef
+sans demander à personne.
 
 Notez l'**identifiant de la clef** (dix caractères) et l'**identifiant
 d'éditeur** affiché en haut de la page, puis téléchargez le `.p8`.
@@ -256,6 +271,7 @@ fabrication apparaisse dans App Store Connect, section *Build*.
 | --- | --- |
 | « Your team has no devices » à l'archivage | l'archive est signée, alors qu'elle ne doit pas l'être. Xcode signe les archives en *développeur*, et un profil de développement réclame un appareil enregistré. Le workflow archive donc sans signer et laisse l'export s'en charger |
 | « conflicting provisioning settings » | une identité de signature est imposée alors que la signature est automatique. En mode automatique, Xcode choisit lui-même et refuse qu'on lui impose |
+| « Cloud signing permission error » | la clef d'équipe n'a pas le rôle **Admin**. Le message « No profiles were found » qui suit égare : le profil n'est pas introuvable, il n'a pas pu être créé |
 | « n'est pas du base64 exploitable » | le secret contient autre chose que le fichier encodé — un chemin, un en-tête `BEGIN CERTIFICATE` |
 | « il refuse ce mot de passe » | `APPLE_CERTIFICAT_MDP` est celui du compte Apple et non celui choisi à l'étape 3 — ou le `.p12` a été fait sans `-legacy` |
 | « Aucun certificat de distribution » | le certificat créé est un « Apple Development » |
