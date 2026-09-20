@@ -91,6 +91,13 @@ pour toutes** : le certificat vaut un an, et sert à toutes les fabrications.
 Il faut `openssl`. Sous Windows, il est livré avec **Git for Windows** — ouvrez
 « Git Bash ». Sous Linux et macOS, il est déjà là.
 
+Placez-vous d'abord dans le dossier des téléchargements : c'est là qu'Apple
+déposera le certificat, et tout restera au même endroit.
+
+```sh
+cd ~/Downloads
+```
+
 ### 1. Une clef privée et une demande de certificat
 
 ```sh
@@ -115,6 +122,15 @@ le dit, plutôt que d'échouer quinze minutes plus tard sur un message obscur.
 
 ### 3. Réunir les deux en un `.p12`
 
+Le nom du fichier téléchargé varie selon les jours — `distribution.cer`,
+`ios_distribution.cer`… Vérifiez-le avant :
+
+```sh
+ls *.cer
+```
+
+puis, en remplaçant le nom si besoin :
+
 ```sh
 openssl x509 -inform DER -in distribution.cer -out certificat.pem
 openssl pkcs12 -export -legacy \
@@ -134,15 +150,33 @@ version 1, l'option n'existe pas et n'est pas nécessaire : retirez-la.
 Un secret GitHub ne transporte que du texte, et un `.p12` est un fichier
 binaire.
 
+Le résultat part dans un fichier plutôt qu'à l'écran. Ce n'est pas un détail :
+la chaîne fait plusieurs milliers de signes, et une fenêtre de terminal la
+coupe en lignes qu'on recopie avec. Ouvert dans un éditeur, le fichier se
+sélectionne d'un `Ctrl+A` et se copie entier.
+
 ```sh
-base64 -w0 certificat.p12          # Linux, Git Bash
-base64 -i certificat.p12 | tr -d '\n'   # macOS
+base64 -w0 certificat.p12 > certificat.txt          # Linux, Git Bash
+base64 -i certificat.p12 | tr -d '\n' > certificat.txt   # macOS
 ```
 
-Copiez toute la sortie dans `APPLE_CERTIFICAT_P12`. Le workflow retire les
-blancs avant de décoder — un retour à la ligne glissé par le presse-papier ne
-casse rien — et, si le décodage échoue quand même, il décrit ce qu'il a reçu
-sans en révéler le contenu.
+Ouvrez `certificat.txt` — Bloc-notes fait l'affaire —, sélectionnez tout,
+collez dans `APPLE_CERTIFICAT_P12`.
+
+Le workflow retire les blancs avant de décoder, si bien qu'un retour à la ligne
+glissé par le presse-papier ne casse rien ; et si le décodage échoue quand
+même, il décrit ce qu'il a reçu sans en révéler le contenu.
+
+### 5. Effacer ce qui traîne
+
+```sh
+rm cle-privee.key certificat.pem certificat.p12 certificat.txt
+```
+
+Le `.p12` et sa forme encodée ouvrent la signature d'applications en votre nom.
+Une fois dans les secrets GitHub, ils n'ont plus à rester dans un dossier de
+téléchargements. Gardez-en une copie ailleurs si vous voulez éviter de tout
+refaire l'an prochain — mais pas là.
 
 ## Envoyer
 
