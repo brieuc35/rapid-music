@@ -9,6 +9,17 @@ pour toutes les mises à jour suivantes.
 > fabrication en prend une quinzaine, soit cent cinquante au compteur. Sur un
 > dépôt privé au forfait gratuit — deux mille minutes par mois — cela fait une
 > douzaine de fabrications. Un dépôt public n'est pas décompté.
+>
+> Le déclenchement automatique est limité à `master` et à ce qui touche au
+> projet iOS. Sans cette limite, un même changement était compilé deux fois :
+> une fois sur sa branche, une fois à la fusion.
+
+## Relancer une exécution ne relance pas le code corrigé
+
+Le bouton **Re-run** rejoue l'exécution telle qu'elle était — même code, même
+commit, donc même échec. Après une correction, il faut **relancer le workflow**
+(Run workflow), pas réexécuter l'ancienne tentative. C'est le piège classique,
+et il coûte quinze minutes de macOS pour rien.
 
 ## Tout de suite, sans rien préparer
 

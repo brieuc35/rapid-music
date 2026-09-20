@@ -49,7 +49,14 @@ on:
   # Sur modification du projet iOS : une erreur de compilation y est autrement
   # invisible jusqu'au jour où l'on veut publier — et ce jour-là, elle arrive
   # au pire moment.
+  #
+  # Sur `master` seulement. Sans cette restriction, un même changement était
+  # compilé deux fois — une fois sur sa branche, une fois à la fusion — soit
+  # quarante minutes de quota pour un seul résultat, les deux exécutions
+  # portant le même contenu.
   push:
+    branches:
+      - master
     paths:
       - 'ios/**'
       - 'capacitor.config.ts'
