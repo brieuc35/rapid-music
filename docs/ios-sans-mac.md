@@ -238,19 +238,24 @@ fabrication apparaisse dans App Store Connect, section *Build*.
    enverrait la version précédente du site sans que rien ne le signale ;
 2. installe le certificat dans un trousseau temporaire, qui disparaît avec le
    serveur ;
-3. archive, en laissant Xcode fabriquer le profil de provisionnement tout seul
-   grâce à la clef d'API. Un profil se régénère sans conséquence — un
+3. archive **sans signer**. Xcode signe les archives avec un certificat de
+   développeur, lequel réclame un profil de développement, lequel réclame un
+   appareil enregistré — il n'y en a aucun sur un serveur. Ne rien signer ici
+   supprime le problème ;
+4. exporte le `.ipa`, **et c'est là que tout se signe**, en laissant Xcode
+   fabriquer le profil App Store tout seul grâce à la clef d'API. Ce profil-là
+   ne demande aucun appareil. Un profil se régénère sans conséquence — un
    certificat, non : Apple n'en autorise que deux par compte, et un serveur qui
    en créerait un à chaque fabrication aurait épuisé le quota au troisième
    essai. C'est pourquoi le certificat est fourni et le profil ne l'est pas ;
-4. exporte le `.ipa` ;
 5. l'envoie, si la case était cochée.
 
 ## Quand ça casse
 
 | Symptôme | Cause habituelle |
 | --- | --- |
-| « Your team has no devices » à l'archivage | le projet est signé en développeur. Le workflow impose désormais « Apple Distribution » ; si le message revient, c'est que cette option a sauté |
+| « Your team has no devices » à l'archivage | l'archive est signée, alors qu'elle ne doit pas l'être. Xcode signe les archives en *développeur*, et un profil de développement réclame un appareil enregistré. Le workflow archive donc sans signer et laisse l'export s'en charger |
+| « conflicting provisioning settings » | une identité de signature est imposée alors que la signature est automatique. En mode automatique, Xcode choisit lui-même et refuse qu'on lui impose |
 | « n'est pas du base64 exploitable » | le secret contient autre chose que le fichier encodé — un chemin, un en-tête `BEGIN CERTIFICATE` |
 | « il refuse ce mot de passe » | `APPLE_CERTIFICAT_MDP` est celui du compte Apple et non celui choisi à l'étape 3 — ou le `.p12` a été fait sans `-legacy` |
 | « Aucun certificat de distribution » | le certificat créé est un « Apple Development » |
