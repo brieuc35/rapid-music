@@ -192,7 +192,11 @@ jobs:
           # nom qu'ils attendent. Le dossier n'existe pas d'emblée.
           mkdir -p "$HOME/.appstoreconnect/private_keys"
           CHEMIN_CLE="$HOME/.appstoreconnect/private_keys/AuthKey_$ID_CLE.p8"
-          printf '%s' "$CLE" > "$CHEMIN_CLE"
+          # Un retour à la ligne final, garanti. Un fichier PEM qui s'arrête net
+          # après « END PRIVATE KEY » est refusé par certains lecteurs, et rien
+          # ne dit si le champ de saisie de GitHub a gardé celui du fichier
+          # d'origine. Une ligne vide de trop, elle, ne gêne personne.
+          printf '%s\n' "$CLE" > "$CHEMIN_CLE"
           chmod 600 "$CHEMIN_CLE"
           if ! grep -q 'BEGIN PRIVATE KEY' "$CHEMIN_CLE"; then
             echo "::error::APPLE_CLE ne ressemble pas à une clef .p8. Le secret doit contenir le fichier entier, « BEGIN PRIVATE KEY » compris."
