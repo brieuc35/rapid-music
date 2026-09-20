@@ -128,9 +128,19 @@ cd ~/Downloads
 
 ```sh
 openssl genrsa -out cle-privee.key 2048
-openssl req -new -key cle-privee.key -out demande.certSigningRequest \
+MSYS_NO_PATHCONV=1 openssl req -new -key cle-privee.key \
+  -out demande.certSigningRequest \
   -subj "/emailAddress=VOTRE@ADRESSE.FR/CN=Votre Nom/C=FR"
 ```
+
+`MSYS_NO_PATHCONV=1` n'est utile que sous Windows, et il y est indispensable :
+Git Bash prend tout argument commençant par `/` pour un chemin et le réécrit en
+chemin Windows. `/emailAddress=…` devient alors `C:/Program Files/Git/…`, et la
+demande n'est pas produite. Ailleurs, la variable est simplement ignorée — on
+peut donc laisser la commande telle quelle partout.
+
+Le fichier s'appelle `demande.certSigningRequest`, en entier. L'explorateur de
+Windows tronque volontiers ce nom-là, au point de faire croire qu'il manque.
 
 **`cle-privee.key` ne doit jamais quitter votre machine ni entrer dans le
 dépôt.** Sans elle, le certificat qu'Apple va signer ne vaut rien — et qui l'a
