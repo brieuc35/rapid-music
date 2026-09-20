@@ -263,6 +263,21 @@ jobs:
       # certificat : celui-ci est fourni, parce qu'Apple n'en autorise que
       # deux par compte et qu'un serveur qui en créerait un à chaque
       # fabrication aurait épuisé le quota au troisième essai.
+      #
+      # `CODE_SIGN_IDENTITY` est imposé ici, et c'est indispensable. Le projet
+      # livré par Capacitor porte « iPhone Developer » dans ses deux
+      # configurations, y compris Release. Xcode demandait donc un profil de
+      # *développement* pour une archive destinée à l'App Store, et un tel
+      # profil réclame au moins un appareil enregistré :
+      #
+      #   « Your team has no devices from which to generate a provisioning
+      #     profile. »
+      #
+      # Le message envoie vers l'enregistrement d'un appareil — un contresens
+      # ici, où il n'y en a aucun et n'y en aura jamais. Un profil App Store,
+      # lui, n'en demande pas. Réglé sur la ligne de commande et non dans le
+      # projet, pour que celui-ci reste signable en développeur sur un Mac,
+      # où c'est exactement ce qu'on veut pour essayer l'application.
       - name: Archiver
         if: steps.signature.outputs.signe == 'oui'
         run: |
@@ -279,6 +294,8 @@ jobs:
             -authenticationKeyID "${{ secrets.APPLE_ID_CLE_EQUIPE }}" \
             -authenticationKeyIssuerID "${{ secrets.APPLE_ID_EDITEUR_EQUIPE }}" \
             DEVELOPMENT_TEAM="${{ secrets.APPLE_ID_EQUIPE }}" \
+            CODE_SIGN_STYLE=Automatic \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
             CURRENT_PROJECT_VERSION=${{ steps.version.outputs.build }} \
             ${{ steps.version.outputs.marketing }} \
             archive

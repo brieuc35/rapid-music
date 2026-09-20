@@ -250,6 +250,7 @@ fabrication apparaisse dans App Store Connect, section *Build*.
 
 | Symptôme | Cause habituelle |
 | --- | --- |
+| « Your team has no devices » à l'archivage | le projet est signé en développeur. Le workflow impose désormais « Apple Distribution » ; si le message revient, c'est que cette option a sauté |
 | « n'est pas du base64 exploitable » | le secret contient autre chose que le fichier encodé — un chemin, un en-tête `BEGIN CERTIFICATE` |
 | « il refuse ce mot de passe » | `APPLE_CERTIFICAT_MDP` est celui du compte Apple et non celui choisi à l'étape 3 — ou le `.p12` a été fait sans `-legacy` |
 | « Aucun certificat de distribution » | le certificat créé est un « Apple Development » |
