@@ -42,9 +42,35 @@ Dans **Réglages → Secrets and variables → Actions → New repository secret
 | `APPLE_CLE_EQUIPE` | le contenu du fichier `.p8` de la clef d'équipe |
 | `APPLE_ID_CLE_EQUIPE` | l'identifiant de cette clef |
 | `APPLE_ID_EDITEUR_EQUIPE` | l'identifiant d'éditeur affiché avec elle |
-| `APPLE_ID_EQUIPE` | developer.apple.com → Membership → *Team ID*, dix caractères |
+| `APPLE_ID_EQUIPE` | le *Team ID*, dix caractères — voir plus bas, il se cache |
 | `APPLE_CERTIFICAT_P12` | à fabriquer, voir plus bas |
 | `APPLE_CERTIFICAT_MDP` | le mot de passe que **vous** choisirez en le fabriquant |
+
+## Trouver le Team ID
+
+Il n'est **pas dans App Store Connect**. Les deux sites d'Apple se ressemblent
+et n'ont pas les mêmes menus : la fiche, les captures et les abonnements sont
+sur `appstoreconnect.apple.com`, les certificats et le Team ID sur
+`developer.apple.com`. C'est la confusion la plus facile à faire.
+
+Le chemin le plus sûr passe par une page où l'on est déjà allé pour déclarer
+l'application :
+
+**developer.apple.com → Certificates, Identifiers & Profiles → Identifiers →**
+`fr.rapidmusic.app` → la ligne **App ID Prefix**.
+
+Ces dix caractères *sont* le Team ID ; Apple le nomme autrement selon la page.
+L'encadré « Membership details » de `developer.apple.com/account` le donne
+aussi, mais il se déplace au fil des refontes.
+
+Le certificat, une fois fabriqué, le porte également — ce qui confirme du même
+coup qu'il appartient au bon compte :
+
+```sh
+openssl x509 -in certificat.pem -noout -subject
+```
+
+Les dix caractères qui suivent `OU=` sont le Team ID.
 
 ## ⚠️ Deux sortes de clefs, qui ne se remplacent pas
 
