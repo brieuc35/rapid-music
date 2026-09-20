@@ -247,8 +247,14 @@ et **une capture d'écran de l'écran d'abonnement** pour l'examen.
 
 ### 2. Créer la clef d'API
 
-**App Store Connect → Utilisateurs et accès → Intégrations → Clés.** Créez une
-clef avec le rôle **In-App Purchase**.
+**App Store Connect → Utilisateurs et accès → Intégrations → In-App Purchase.**
+Créez-y une clef.
+
+⚠️ **Celle-ci, et pas une clef d'équipe.** App Store Connect propose deux types
+de clefs : celle-ci ouvre l'API serveur des abonnements, une clef d'équipe sert
+à envoyer les paquets. Elles ne se remplacent pas, et leurs identifiants — celui
+de la clef *comme celui de l'éditeur* — diffèrent. Voir
+[`ios-sans-mac.md`](ios-sans-mac.md) pour l'autre.
 
 Le fichier `.p8` ne se télécharge **qu'une seule fois**. Apple ne le redonne
 jamais. Perdu, il faut révoquer la clef et recommencer.

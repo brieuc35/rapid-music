@@ -22,17 +22,28 @@ name: Application iPhone (.ipa)
 #
 # Secrets attendus, dans Réglages → Secrets and variables → Actions :
 #
-#   APPLE_CERTIFICAT_P12   le certificat de distribution, en base64
-#   APPLE_CERTIFICAT_MDP   le mot de passe choisi à son export
-#   APPLE_EQUIPE           l'identifiant d'équipe (dix caractères)
-#   APPLE_CLE              le contenu du fichier .p8 de la clef d'API
-#   APPLE_ID_CLE           l'identifiant de cette clef
-#   APPLE_ID_EDITEUR       l'identifiant de l'éditeur
+#   APPLE_CERTIFICAT_P12      le certificat de distribution, en base64
+#   APPLE_CERTIFICAT_MDP      le mot de passe choisi à son export
+#   APPLE_ID_EQUIPE           l'identifiant d'équipe (dix caractères)
+#   APPLE_CLE_EQUIPE          le .p8 de la clef d'équipe
+#   APPLE_ID_CLE_EQUIPE       l'identifiant de cette clef
+#   APPLE_ID_EDITEUR_EQUIPE   l'identifiant d'éditeur qui l'accompagne
 #
-# Les trois derniers sont ceux qui servent déjà à vérifier les achats côté
-# serveur — mêmes valeurs, voir docs/facturation.md. Les trois premiers sont
-# propres à la fabrication, et docs/ios-sans-mac.md explique comment les
-# obtenir sans Mac.
+# ⚠️ **Ce n'est pas la clef qui vérifie les achats.** App Store Connect en
+# propose deux sortes, et elles ne sont pas interchangeables :
+#
+#   clef « In-App Purchase »  → l'API serveur des abonnements. C'est celle de
+#                               docs/facturation.md, déposée chez Firebase ;
+#   clef d'équipe             → l'envoi des paquets et les profils de
+#                               signature. C'est celle-ci.
+#
+# Les deux portent un « identifiant de clef » et un « identifiant d'éditeur »,
+# **et ces valeurs diffèrent** — y compris l'identifiant d'éditeur, qu'on
+# croirait propre au compte. D'où le suffixe dans les noms : sans lui, on
+# recopie les trois valeurs de la facturation et l'envoi échoue sur une erreur
+# d'authentification qui ne dit pas pourquoi.
+#
+# docs/ios-sans-mac.md explique comment obtenir tout cela sans Mac.
 
 on:
   workflow_dispatch:
@@ -111,10 +122,10 @@ jobs:
         env:
           P12: ${{ secrets.APPLE_CERTIFICAT_P12 }}
           P12_MDP: ${{ secrets.APPLE_CERTIFICAT_MDP }}
-          EQUIPE: ${{ secrets.APPLE_EQUIPE }}
-          CLE: ${{ secrets.APPLE_CLE }}
-          ID_CLE: ${{ secrets.APPLE_ID_CLE }}
-          ID_EDITEUR: ${{ secrets.APPLE_ID_EDITEUR }}
+          EQUIPE: ${{ secrets.APPLE_ID_EQUIPE }}
+          CLE: ${{ secrets.APPLE_CLE_EQUIPE }}
+          ID_CLE: ${{ secrets.APPLE_ID_CLE_EQUIPE }}
+          ID_EDITEUR: ${{ secrets.APPLE_ID_EDITEUR_EQUIPE }}
         run: |
           set -euo pipefail
 
@@ -123,15 +134,15 @@ jobs:
           # script. Tous les secrets présents, la dernière ligne aurait donc
           # interrompu la fabrication — l'exact contraire du but.
           manquants=""
-          for nom in APPLE_CERTIFICAT_P12 APPLE_CERTIFICAT_MDP APPLE_EQUIPE \
-                     APPLE_CLE APPLE_ID_CLE APPLE_ID_EDITEUR; do
+          for nom in APPLE_CERTIFICAT_P12 APPLE_CERTIFICAT_MDP APPLE_ID_EQUIPE \
+                     APPLE_CLE_EQUIPE APPLE_ID_CLE_EQUIPE APPLE_ID_EDITEUR_EQUIPE; do
             case "$nom" in
-              APPLE_CERTIFICAT_P12) valeur="$P12" ;;
-              APPLE_CERTIFICAT_MDP) valeur="$P12_MDP" ;;
-              APPLE_EQUIPE)         valeur="$EQUIPE" ;;
-              APPLE_CLE)            valeur="$CLE" ;;
-              APPLE_ID_CLE)         valeur="$ID_CLE" ;;
-              APPLE_ID_EDITEUR)     valeur="$ID_EDITEUR" ;;
+              APPLE_CERTIFICAT_P12)    valeur="$P12" ;;
+              APPLE_CERTIFICAT_MDP)    valeur="$P12_MDP" ;;
+              APPLE_ID_EQUIPE)         valeur="$EQUIPE" ;;
+              APPLE_CLE_EQUIPE)        valeur="$CLE" ;;
+              APPLE_ID_CLE_EQUIPE)     valeur="$ID_CLE" ;;
+              APPLE_ID_EDITEUR_EQUIPE) valeur="$ID_EDITEUR" ;;
             esac
             if [ -z "$valeur" ]; then manquants="$manquants $nom"; fi
           done
@@ -199,7 +210,7 @@ jobs:
           printf '%s\n' "$CLE" > "$CHEMIN_CLE"
           chmod 600 "$CHEMIN_CLE"
           if ! grep -q 'BEGIN PRIVATE KEY' "$CHEMIN_CLE"; then
-            echo "::error::APPLE_CLE ne ressemble pas à une clef .p8. Le secret doit contenir le fichier entier, « BEGIN PRIVATE KEY » compris."
+            echo "::error::APPLE_CLE_EQUIPE ne ressemble pas à une clef .p8. Le secret doit contenir le fichier entier, « BEGIN PRIVATE KEY » compris."
             exit 1
           fi
 
@@ -265,9 +276,9 @@ jobs:
             -resultBundlePath "$RUNNER_TEMP/resultat.xcresult" \
             -allowProvisioningUpdates \
             -authenticationKeyPath "${{ steps.signature.outputs.cle }}" \
-            -authenticationKeyID "${{ secrets.APPLE_ID_CLE }}" \
-            -authenticationKeyIssuerID "${{ secrets.APPLE_ID_EDITEUR }}" \
-            DEVELOPMENT_TEAM="${{ secrets.APPLE_EQUIPE }}" \
+            -authenticationKeyID "${{ secrets.APPLE_ID_CLE_EQUIPE }}" \
+            -authenticationKeyIssuerID "${{ secrets.APPLE_ID_EDITEUR_EQUIPE }}" \
+            DEVELOPMENT_TEAM="${{ secrets.APPLE_ID_EQUIPE }}" \
             CURRENT_PROJECT_VERSION=${{ steps.version.outputs.build }} \
             ${{ steps.version.outputs.marketing }} \
             archive
@@ -288,7 +299,7 @@ jobs:
           <plist version="1.0">
           <dict>
             <key>method</key><string>$1</string>
-            <key>teamID</key><string>${{ secrets.APPLE_EQUIPE }}</string>
+            <key>teamID</key><string>${{ secrets.APPLE_ID_EQUIPE }}</string>
             <key>signingStyle</key><string>automatic</string>
             <key>uploadSymbols</key><true/>
             <key>destination</key><string>export</string>
@@ -304,8 +315,8 @@ jobs:
               -exportPath "$RUNNER_TEMP/export" \
               -allowProvisioningUpdates \
               -authenticationKeyPath "${{ steps.signature.outputs.cle }}" \
-              -authenticationKeyID "${{ secrets.APPLE_ID_CLE }}" \
-              -authenticationKeyIssuerID "${{ secrets.APPLE_ID_EDITEUR }}"
+              -authenticationKeyID "${{ secrets.APPLE_ID_CLE_EQUIPE }}" \
+              -authenticationKeyIssuerID "${{ secrets.APPLE_ID_EDITEUR_EQUIPE }}"
           }
 
           ecrire_options app-store-connect
@@ -333,8 +344,8 @@ jobs:
           xcrun altool --upload-app \
             -f "${{ steps.export.outputs.ipa }}" \
             -t ios \
-            --apiKey "${{ secrets.APPLE_ID_CLE }}" \
-            --apiIssuer "${{ secrets.APPLE_ID_EDITEUR }}"
+            --apiKey "${{ secrets.APPLE_ID_CLE_EQUIPE }}" \
+            --apiIssuer "${{ secrets.APPLE_ID_EDITEUR_EQUIPE }}"
           echo "Envoyé. Comptez cinq à trente minutes de traitement avant que la"
           echo "fabrication apparaisse dans App Store Connect."
 

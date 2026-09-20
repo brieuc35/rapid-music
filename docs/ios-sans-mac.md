@@ -39,15 +39,49 @@ Dans **Réglages → Secrets and variables → Actions → New repository secret
 
 | Secret | Où le trouver |
 | --- | --- |
-| `APPLE_CLE` | le contenu du fichier `.p8` — **le même** que pour la vérification des achats |
-| `APPLE_ID_CLE` | l'identifiant de cette clef |
-| `APPLE_ID_EDITEUR` | l'identifiant de l'éditeur |
-| `APPLE_EQUIPE` | developer.apple.com → Membership → *Team ID*, dix caractères |
-| `APPLE_CERTIFICAT_P12` | à fabriquer, voir ci-dessous |
+| `APPLE_CLE_EQUIPE` | le contenu du fichier `.p8` de la clef d'équipe |
+| `APPLE_ID_CLE_EQUIPE` | l'identifiant de cette clef |
+| `APPLE_ID_EDITEUR_EQUIPE` | l'identifiant d'éditeur affiché avec elle |
+| `APPLE_ID_EQUIPE` | developer.apple.com → Membership → *Team ID*, dix caractères |
+| `APPLE_CERTIFICAT_P12` | à fabriquer, voir plus bas |
 | `APPLE_CERTIFICAT_MDP` | le mot de passe que **vous** choisirez en le fabriquant |
 
-Les trois premiers sont déjà décrits dans [`facturation.md`](facturation.md) :
-mêmes valeurs, rien à recréer.
+## ⚠️ Deux sortes de clefs, qui ne se remplacent pas
+
+C'est le piège de cette page. App Store Connect propose deux types de clefs
+d'API, et **la clef qui vérifie les achats ne sait pas envoyer un paquet**.
+
+| | Clef « In-App Purchase » | Clef d'équipe |
+| --- | --- | --- |
+| Sert à | l'API serveur des abonnements | l'envoi des paquets, les profils de signature |
+| Où | Intégrations → **In-App Purchase** | Intégrations → **App Store Connect API** → *Clés d'équipe* |
+| Déposée dans | les secrets Firebase | les secrets GitHub |
+| Décrite dans | [`facturation.md`](facturation.md) | cette page |
+
+Les deux portent un « identifiant de clef » et un « identifiant d'éditeur », et
+**ces valeurs diffèrent** — y compris l'identifiant d'éditeur, qu'on croirait
+pourtant propre au compte. D'où le suffixe `_EQUIPE` dans les noms des secrets
+GitHub : sans lui, on recopie les trois valeurs de la facturation et l'envoi
+échoue sur une erreur d'authentification qui ne dit pas pourquoi.
+
+## Créer la clef d'équipe
+
+**App Store Connect → Utilisateurs et accès → Intégrations → App Store Connect
+API → Clés d'équipe → +**
+
+Rôle : **App Manager**. C'est le moindre rôle qui permette d'envoyer un paquet ;
+« Developer » convient aussi, « Marketing » ou « Finance » non.
+
+Notez l'**identifiant de la clef** (dix caractères) et l'**identifiant
+d'éditeur** affiché en haut de la page, puis téléchargez le `.p8`.
+
+> **Le `.p8` ne se télécharge qu'une seule fois.** Apple ne le redonne jamais.
+> S'il est perdu, il faut révoquer la clef et en créer une autre. Le fichier
+> part dans le dossier des téléchargements, nommé `AuthKey_XXXXXXXXXX.p8` — il
+> n'est plus visible dans App Store Connect une fois téléchargé.
+
+Son contenu entier va dans `APPLE_CLE_EQUIPE`, lignes `BEGIN` et `END`
+comprises.
 
 ## Fabriquer le certificat sans Mac
 
