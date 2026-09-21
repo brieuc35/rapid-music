@@ -9,8 +9,14 @@
 /*    — six visuels : la capture posée dans un cadre de téléphone, sur le      */
 /*      violet de la marque et sous une phrase, 1080 × 1920.                   */
 /*                                                                            */
-/*  Et dans app-store/ : les six mêmes écrans aux deux tailles qu'Apple        */
-/*  accepte, 1320 × 2868 et 1290 × 2796.                                       */
+/*  Et dans app-store/ :                                                       */
+/*    — les six mêmes écrans aux trois tailles d'iPhone qu'Apple accepte,      */
+/*      1320 × 2868, 1290 × 2796 et 1284 × 2778 ;                              */
+/*    — les six écrans d'iPad, 2064 × 2752 et 2048 × 2732. Ce ne sont pas les  */
+/*      captures du téléphone agrandies : l'application change de mise en page */
+/*      à 900 px, et un iPad en fait 1032 — c'est donc une autre interface     */
+/*      qui est photographiée, celle à barre latérale ;                        */
+/*    — les captures d'examen de l'abonnement et l'illustration promotionnelle.*/
 /*                                                                            */
 /*  Le nom du fichier est resté celui du seul magasin qu'il servait au départ. */
 /*  Le renommer casserait la commande écrite dans trois documents, pour un      */
@@ -212,6 +218,30 @@ const LARGEUR = 360
 const HAUTEUR = 720
 const ECHELLE = 3
 
+/* -------------------------------------------------------------------------- */
+/*  Les deux appareils photographiés                                           */
+/*                                                                            */
+/*  Ce n'est pas la même application des deux côtés, et c'est tout l'intérêt : */
+/*  la feuille de style bascule à 900 px. En deçà, le menu est un tiroir et la */
+/*  navigation une barre d'onglets en bas ; au-delà, la barre latérale reste   */
+/*  dépliée et la barre d'onglets disparaît.                                   */
+/*                                                                            */
+/*  Un iPad 13 pouces fait 1032 points de large : il voit donc la seconde mise */
+/*  en page. Poser une capture de téléphone dans un cadre d'iPad montrerait    */
+/*  une application que personne n'a sous les yeux — et Apple refuse les       */
+/*  captures qui ne correspondent pas à l'appareil.                            */
+/*                                                                            */
+/*  D'où l'attente d'un sélecteur différent : `.tabbar` n'existe pas à cette   */
+/*  largeur, et l'attendre bloquerait jusqu'au délai de garde.                 */
+/* -------------------------------------------------------------------------- */
+
+const CAPTURE_TEL = { l: LARGEUR, h: HAUTEUR, echelle: ECHELLE, attendre: '.tabbar' }
+
+/*  1032 × 1376, la taille logique d'un iPad 13 pouces — 2064 × 2752 une fois
+ *  doublée, c'est-à-dire exactement ce qu'App Store Connect réclame. Le rapport
+ *  est de 4:3 au point près. */
+const CAPTURE_IPAD = { l: 1032, h: 1376, echelle: 2, attendre: '.sidebar' }
+
 /*  La mise en scène vient de la sonde : l'aperçu vidéo montre les mêmes écrans
  *  et doit les montrer pareil. Seul le filtre des concerts est propre à cet
  *  écran-là. */
@@ -262,14 +292,27 @@ const FORMATS = [
     prefixe: 'visuel',
     l: 540,
     h: 960,
+    capture: CAPTURE_TEL,
     /*  Figé, et non calculé comme les suivants : ces images sont déjà en ligne
      *  sur la fiche Google. Les recalculer les changerait sans raison. */
-    tel: { largeur: 300, hauteur: 576, cadre: 12, haut: 252 },
+    tel: { largeur: 300, hauteur: 576, cadre: 12, haut: 252, rayon: 38 },
     titre: { haut: 62, taille: 42, marge: 44 },
   },
   cadreApple('iphone-6.9', 660, 1434),
   cadreApple('iphone-6.7', 645, 1398),
   cadreApple('iphone-6.5', 642, 1389),
+  /*  L'iPad, dans le seul créneau qu'Apple ouvre encore : « 13 pouces ». Il
+   *  accepte deux tailles, et les deux sont produites pour la même raison que
+   *  les trois tailles d'iPhone — laquelle le formulaire réclame ne se découvre
+   *  qu'au moment de l'envoi, une fois tout le reste rempli.
+   *
+   *    2064 × 2752   la taille de référence, celle à envoyer ;
+   *    2048 × 2732   l'ancienne 12,9 pouces, encore acceptée dans ce créneau.
+   *
+   *  C'est de la plus grande fournie qu'Apple dérive les tailles des autres
+   *  appareils : à choisir, la première. */
+  cadreIPad('ipad-13', 1032, 1376),
+  cadreIPad('ipad-13-alt', 1024, 1366),
 ]
 
 /**
@@ -299,9 +342,74 @@ function cadreApple(prefixe, l, h) {
     prefixe,
     l,
     h,
-    tel: { largeur, hauteur, cadre, haut: Math.round(basDuTitre + (h - basDuTitre - hauteur) / 2) },
+    capture: CAPTURE_TEL,
+    tel: {
+      largeur,
+      hauteur,
+      cadre,
+      haut: Math.round(basDuTitre + (h - basDuTitre - hauteur) / 2),
+      rayon: Math.round(cadre * 3.2),
+    },
     titre,
   }
+}
+
+/**
+ * Le même travail pour l'iPad, à trois différences près.
+ *
+ * La toile est presque carrée — 3:4 contre 1:2,17 pour un iPhone — et la
+ * capture l'est tout autant. Le cadre occupe donc une part plus modeste de la
+ * largeur : à 72 %, comme sur l'iPhone, il ne resterait rien sous le titre.
+ *
+ * Le rapport de l'écran doit valoir exactement celui de la capture, faute de
+ * quoi `cover` rogne les bords sans rien dire. Sur l'iPhone, `cadreApple` y
+ * arrive en déduisant la hauteur d'un rapport de 1:2, entier par nature. Ici le
+ * rapport est de 4:3, et toute largeur ne donne pas une hauteur entière : la
+ * largeur est donc ramenée au multiple inférieur du pas qui le garantit.
+ *
+ * Les angles, enfin, sont bien moins arrondis que ceux d'un téléphone. Un
+ * rayon de 3,2 fois la bordure, transposé tel quel, donnerait un galet.
+ */
+function cadreIPad(prefixe, l, h) {
+  const capture = CAPTURE_IPAD
+
+  /*  Le pas : la plus petite largeur d'écran qui tombe sur une hauteur entière.
+   *  Pour 1032 × 1376, le rapport se réduit à 3:4 et le pas vaut 3. */
+  const d = pgcd(capture.l, capture.h)
+  const pas = capture.l / d
+
+  const cadre = Math.round(l * 0.017)
+  const ecranL = Math.floor((Math.round(l * 0.78) - 2 * cadre) / pas) * pas
+  const ecranH = (ecranL / pas) * (capture.h / d)
+
+  const titre = {
+    haut: Math.round(h * 0.05),
+    taille: Math.round(l * 0.062),
+    marge: Math.round(l * 0.1),
+  }
+  //  Deux lignes de titre, plus un peu d'air avant l'appareil.
+  const basDuTitre = titre.haut + Math.round(titre.taille * 1.12 * 2)
+  const hauteur = ecranH + 2 * cadre
+
+  return {
+    magasin: 'app-store',
+    prefixe,
+    l,
+    h,
+    capture,
+    tel: {
+      largeur: ecranL + 2 * cadre,
+      hauteur,
+      cadre,
+      haut: Math.round(basDuTitre + (h - basDuTitre - hauteur) / 2),
+      rayon: Math.round(cadre * 1.9),
+    },
+    titre,
+  }
+}
+
+function pgcd(a, b) {
+  return b === 0 ? a : pgcd(b, a % b)
 }
 
 /*  Le rognage se ferait sans bruit : `cover` remplit toujours le cadre, et rien
@@ -314,18 +422,22 @@ function cadreApple(prefixe, l, h) {
  *  figée du Play Store, dont les quatre nombres sont indépendants, et il
  *  protégera de la même façon tout format qu'on écrirait à la main plus tard. */
 for (const f of FORMATS) {
+  const c = f.capture
   const ecranL = f.tel.largeur - 2 * f.tel.cadre
   const ecranH = f.tel.hauteur - 2 * f.tel.cadre
-  if (ecranL * HAUTEUR !== ecranH * LARGEUR) {
-    const rogne = Math.abs(ecranL - (ecranH * LARGEUR) / HAUTEUR) / 2
+  if (ecranL * c.h !== ecranH * c.l) {
+    const rogne = Math.abs(ecranL - (ecranH * c.l) / c.h) / 2
     throw new Error(
-      `${f.prefixe} : le cadre du téléphone (${ecranL} × ${ecranH}) n'a pas le rapport ` +
-        `de la capture (${LARGEUR} × ${HAUTEUR}) : « cover » rognerait ${rogne.toFixed(1)} px ` +
+      `${f.prefixe} : le cadre de l'appareil (${ecranL} × ${ecranH}) n'a pas le rapport ` +
+        `de la capture (${c.l} × ${c.h}) : « cover » rognerait ${rogne.toFixed(1)} px ` +
         `de chaque côté, et avec eux la marge des pages de l'application.`,
     )
   }
   if (f.tel.hauteur + f.tel.haut > f.h) {
-    throw new Error(`${f.prefixe} : le téléphone dépasse le bas de la toile.`)
+    throw new Error(`${f.prefixe} : l'appareil dépasse le bas de la toile.`)
+  }
+  if (f.tel.haut < f.titre.haut + f.titre.taille) {
+    throw new Error(`${f.prefixe} : l'appareil remonte sur le titre.`)
   }
 }
 
@@ -394,10 +506,10 @@ function pageVisuel(f, titre, imageBase64, fond) {
     position: absolute; left: 50%; top: ${f.tel.haut}px;
     width: ${f.tel.largeur}px; height: ${f.tel.hauteur}px;
     transform: translateX(-50%);
-    border-radius: ${Math.round(f.tel.cadre * 3.2)}px; background: #0b0812; padding: ${f.tel.cadre}px;
+    border-radius: ${f.tel.rayon}px; background: #0b0812; padding: ${f.tel.cadre}px;
     box-shadow: 0 60px 90px rgba(0,0,0,.55), 0 0 0 1.5px rgba(255,255,255,.14), 0 0 0 8px rgba(255,255,255,.05);
   }
-  .ecran { width: 100%; height: 100%; border-radius: ${Math.round(f.tel.cadre * 2.2)}px; overflow: hidden; background: #fff; position: relative; }
+  .ecran { width: 100%; height: 100%; border-radius: ${Math.round(f.tel.rayon * 0.69)}px; overflow: hidden; background: #fff; position: relative; }
   /*  \`height: 100%\` autant que \`width\` : sans elle l'image garde ses
       proportions, ne remplit pas le cadre, et laisse une bande blanche sous la
       barre d'onglets. \`cover\` ne recadre que si les deux sont contraints. */
@@ -536,6 +648,31 @@ async function principal() {
       await page.close()
     }
 
+    /*  ---- les mêmes six écrans, vus par un iPad
+     *
+     *  Gardées en mémoire et non écrites sur le disque, contrairement à celles
+     *  du téléphone : celles-là sont elles-mêmes une livraison — ce sont les
+     *  captures de la fiche Google — tandis que celles-ci ne servent qu'à
+     *  remplir les cadres d'iPad quelques lignes plus bas. Six fichiers de
+     *  2064 × 2752 versés au dépôt pour être aussitôt recopiés dans d'autres
+     *  images seraient du poids sans emploi. */
+    const capturesIPad = new Map()
+    for (const ecran of ECRANS) {
+      const page = await navigateur.newPage({
+        viewport: { width: CAPTURE_IPAD.l, height: CAPTURE_IPAD.h },
+        deviceScaleFactor: CAPTURE_IPAD.echelle,
+      })
+      page.on('pageerror', (e) => console.error(`  ipad ${ecran.nom} :`, e.message))
+      await page.goto(`${PAGE}#${ecran.route}`)
+      await page.waitForSelector(CAPTURE_IPAD.attendre, { timeout: 20000 })
+      await attendre(1000)
+      await poserLaScene(page)
+      if (ecran.apres) await ecran.apres(page)
+      await attendre(600)
+      capturesIPad.set(ecran.nom, (await page.screenshot()).toString('base64'))
+      await page.close()
+    }
+
     // ---- les visuels : les captures qu'on vient de produire, mises en scène.
     //      Les mêmes six écrans, habillés une fois par emplacement de magasin.
     for (const f of FORMATS) {
@@ -543,7 +680,10 @@ async function principal() {
       mkdirSync(dossier, { recursive: true })
 
       for (const [i, [nom, titre]] of VISUELS.entries()) {
-        const capture = readFileSync(join(SORTIE, `capture-${nom}.png`)).toString('base64')
+        const capture =
+          f.capture === CAPTURE_IPAD
+            ? capturesIPad.get(nom)
+            : readFileSync(join(SORTIE, `capture-${nom}.png`)).toString('base64')
         const page = await navigateur.newPage({
           viewport: { width: f.l, height: f.h },
           deviceScaleFactor: 2,
