@@ -154,6 +154,23 @@
             </span>
           </template>
           <span v-else class="badge badge--violet">Votre formule</span>
+
+          <!--  La reconduction et les deux liens, sur l'écran où l'on paie.
+                Apple l'exige (règle 3.1.2) et le refus est automatique : les
+                liens doivent être **ici**, pas seulement dans le profil, car
+                c'est cet écran-là que le vérificateur regarde. Google demande
+                la même chose en des termes plus vagues.
+
+                Hors de toute condition d'affichage, y compris pour un abonné :
+                connaître les termes de ce qui se reconduit tous les mois n'est
+                pas moins utile une fois qu'on a payé. -->
+          <p class="plan__legal">
+            Abonnement sans engagement, reconduit automatiquement à la fin de
+            chaque période sauf résiliation au moins 24 h avant son terme, et
+            résiliable à tout moment depuis la boutique où il a été souscrit.
+            <RouterLink to="/conditions">Conditions d'utilisation</RouterLink> ·
+            <RouterLink to="/confidentialite">Confidentialité</RouterLink>
+          </p>
         </div>
       </div>
     </div>
@@ -222,6 +239,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { RouterLink } from 'vue-router'
 import PageHeader from '@/components/PageHeader.vue'
 import Icon from '@/components/Icon.vue'
 import Modal from '@/components/Modal.vue'
@@ -581,9 +599,29 @@ function doCancel() {
   flex-shrink: 0;
   margin-top: 2px;
 }
+/*  En colonne, et non en ligne : le pied contient désormais le bouton, le
+    rappel du prélèvement annuel et les mentions d'abonnement. En ligne, ces
+    trois-là se seraient disputé la largeur — le bouton étant en `btn--block`,
+    les deux textes auraient été écrasés contre le bord. */
 .plan__foot {
   display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
+}
+/*  Les mentions légales de l'abonnement. Discrètes, mais lisibles : les
+    rendre illisibles serait contraire à leur raison d'être, et Apple refuse
+    les écrans où elles se devinent. */
+.plan__legal {
+  margin: 14px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--text-muted);
+}
+.plan__legal a {
+  color: var(--text-soft);
+  text-decoration: underline;
 }
 
 .ico-yes {
