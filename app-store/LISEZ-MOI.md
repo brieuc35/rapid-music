@@ -1,7 +1,8 @@
 # Les images et l'aperçu de la fiche App Store
 
-Treize fichiers vont dans **App Store Connect → votre app → la version iOS →
-Aperçus et captures d'écran**. Le quatorzième attend ailleurs — voir plus bas.
+Ces fichiers vont dans **App Store Connect → votre app → la version iOS →
+Aperçus et captures d'écran**. Deux d'entre eux attendent ailleurs — voir plus
+bas.
 
 | Fichier | Taille | Ce que c'est |
 | --- | --- | --- |
@@ -9,9 +10,38 @@ Aperçus et captures d'écran**. Le quatorzième attend ailleurs — voir plus b
 | `iphone-6.9-*.png` | 1320 × 2868 | six captures, iPhone 6,9 pouces |
 | `iphone-6.7-*.png` | 1290 × 2796 | les six mêmes, iPhone 6,7 pouces |
 | `iphone-6.5-*.png` | 1284 × 2778 | les six mêmes, iPhone 6,5 pouces |
+| `ipad-13-*.png` | 2064 × 2752 | six captures d'iPad 13 pouces |
+| `ipad-13-alt-*.png` | 2048 × 2732 | les six mêmes, dans l'ancienne taille 12,9 pouces |
 | `illustration-promo-4320x1080.png` | 4320 × 1080 | l'illustration promotionnelle — **pas encore téléversable** |
 | `verification-abonnement-640x920.png` | 640 × 920 | capture d'examen de l'abonnement — **va ailleurs**, voir ci-dessous |
 | `verification-abonnement-1284x2778.png` | 1284 × 2778 | la même, en plus net, si le formulaire l'accepte |
+
+## Les captures d'iPad sont obligatoires
+
+Non par zèle : `ios/App/App.xcodeproj` déclare `TARGETED_DEVICE_FAMILY = "1,2"`,
+c'est-à-dire iPhone **et** iPad. Une application qui se dit compatible iPad doit
+montrer des captures d'iPad, et le formulaire les réclame avant d'accepter la
+soumission.
+
+**Ce ne sont pas les captures d'iPhone agrandies**, et c'est essentiel. La
+feuille de style bascule à 900 px : en deçà, la navigation est une barre
+d'onglets en bas et le menu un tiroir ; au-delà, la barre latérale reste
+dépliée. Un iPad 13 pouces fait 1032 points de large — il voit donc la seconde
+mise en page, celle à barre latérale, et c'est elle qui est photographiée.
+
+Poser une capture de téléphone dans un cadre d'iPad montrerait une application
+que personne n'a sous les yeux. Apple refuse ces captures-là, et elles
+décevraient à l'installation.
+
+Au passage, l'écran des concerts y gagne : sur iPhone, les filtres passent à la
+ligne et ne laissent voir qu'une seule date. À la largeur d'un iPad, les six
+tiennent.
+
+**Envoyez le `ipad-13-*`** — 2064 × 2752 est la taille de référence du créneau
+13 pouces, et c'est de la plus grande fournie qu'Apple dérive les autres. Le
+`ipad-13-alt-*` est l'ancienne taille 12,9 pouces, encore acceptée dans le même
+créneau : elle ne sert que si le formulaire réclame celle-là, ce qu'il n'écrit
+qu'au moment du refus.
 
 ## Attention : deux tailles pour le même écran
 
@@ -134,9 +164,15 @@ node scripts/fiche-play-store.mjs    # les images — Play Store et App Store
 node scripts/apercu-app-store.mjs    # l'aperçu vidéo
 ```
 
-La première commande refait **toutes** les images : les treize du Play Store et
-les douze d'ici. Les six écrans sont pris une seule fois et servent aux trois
-formats — seul l'habillage change.
+La première commande refait **toutes** les images, celles du Play Store comme
+celles d'ici. Les six écrans sont photographiés deux fois — une fois en
+téléphone, une fois en iPad — et chaque prise sert à tous les formats qui
+partagent sa mise en page ; seul l'habillage change.
+
+Les captures sont datées par rapport au jour de la fabrication : relancer le
+script change donc les dates affichées, et toutes les images du dépôt avec
+elles. C'est voulu, et c'est pour cela qu'on les refait en une seule fois plutôt
+qu'une par une — une série mi-septembre mi-octobre se remarquerait.
 
 Il leur faut deux outils, tenus hors des dépendances du projet parce qu'ils
 pèsent plus lourd que l'application et ne servent qu'ici :
