@@ -526,6 +526,37 @@ export const authReady = ref(false)
  *  compte soient là, et qu'il n'y ait plus qu'un seul écran possible. */
 export const chargementCompte = ref(false)
 
+/*  Le filet : si Firebase n'a pas répondu au bout de ce délai, on ouvre quand
+ *  même.
+ *
+ *  Le `finally` posé plus bas garantit que `authReady` est levé quoi qu'il
+ *  arrive **pendant** le traitement d'une session. Il ne garantit rien si
+ *  `onAuthStateChanged` n'est jamais appelé — et c'est précisément ce qui s'est
+ *  produit dans l'enveloppe iPhone, où le résolveur installé par `getAuth`
+ *  attendait une page qui n'arrivait pas. L'application restait sur son écran
+ *  d'attente, sans planter, donc sans laisser la moindre trace.
+ *
+ *  La cause est corrigée dans `firebase.ts`. Ce filet est là pour la prochaine,
+ *  quelle qu'elle soit : entre un écran de connexion affiché à tort — dont on
+ *  sort en se connectant — et une application définitivement inerte, le choix
+ *  ne se discute pas.
+ *
+ *  Huit secondes : bien au-delà du dixième de seconde que Firebase met à
+ *  répondre, y compris sur un réseau lent, et en deçà de ce qu'on accepte de
+ *  fixer un logo qui pulse. Si la session arrive après, elle s'applique
+ *  normalement — l'écran de connexion cède la place, et rien n'est perdu. */
+const DELAI_MAX_AUTH = 8000
+
+window.setTimeout(() => {
+  if (authReady.value) return
+  console.warn(
+    `Firebase n'a pas répondu en ${DELAI_MAX_AUTH / 1000} s. ` +
+      "Ouverture de l'écran de connexion sans attendre.",
+  )
+  chargementCompte.value = false
+  authReady.value = true
+}, DELAI_MAX_AUTH)
+
 export const isLoggedIn = computed(() => currentUser.value !== null)
 
 /* -------------------------------------------------------------------------- */
