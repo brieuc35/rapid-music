@@ -12,7 +12,11 @@
 /* -------------------------------------------------------------------------- */
 
 import { initializeApp } from 'firebase/app'
-import { getAuth } from 'firebase/auth'
+import {
+  browserLocalPersistence,
+  indexedDBLocalPersistence,
+  initializeAuth,
+} from 'firebase/auth'
 /*  Version allégée de Firestore : lectures et écritures ponctuelles, sans
  *  écoute temps réel ni cache géré par le SDK. C'est exactement ce que fait
  *  cette application — un document lu à l'ouverture, réécrit à chaque
@@ -31,7 +35,33 @@ const app = initializeApp({
   appId: '1:1084456617285:web:051814589d2454e4362a2c',
 })
 
-export const auth = getAuth(app)
+/*  `initializeAuth` et non `getAuth`, et ce n'est pas un détail de style :
+ *  c'est ce qui empêchait l'application iPhone de démarrer.
+ *
+ *  `getAuth` est un raccourci qui choisit tout seul, et qui choisit pour un
+ *  navigateur. Il installe notamment le « popup redirect resolver », la pièce
+ *  qui sert à se connecter par Google ou Facebook dans une fenêtre surgissante.
+ *  Celle-ci va chercher une page chez `authDomain`, sur `https://`.
+ *
+ *  Dans l'enveloppe de l'App Store, la page n'est pas servie en `https://` mais
+ *  sous le schéma `capacitor://` : ce chargement n'aboutit jamais, et rien ne
+ *  le signale. `onAuthStateChanged` n'est alors jamais appelé — ni avec un
+ *  artiste, ni avec `null`. Or c'est lui qui lève `authReady`. L'application
+ *  restait donc sur son écran d'attente, indéfiniment, sans planter : aucune
+ *  trace dans les rapports de panne, puisqu'il n'y avait pas de panne.
+ *
+ *  `initializeAuth` demande de nommer ce qu'on veut, et rien de plus. Sans
+ *  résolveur, car cette application n'ouvre aucune fenêtre surgissante : elle
+ *  ne connaît que l'adresse et le mot de passe. La liste de persistances est
+ *  celle que `getAuth` aurait retenue, essayée dans l'ordre — IndexedDB
+ *  d'abord, `localStorage` s'il est indisponible, ce qui arrive en navigation
+ *  privée.
+ *
+ *  Rien ne change pour le site : c'est le même stockage, et la session s'y
+ *  rétablit comme avant. */
+export const auth = initializeAuth(app, {
+  persistence: [indexedDBLocalPersistence, browserLocalPersistence],
+})
 
 /*  Langue des messages envoyés par Firebase — confirmation d'adresse,
  *  réinitialisation de mot de passe. Sans ce réglage ils partent en anglais,
