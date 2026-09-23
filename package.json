@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "ios:sync": "npm run build && cap sync ios && node scripts/greffons-ios.mjs",
     "preview": "vite preview",
     "test": "tsc src/auth-action.ts src/auth-action.test.ts src/utils/image-regles.ts src/utils/image-regles.test.ts --outDir .test-tmp --module nodenext --moduleResolution nodenext --target es2022 --strict --skipLibCheck && node --test .test-tmp/**/*.test.js .test-tmp/*.test.js"
   },

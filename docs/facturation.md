@@ -283,12 +283,14 @@ comprises.
 Le greffon d'achat est du code natif : il n'arrive pas par une mise à jour du
 site. Il faut reconstruire et renvoyer le paquet.
 
-```sh
-npm run build && npx cap sync ios
-npx cap open ios
-```
+Aucun Mac n'est nécessaire : **Actions → Application iPhone (.ipa) → Run
+workflow**, en cochant l'envoi. Le numéro de fabrication monte tout seul. Voir
+[`ios-sans-mac.md`](ios-sans-mac.md).
 
-Puis **Product → Archive → Distribute App**. Le numéro de build doit augmenter.
+En local, sur un Mac, la commande est `npm run ios:sync` — et non `cap sync`
+seul. La différence compte : `cap sync` ne déclare pas le greffon d'achat, et
+l'application se fabrique alors sans lui, sans la moindre alerte. Voir
+`scripts/greffons-ios.mjs`.
 
 ## Vérifier l'achat sur iPhone
 
