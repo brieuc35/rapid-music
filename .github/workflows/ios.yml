@@ -109,21 +109,28 @@ jobs:
       - name: Installer les dépendances
         run: npm ci
 
-      # Les deux commandes vont ensemble. `sync` recopie ce que `build` vient de
-      # produire ; sans `build`, on enverrait à Apple la version précédente du
-      # site, et rien ne le signalerait. Le dossier recopié est d'ailleurs
-      # écarté du dépôt (voir ios/.gitignore) : sans cette étape, l'application
-      # n'aurait aucune page à afficher.
+      # Les trois commandes vont ensemble, dans cet ordre. `sync` recopie ce que
+      # `build` vient de produire ; sans `build`, on enverrait à Apple la
+      # version précédente du site, et rien ne le signalerait. Le dossier
+      # recopié est d'ailleurs écarté du dépôt (voir ios/.gitignore) : sans
+      # cette étape, l'application n'aurait aucune page à afficher.
+      #
+      # La troisième déclare le greffon d'achat, que `sync` ne voit pas —
+      # scripts/greffons-ios.mjs explique pourquoi. Elle vient après `sync`, qui
+      # réécrit le fichier qu'elle corrige.
       - name: Fabriquer le site et le recopier dans le projet iOS
         run: |
           npm run build
           npx cap sync ios
+          node scripts/greffons-ios.mjs
 
       - name: Outils disponibles
         run: |
           xcodebuild -version
           echo "---"
           xcodebuild -project ios/App/App.xcodeproj -list
+          echo "--- greffons déclarés ---"
+          cat ios/App/App/capacitor.config.json
 
       # ----------------------------------------------------------------------
       #  Signature
