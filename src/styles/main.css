@@ -131,6 +131,29 @@ textarea {
   font-size: 14px;
 }
 
+/*  Seize pixels au doigt, et pas un de moins.
+ *
+ *  En deçà de seize, iOS agrandit la page dès qu'on touche un champ, pour que
+ *  le texte y soit lisible. C'est une aide, mais elle ne se défait pas : la
+ *  page reste agrandie une fois le champ quitté, et il faut alors la faire
+ *  glisser de gauche à droite pour en voir les bords. Le premier champ touché
+ *  est celui de la connexion — l'application partait donc de travers dès son
+ *  ouverture, et le restait.
+ *
+ *  Le site en souffrait autant que l'application, et depuis plus longtemps :
+ *  tout visiteur sous iPhone rencontrait la même chose.
+ *
+ *  `pointer: coarse` plutôt qu'une largeur : c'est bien le doigt qui déclenche
+ *  cet agrandissement, pas la taille de l'écran. Une souris sur une fenêtre
+ *  étroite garde les quatorze pixels de la maquette. */
+@media (pointer: coarse) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
 ::selection {
   background: var(--violet-200);
 }
