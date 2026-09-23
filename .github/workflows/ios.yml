@@ -325,6 +325,51 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             archive
 
+      # Le greffon a-t-il survécu à l'édition de liens ?
+      #
+      # Trois conditions doivent tenir pour qu'un achat soit possible, et
+      # jusqu'ici seules les deux premières se voyaient :
+      #
+      #   compilé      le fichier Swift est dans la cible — le journal le dit ;
+      #   déclaré      la classe est nommée dans packageClassList — pareil ;
+      #   **lié**      la classe est encore dans le binaire.
+      #
+      # La troisième manquait. `CapApp-SPM` est une bibliothèque statique, et
+      # rien dans le code de l'application ne nomme `AchatProPlugin` : Capacitor
+      # le cherche à l'exécution, par son nom, avec `NSClassFromString`.
+      # L'éditeur de liens ne voyant aucune référence, il écartait l'objet — la
+      # classe n'était donc jamais enregistrée auprès de l'Objective-C, et
+      # `window.Capacitor.Plugins.AchatPro` restait introuvable. L'application
+      # se fabriquait, se signait, s'envoyait, et l'écran d'abonnement affichait
+      # « Indisponible pour le moment ».
+      #
+      # `-ObjC` corrige la cause (voir OTHER_LDFLAGS dans project.pbxproj). Ce
+      # contrôle-ci vérifie le résultat, et fait échouer la fabrication plutôt
+      # que d'envoyer à Apple une application dont l'achat ne marche pas : c'est
+      # un motif de refus, et il coûte une semaine.
+      - name: Vérifier que le greffon est bien dans le binaire
+        if: steps.signature.outputs.signe == 'oui'
+        run: |
+          set -euo pipefail
+          BINAIRE="$RUNNER_TEMP/App.xcarchive/Products/Applications/App.app/App"
+          if [ ! -f "$BINAIRE" ]; then
+            echo "::error::Binaire introuvable dans l'archive : $BINAIRE"
+            exit 1
+          fi
+
+          # Deux méthodes, et l'échec n'est déclaré que si les deux échouent :
+          # la table des symboles peut être élaguée dans une compilation de
+          # publication, alors que le nom de classe, lui, reste.
+          trouve=non
+          if nm "$BINAIRE" 2>/dev/null | grep -q 'AchatProPlugin'; then trouve=oui; fi
+          if [ "$trouve" = non ] && strings "$BINAIRE" | grep -q 'AchatProPlugin'; then trouve=oui; fi
+
+          if [ "$trouve" = non ]; then
+            echo "::error::La classe AchatProPlugin est absente du binaire : l'éditeur de liens l'a écartée. Vérifier OTHER_LDFLAGS = \"-ObjC\" dans ios/App/App.xcodeproj."
+            exit 1
+          fi
+          echo "AchatProPlugin est bien dans le binaire : l'achat intégré pourra fonctionner."
+
       # C'est ici que tout se signe, l'archive étant sortie nue de l'étape
       # précédente. Xcode fabrique le profil App Store au passage, grâce à la
       # clef d'API — un profil de ce type ne réclame aucun appareil
