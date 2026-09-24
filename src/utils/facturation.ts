@@ -31,7 +31,7 @@ import {
   lireTarifs as lireTarifsPlay,
 } from './facturation-play'
 
-export { AchatAnnule } from './facturation-apple'
+export { AchatAnnule, diagnosticAchat } from './facturation-apple'
 export {
   ecrireTarif,
   ErreurAchat,
