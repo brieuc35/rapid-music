@@ -142,6 +142,14 @@
             <span v-else class="muted" style="font-size: 13px">
               {{ surIPhone ? 'Indisponible pour le moment' : "Depuis l'application" }}
             </span>
+            <!--  Le pourquoi, là où l'achat devrait marcher et ne marche pas.
+                  Cette ligne ne s'adresse pas à l'artiste mais à qui répare :
+                  sans Mac, un iPhone ne se laisse pas inspecter, et elle est la
+                  seule fenêtre sur ce qui s'y passe. Elle disparaît d'elle-même
+                  dès que l'achat fonctionne, l'achat étant alors proposé. -->
+            <span v-if="!achatPossible && surIPhone" class="plan__diag">
+              {{ diagnostic }}
+            </span>
             <!-- Le prix engagé, redit sous le bouton : l'annuel se paie en une
                  fois, et le découvrir sur l'écran de Google serait une surprise
                  désagréable. -->
@@ -260,6 +268,7 @@ import { surIOS } from '@/utils/enveloppe-native'
 import {
   AchatAnnule,
   acheterPro,
+  diagnosticAchat,
   ecrireTarif,
   ErreurAchat,
   facturationPossible,
@@ -314,6 +323,10 @@ const achatPossible = facturationPossible()
 /*  Dans l'enveloppe App Store : ni bouton d'achat, ni renvoi vers le Play Store.
  *  Constant pour la session, comme la disponibilité de la facturation. */
 const surIPhone = surIOS()
+
+/*  Relevé une seule fois, comme la disponibilité : ce qu'il décrit ne change
+ *  pas en cours de session. */
+const diagnostic = diagnosticAchat()
 const achatEnCours = ref(false)
 const erreurAchat = ref('')
 
@@ -608,6 +621,16 @@ function doCancel() {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+}
+.plan__diag {
+  display: block;
+  margin-top: 8px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10.5px;
+  line-height: 1.45;
+  text-align: center;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
 }
 /*  Les mentions légales de l'abonnement. Discrètes, mais lisibles : les
     rendre illisibles serait contraire à leur raison d'être, et Apple refuse

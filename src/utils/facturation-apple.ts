@@ -67,6 +67,40 @@ export function facturationApplePossible(): boolean {
 }
 
 /**
+ * Pourquoi l'achat n'est-il pas proposé, dans l'enveloppe iPhone ?
+ *
+ * Une ligne technique, affichée uniquement là où l'achat devrait marcher et ne
+ * marche pas. Elle ne s'adresse pas à l'artiste : elle s'adresse à qui répare,
+ * et elle existe parce qu'un iPhone ne se laisse pas inspecter à distance. Sans
+ * Mac, il n'y a ni console ni journal — cette ligne est la seule fenêtre.
+ *
+ * Trois choses s'y lisent, et chacune désigne un coupable différent :
+ *
+ *   pont absent          `window.Capacitor` n'a pas été posé — le paquet n'est
+ *                        pas celui de Capacitor, ou le pont a échoué ;
+ *   plateforme ≠ ios     l'enveloppe tourne, mais ne se déclare pas iOS ;
+ *   AchatPro manquant    le greffon natif n'est pas enregistré, et la liste des
+ *                        greffons présents dit s'il en manque un seul ou tous.
+ *
+ * À retirer le jour où l'achat sera confirmé sur un appareil. D'ici là, elle
+ * vaut mieux qu'un aller-retour par fabrication.
+ */
+export function diagnosticAchat(): string {
+  const pont = (window as FenetreAvecGreffons).Capacitor
+  if (!pont) return 'pont natif absent'
+
+  const plateforme = (pont as { getPlatform?: () => string }).getPlatform?.() ?? '?'
+  const natif = (pont as { isNativePlatform?: () => boolean }).isNativePlatform?.() ?? false
+  const noms = Object.keys((pont.Plugins ?? {}) as Record<string, unknown>)
+
+  return [
+    `natif ${natif ? 'oui' : 'non'}`,
+    `plateforme ${plateforme}`,
+    `greffons ${noms.length ? noms.join(', ') : '(aucun)'}`,
+  ].join(' · ')
+}
+
+/**
  * Déclenche le paiement et rend le reçu signé par Apple.
  *
  * Une annulation lève une erreur portant `annule`, que l'appelant distingue
