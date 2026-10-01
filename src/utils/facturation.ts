@@ -63,6 +63,34 @@ export function facturationPossible(): boolean {
 }
 
 /**
+ * Où l'on résilie, et c'est ailleurs qu'ici.
+ *
+ * Ni Apple ni Google n'autorisent une application à résilier l'abonnement
+ * qu'ils encaissent : ils gardent la main, et c'est tant mieux — personne ne
+ * veut qu'une application puisse décider seule de l'argent qu'elle prélève. La
+ * seule chose à faire est donc d'ouvrir la page du magasin, d'un geste.
+ *
+ * `null` sur le site : on y ignore chez quel magasin l'abonnement a été pris,
+ * et deviner enverrait un abonné Apple sur une page Google où il ne trouverait
+ * rien. L'écran dit alors où chercher, en toutes lettres.
+ */
+export function lienGestionAbonnement(): { url: string; magasin: 'apple' | 'play' } | null {
+  const ou = magasin()
+  if (ou === 'apple') {
+    return { url: 'https://apps.apple.com/account/subscriptions', magasin: 'apple' }
+  }
+  if (ou === 'play') {
+    /*  Le paquet en paramètre : sans lui, Google ouvre la liste de tous les
+     *  abonnements du compte, où il faut retrouver le bon. */
+    return {
+      url: 'https://play.google.com/store/account/subscriptions?package=fr.rapidmusic.app',
+      magasin: 'play',
+    }
+  }
+  return null
+}
+
+/**
  * Déclenche le paiement et rend le reçu à faire vérifier.
  *
  * Le magasin accompagne le jeton : `verifierAupresDuServeur` en a besoin, et le

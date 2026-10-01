@@ -50,7 +50,23 @@
 
       <div class="hero__body">
         <template v-if="!editMode">
-          <h2 class="hero__name">{{ displayed.stageName }}</h2>
+          <h2 class="hero__name">
+            {{ displayed.stageName }}
+            <!--  La vignette dit laquelle des deux : un abonnement payé et une
+                  démonstration ouvrent les mêmes écrans, mais l'un se résilie
+                  chez un magasin et l'autre s'arrête d'un bouton. Les
+                  confondre sous un même « PRO » ferait chercher une
+                  résiliation là où il n'y a rien à résilier. -->
+            <RouterLink
+              v-if="isPro"
+              to="/abonnement"
+              class="hero__pro"
+              :class="{ 'hero__pro--demo': !isPaidPro }"
+              :title="isPaidPro ? 'Abonnement Pro actif' : 'Démonstration Pro en cours'"
+            >
+              {{ isPaidPro ? 'Pro' : 'Pro démo' }}
+            </RouterLink>
+          </h2>
           <p class="hero__real" v-if="displayed.realName">{{ displayed.realName }}</p>
           <div class="hero__tags">
             <span v-if="displayed.genre" class="pill"><Icon name="music" /> {{ displayed.genre }}</span>
@@ -354,7 +370,7 @@ import PageHeader from '@/components/PageHeader.vue'
 import Icon from '@/components/Icon.vue'
 import Avatar from '@/components/Avatar.vue'
 import Modal from '@/components/Modal.vue'
-import { store, logout, deleteAccount, importData } from '@/store'
+import { store, logout, deleteAccount, importData, isPro, isPaidPro } from '@/store'
 import type { AppData, ArtistProfile } from '@/store/types'
 import { fileToAvatarDataUrl, ImageError } from '@/utils/image'
 import { GENRES } from '@/utils/genres'
@@ -616,6 +632,31 @@ async function doDelete() {
   font-size: 26px;
   font-weight: 800;
   letter-spacing: -0.025em;
+  /*  Pour que la vignette se pose sur la même ligne de base que le nom, et
+      passe à la ligne plutôt que de le pousser hors du cadre. */
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.hero__pro {
+  background: var(--brand-gradient);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border-radius: 20px;
+  padding: 3px 10px;
+  white-space: nowrap;
+}
+/*  La démonstration ne se pare pas des couleurs de la marque : elle n'a rien
+    coûté, et la distinguer d'un coup d'œil évite de croire à un abonnement. */
+.hero__pro--demo {
+  background: none;
+  color: var(--text-soft);
+  border: 1px solid var(--border-strong);
 }
 .hero__real {
   color: var(--text-soft);
