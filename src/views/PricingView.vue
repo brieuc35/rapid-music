@@ -56,11 +56,29 @@
           </div>
         </div>
       </div>
-      <p class="current__note">
+      <!--  Résilier ne se fait pas ici, et ce n'est pas un choix : ni Apple ni
+            Google n'autorisent une application à mettre fin à l'abonnement
+            qu'ils encaissent. Ce bouton ouvre donc la page du magasin — c'est
+            le geste le plus court qui existe.
+
+            Il remplace une invitation à écrire. Demander un courriel pour une
+            résiliation que l'abonné peut faire en deux touches était la plus
+            mauvaise réponse possible à quelqu'un qui veut arrêter de payer, et
+            Apple le refuse. -->
+      <div v-if="gestion" class="current__actions">
+        <a class="btn btn--ghost" :href="gestion.url" target="_blank" rel="noopener">
+          <Icon name="external" />
+          {{ gestion.magasin === 'apple' ? 'Gérer sur l’App Store' : 'Gérer sur Google Play' }}
+        </a>
+        <span class="current__aide">
+          Changement de formule, moyen de paiement et résiliation s'y font tous.
+        </span>
+      </div>
+      <p v-else class="current__note">
         <Icon name="mail" />
-        Pour changer de moyen de paiement ou mettre fin à votre abonnement,
-        écrivez-nous : la résiliation se fait auprès du prestataire de paiement et non
-        depuis cette page.
+        La résiliation se fait auprès du magasin où l'abonnement a été pris —
+        « Abonnements » dans les réglages de votre compte Apple, ou dans
+        Google Play. Depuis cette page, nous n'y avons pas la main.
       </p>
     </div>
 
@@ -272,6 +290,7 @@ import {
   ecrireTarif,
   ErreurAchat,
   facturationPossible,
+  lienGestionAbonnement,
   lireTarifs,
   PRODUIT_ANNUEL,
   PRODUIT_MENSUEL,
@@ -319,6 +338,10 @@ const showCancel = ref(false)
 /*  Calculé une fois : la disponibilité ne change pas en cours de session, et
  *  l'interroger dans le gabarit le referait à chaque rendu. */
 const achatPossible = facturationPossible()
+
+/*  Où résilier, selon le magasin d'où l'on vient. Nul sur le site, où l'on ne
+ *  sait pas chez qui l'abonnement a été pris. */
+const gestion = lienGestionAbonnement()
 
 /*  Dans l'enveloppe App Store : ni bouton d'achat, ni renvoi vers le Play Store.
  *  Constant pour la session, comme la disponibilité de la facturation. */
@@ -621,6 +644,17 @@ function doCancel() {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+}
+.current__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin-top: 14px;
+}
+.current__aide {
+  font-size: 13px;
+  color: var(--text-soft);
 }
 .plan__diag {
   display: block;
