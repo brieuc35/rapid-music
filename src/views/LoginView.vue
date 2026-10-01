@@ -96,8 +96,20 @@
 
       <!--  Consultables avant de créer un compte : c'est tout l'intérêt. On ne
             peut pas demander d'accepter des conditions qu'il faudrait un compte
-            pour lire. -->
-      <nav class="login__legal" aria-label="Informations légales">
+            pour lire.
+
+            Sur le site seulement, et c'est la raison d'être du test. Dans
+            l'application de l'App Store, ces quatre liens alourdissaient un
+            écran qui n'a qu'une chose à faire — ouvrir la session — sans rien
+            apporter : Apple porte déjà la politique de confidentialité sur la
+            fiche du magasin, l'écran d'abonnement porte les conditions et la
+            confidentialité à l'endroit où l'on s'engage, et la suppression du
+            compte est dans « Mon profil », où Apple veut qu'elle soit.
+
+            Sur le web, les retirer laisserait un visiteur sans aucun chemin
+            vers les mentions légales — obligatoires et accessibles sans compte.
+            Ils restent donc. -->
+      <nav v-if="!dansApplication" class="login__legal" aria-label="Informations légales">
         <RouterLink v-for="p in PAGES_LEGALES" :key="p.to" :to="p.to">{{ p.libelle }}</RouterLink>
       </nav>
     </div>
@@ -111,8 +123,12 @@ import BrandMark from '@/components/BrandMark.vue'
 import Icon from '@/components/Icon.vue'
 import { login, signUp, resetPassword } from '@/store'
 import { PAGES_LEGALES } from '@/router/legal'
+import { dansEnveloppeNative } from '@/utils/enveloppe-native'
 
 type Mode = 'login' | 'signup' | 'reset'
+
+/*  Relevé une fois : le pont natif ne change pas en cours de session. */
+const dansApplication = dansEnveloppeNative()
 
 const mode = ref<Mode>('login')
 const email = ref('')
