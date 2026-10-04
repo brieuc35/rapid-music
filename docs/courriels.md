@@ -197,7 +197,7 @@ fichier entier**, accolades comprises.
 
 ### 5. Déployer
 
-Onglet **Actions** → **Courriels automatiques (déploiement)** → **Run
+Onglet **Actions** → **Fonctions serveur (déploiement)** → **Run
 workflow**. Le workflow vérifie les types, lance les tests, puis déploie. Il
 refuse de déployer si un test échoue.
 

@@ -1,6 +1,18 @@
-name: Courriels automatiques (déploiement)
+name: Fonctions serveur (déploiement)
 
-# Déploie les fonctions serveur qui envoient les deux courriels automatiques.
+# Déploie **toutes** les fonctions serveur du projet, et non les seuls
+# courriels — c'est ce que fait « firebase deploy --only functions ».
+#
+# Le nom précédent, « Courriels automatiques », datait du jour où il n'y avait
+# que cela à déployer. Il a coûté cher : la vérification des achats Apple vit
+# dans les mêmes fonctions, et personne ne pense à chercher un abonnement
+# derrière un bouton nommé « Courriels ». Un achat a échoué faute d'un
+# déploiement qu'on ne savait pas où lancer.
+#
+# Ce qui est déployé :
+#
+#   verifierAchat     la vérification des abonnements, Apple et Google
+#   les courriels     bienvenue et relances
 #
 # Pourquoi ici et pas depuis un poste de travail : le déploiement réclame Node,
 # firebase-tools et une session Firebase. Le même choix que pour le paquet
@@ -36,7 +48,7 @@ env:
   PROJET: rapidmusic-db075
 
 jobs:
-  courriels:
+  fonctions:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
