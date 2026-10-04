@@ -32,7 +32,17 @@
 
     <div v-if="erreurAchat" class="notice notice--danger">
       <Icon name="bell" />
-      <div>{{ erreurAchat }}</div>
+      <div>
+        {{ erreurAchat }}
+        <!--  Le détail technique, dans l'enveloppe native seulement. Il ne dit
+              rien à l'artiste, et c'est voulu : il s'adresse à qui répare, et
+              sans Mac un iPhone n'offre ni console ni journal. Sans lui, un
+              échec d'achat ne dit pas s'il vient du magasin, du réseau ou du
+              serveur — trois pannes très différentes sous une seule phrase. -->
+        <span v-if="detailErreur && surIPhone" class="plan__diag" style="text-align: left">
+          {{ detailErreur }}
+        </span>
+      </div>
     </div>
 
     <!-- État de l'abonnement en cours.
@@ -352,6 +362,7 @@ const surIPhone = surIOS()
 const diagnostic = diagnosticAchat()
 const achatEnCours = ref(false)
 const erreurAchat = ref('')
+const detailErreur = ref('')
 
 /** La formule choisie. L'annuelle par défaut : c'est la meilleure des deux. */
 const formule = ref<string>(PRODUIT_ANNUEL)
@@ -416,6 +427,7 @@ const formuleChoisie = computed(() =>
 async function souscrire() {
   achatEnCours.value = true
   erreurAchat.value = ''
+  detailErreur.value = ''
   try {
     const { jeton, magasin } = await acheterPro(formule.value)
     await verifierAupresDuServeur(jeton, magasin)
@@ -431,6 +443,16 @@ async function souscrire() {
      *  tous ceux qui renoncent sur iPhone. */
     if (e instanceof AchatAnnule) return
     if (e instanceof DOMException && e.name === 'AbortError') return
+
+    /*  Le code et le message tels que l'appel les a rendus. Un appel de
+     *  fonction Firebase porte un code — `functions/internal`,
+     *  `functions/not-found`, `functions/unauthenticated` — et c'est lui qui
+     *  dit où regarder : une fonction non déployée, un secret absent et un
+     *  jeton refusé ne se corrigent pas au même endroit. */
+    const err = e as { code?: string; message?: string }
+    detailErreur.value = [err?.code, err?.message].filter(Boolean).join(' — ').slice(0, 300)
+    console.error('Achat refusé :', e)
+
     erreurAchat.value =
       e instanceof ErreurAchat
         ? e.message
