@@ -279,9 +279,26 @@ firebase functions:secrets:set APPLE_ID_EDITEUR
 firebase deploy --only functions
 ```
 
-Sans ligne de commande : onglet **Actions** → **Fonctions serveur
-(déploiement)** → **Run workflow**. Le dépôt des secrets, lui, demande la
-commande ci-dessus — ou la console Google Cloud, section *Secret Manager*.
+#### Sans ligne de commande
+
+Le déploiement : onglet **Actions** → **Fonctions serveur (déploiement)** →
+**Run workflow**.
+
+Les secrets : **console.cloud.google.com** → projet `rapidmusic-db075` →
+**Secret Manager** → *Créer un secret*. Trois à créer, nommés exactement :
+
+| Nom | Contenu |
+| --- | --- |
+| `APPLE_CLE` | le fichier `.p8` entier, lignes `BEGIN`/`END` comprises |
+| `APPLE_ID_CLE` | l'identifiant de la clef, dix caractères |
+| `APPLE_ID_EDITEUR` | l'identifiant d'éditeur, en haut de la page des clefs |
+
+Puis, sur chacun : onglet **Autorisations** → **Accorder l'accès** → le compte
+de service des fonctions — `courriels@rapidmusic-db075.iam.gserviceaccount.com`,
+celui que déclare `COMPTE` dans `functions/src/index.ts` — avec le rôle
+**Accesseur de secrets Secret Manager**. Sans
+cette étape, le secret existe mais la fonction ne peut pas le lire, et le
+déploiement échoue plus loin — sur un message différent.
 
 **Le déploiement n'est pas facultatif.** Le code peut être dans le dépôt depuis
 des semaines : tant qu'il n'est pas déployé, c'est l'ancienne fonction qui
