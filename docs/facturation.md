@@ -220,8 +220,40 @@ manque : `functions.logger` y écrit le code renvoyé par Google.
 
 ## Ce qu'il faut régler côté Apple
 
-Quatre choses, dans cet ordre. Rien ne fonctionne tant que les quatre ne sont
-pas faites, et les symptômes se ressemblent.
+Cinq choses, dans cet ordre. Rien ne fonctionne tant que les cinq ne sont pas
+faites, et les symptômes se ressemblent — ce qui rend l'ordre d'autant plus
+utile.
+
+### 0. Le contrat relatif aux applications payantes
+
+**Celui-ci d'abord, et il ne se devine pas.** Tant qu'il n'est pas actif, Apple
+ne sert aucun produit payant : `Product.products(for:)` rend une liste vide, et
+l'application affiche « Cet abonnement est introuvable sur l'App Store » — alors
+que les abonnements sont correctement créés, tarifés, disponibles et attachés à
+la version.
+
+**App Store Connect → Business → Contrats.** La ligne *Contrat relatif aux
+applications payantes* doit être **Actif**. « Nouveau » signifie qu'il n'a
+jamais été signé.
+
+Deux conditions le précèdent, et elles rendent la ligne inerte tant qu'elles ne
+sont pas remplies — un bandeau le dit, mais la ligne, elle, ne réagit tout
+simplement pas au clic :
+
+1. **l'entité juridique** doit être complétée (*Modifier l'entité juridique*) ;
+2. **le statut de commerçant** au sens du DSA doit être déclaré, faute de quoi
+   rien ne se distribue dans l'Union européenne.
+
+Suivent les formulaires fiscaux — celui des États-Unis est obligatoire où que
+l'on habite — et les coordonnées bancaires, dont le titulaire doit être celui
+déclaré comme entité juridique.
+
+Comptez de quelques heures à deux jours de validation, puis encore quelques
+heures avant que StoreKit serve les produits.
+
+⚠️ Déclarer le statut de commerçant fait **publier les coordonnées du vendeur**
+sur la fiche App Store : nom, adresse, téléphone, courriel. Une adresse de
+domiciliation évite d'y afficher son domicile.
 
 ### 1. Créer les deux abonnements dans App Store Connect
 
@@ -321,6 +353,31 @@ En local, sur un Mac, la commande est `npm run ios:sync` — et non `cap sync`
 seul. La différence compte : `cap sync` ne déclare pas le greffon d'achat, et
 l'application se fabrique alors sans lui, sans la moindre alerte. Voir
 `scripts/greffons-ios.mjs`.
+
+## Quand l'achat échoue, dans quel ordre chercher
+
+Les symptômes se ressemblent tous — un message rouge — mais chaque cause a son
+poste. Le tableau suit l'ordre dans lequel une tentative d'achat traverse la
+chaîne, et c'est l'ordre dans lequel il faut chercher.
+
+| Ce que montre l'application | Où regarder |
+| --- | --- |
+| « Cet abonnement est introuvable sur l'App Store » | Apple ne sert pas le produit : le contrat des applications payantes (étape 0), les territoires de disponibilité, le prix enregistré. Puis la patience — la diffusion prend des heures |
+| « Indisponible pour le moment » | le greffon natif n'est pas enregistré : voir `scripts/greffons-ios.mjs` et `OTHER_LDFLAGS = -ObjC` |
+| « L'abonnement n'a pas pu être confirmé » | le serveur. Dans l'application, une ligne technique sous le message nomme le code — `functions/not-found` si la fonction n'est pas déployée, `functions/permission-denied` si elle l'est sans droit d'appel |
+
+Deux pièges s'ajoutent, qui ne laissent **aucune trace** et font chercher au
+mauvais endroit :
+
+- **`verifierAchat` déployée pour la première fois** n'a pas toujours le droit
+  d'être appelée. Elle existe, elle refuse la connexion avant de s'exécuter,
+  donc elle ne journalise rien. Console Google Cloud → la fonction →
+  *Autorisations* → ajouter `allUsers` avec le rôle **Demandeur Cloud
+  Functions**. C'est sans danger : la fonction vérifie elle-même qui l'appelle
+  et refuse tout appel non authentifié.
+- **Le compte déjà Pro** masque le bouton d'achat, le message *et* le
+  diagnostic — les trois vivent dans le même bloc. Un compte neuf lève le doute
+  en trente secondes.
 
 ## Vérifier l'achat sur iPhone
 
