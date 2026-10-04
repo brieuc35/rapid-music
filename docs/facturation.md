@@ -264,6 +264,10 @@ page.
 
 ### 3. Déposer les trois secrets
 
+Ces trois-là ne sont pas des secrets GitHub : ils vivent chez Firebase, et la
+fonction les réclame nommément (`secrets: [...]` dans `functions/src/index.ts`).
+Une fonction déployée sans eux refuse tous les achats Apple.
+
 C'est une clef privée : elle signe les requêtes au nom de l'éditeur, et qui
 l'a peut lire l'état des abonnements de tous les clients. **Elle n'entre pas
 dans le dépôt.**
@@ -274,6 +278,15 @@ firebase functions:secrets:set APPLE_ID_CLE
 firebase functions:secrets:set APPLE_ID_EDITEUR
 firebase deploy --only functions
 ```
+
+Sans ligne de commande : onglet **Actions** → **Fonctions serveur
+(déploiement)** → **Run workflow**. Le dépôt des secrets, lui, demande la
+commande ci-dessus — ou la console Google Cloud, section *Secret Manager*.
+
+**Le déploiement n'est pas facultatif.** Le code peut être dans le dépôt depuis
+des semaines : tant qu'il n'est pas déployé, c'est l'ancienne fonction qui
+répond, et elle ne connaît que les reçus de Google. L'achat Apple échoue alors
+sur « L'abonnement n'a pas pu être confirmé ».
 
 Le premier prend le contenu entier du fichier, en-têtes `BEGIN PRIVATE KEY`
 comprises.
