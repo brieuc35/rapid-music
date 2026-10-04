@@ -126,6 +126,17 @@ jobs:
           # Le code de sortie ne suffit pas : « firebase deploy » rend 0 alors
           # qu'une fonction a échoué à se créer, et le workflow s'affichait vert
           # avec la moitié du travail faite. On relit donc ce qu'il a écrit.
+          # Les secrets d'abord, parce que c'est l'échec le plus fréquent et le
+          # plus mal expliqué : firebase-tools le dit en trois lignes au milieu
+          # du journal, et l'encadré d'erreur de GitHub — le seul endroit qu'on
+          # regarde — n'affiche qu'un « code de sortie 1 ». Nommer le secret
+          # manquant et le remède ici évite d'aller lire cent lignes.
+          if grep -q 'Failed to validate secret versions' "$JOURNAL"; then
+            MANQUANTS=$(grep -oE 'secrets/[A-Z_]+' "$JOURNAL" | sed 's|secrets/||' | sort -u | tr '\n' ' ')
+            echo "::error::Secrets absents chez Firebase :$MANQUANTS — ce ne sont pas des secrets GitHub. Les créer dans la console Google Cloud, section Secret Manager, puis donner l'accès au compte de service des fonctions. Voir docs/facturation.md."
+            exit 1
+          fi
+
           if grep -qiE 'failed to (create|update|delete) function|Deploy failed' "$JOURNAL"; then
             echo "::error::Une ou plusieurs fonctions n'ont pas été déployées — voir les lignes ci-dessous. Relancer avec « detail » coché pour connaître la cause."
             grep -iE 'failed|error' "$JOURNAL" | head -30
