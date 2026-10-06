@@ -52,19 +52,12 @@
         <template v-if="!editMode">
           <h2 class="hero__name">
             {{ displayed.stageName }}
-            <!--  La vignette dit laquelle des deux : un abonnement payé et une
-                  démonstration ouvrent les mêmes écrans, mais l'un se résilie
-                  chez un magasin et l'autre s'arrête d'un bouton. Les
-                  confondre sous un même « PRO » ferait chercher une
-                  résiliation là où il n'y a rien à résilier. -->
-            <RouterLink
-              v-if="isPro"
-              to="/abonnement"
-              class="hero__pro"
-              :class="{ 'hero__pro--demo': !isPaidPro }"
-              :title="isPaidPro ? 'Abonnement Pro actif' : 'Démonstration Pro en cours'"
-            >
-              {{ isPaidPro ? 'Pro' : 'Pro démo' }}
+            <!--  Une seule sorte de Pro depuis le retrait de la
+                  démonstration : celle qui a été payée. La vignette n'a donc
+                  plus de variante, et mène à l'écran d'abonnement — c'est là
+                  qu'on gère, et qu'on résilie. -->
+            <RouterLink v-if="isPro" to="/abonnement" class="hero__pro" title="Abonnement Pro actif">
+              Pro
             </RouterLink>
           </h2>
           <p class="hero__real" v-if="displayed.realName">{{ displayed.realName }}</p>
@@ -370,7 +363,7 @@ import PageHeader from '@/components/PageHeader.vue'
 import Icon from '@/components/Icon.vue'
 import Avatar from '@/components/Avatar.vue'
 import Modal from '@/components/Modal.vue'
-import { store, logout, deleteAccount, importData, isPro, isPaidPro } from '@/store'
+import { store, logout, deleteAccount, importData, isPro } from '@/store'
 import type { AppData, ArtistProfile } from '@/store/types'
 import { fileToAvatarDataUrl, ImageError } from '@/utils/image'
 import { GENRES } from '@/utils/genres'
@@ -650,13 +643,6 @@ async function doDelete() {
   border-radius: 20px;
   padding: 3px 10px;
   white-space: nowrap;
-}
-/*  La démonstration ne se pare pas des couleurs de la marque : elle n'a rien
-    coûté, et la distinguer d'un coup d'œil évite de croire à un abonnement. */
-.hero__pro--demo {
-  background: none;
-  color: var(--text-soft);
-  border: 1px solid var(--border-strong);
 }
 .hero__real {
   color: var(--text-soft);

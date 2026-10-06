@@ -92,20 +92,6 @@
       </p>
     </div>
 
-    <div v-else-if="isPro" class="card card--pad current current--demo">
-      <div class="hstack" style="gap: 14px">
-        <span class="current__ico"><Icon name="star" /></span>
-        <div class="row__main">
-          <b style="font-size: 15.5px">Démonstration Pro en cours</b>
-          <div class="muted" style="font-size: 13.5px; margin-top: 2px">
-            Ouverte le {{ formatDate(store.subscription.since) }} · aucun montant
-            n'a été prélevé
-          </div>
-        </div>
-        <button class="btn btn--ghost" @click="showCancel = true">Arrêter</button>
-      </div>
-    </div>
-
     <div class="plans">
       <!-- Gratuit -->
       <div class="plan">
@@ -251,25 +237,6 @@
       </div>
     </div>
 
-    <!-- Résiliation -->
-    <Modal :open="showCancel" title="Arrêter la démonstration" @close="showCancel = false">
-      <p style="margin: 0; color: var(--text-soft); line-height: 1.6">
-        Vous repasserez à la formule gratuite. Les onglets Revenus et Contrats
-        seront de nouveau verrouillés, mais
-        <b style="color: var(--text)">aucune donnée ne sera supprimée</b> : tout sera
-        retrouvé en cas de réactivation.
-      </p>
-      <!-- La question que se pose quiconque a plus de trois contacts avant de
-           cliquer. Y répondre ici évite de la découvrir après coup. -->
-      <p style="margin: 12px 0 0; color: var(--text-soft); line-height: 1.6">
-        Vos contacts au-delà de {{ FREE_CONTACTS }} restent consultables et modifiables ;
-        seul l'ajout d'un nouveau contact demandera de repasser à Pro.
-      </p>
-      <template #footer>
-        <button class="btn btn--subtle" @click="showCancel = false">Annuler</button>
-        <button class="btn btn--danger" @click="doCancel">Arrêter</button>
-      </template>
-    </Modal>
   </div>
 </template>
 
@@ -278,13 +245,10 @@ import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import PageHeader from '@/components/PageHeader.vue'
 import Icon from '@/components/Icon.vue'
-import Modal from '@/components/Modal.vue'
 import {
-  store,
   isPro,
   isPaidPro,
   paidSubscription,
-  cancelPro,
   relireAbonnement,
   PRO_PRICE,
   PRO_PRICE_ANNUEL,
@@ -343,7 +307,6 @@ const comparison = [
   { label: 'Contrats', detail: 'Statuts, avances, taux artiste', free: false },
 ]
 
-const showCancel = ref(false)
 
 /*  Calculé une fois : la disponibilité ne change pas en cours de session, et
  *  l'interroger dans le gabarit le referait à chaque rendu. */
@@ -477,11 +440,6 @@ async function souscrire() {
     achatEnCours.value = false
   }
 }
-
-function doCancel() {
-  cancelPro()
-  showCancel.value = false
-}
 </script>
 
 <style scoped>
@@ -558,10 +516,6 @@ function doCancel() {
 }
 /* Une démonstration se distingue d'un abonnement payé jusque dans le cadre :
    les pointillés disent partout dans l'application « annoncé, pas acquis ». */
-.current--demo {
-  border-style: dashed;
-  border-color: var(--border-strong);
-}
 .current__note {
   display: flex;
   gap: 9px;

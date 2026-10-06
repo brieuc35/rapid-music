@@ -21,7 +21,6 @@ export function seedData(): AppData {
       spotify: 'NOVA',
       website: 'nova-music.fr',
     },
-    subscription: { plan: 'free', since: '' },
     label: {
       name: 'Halo Records',
       tagline: 'Label indépendant · Électro-pop & nouvelles scènes',
