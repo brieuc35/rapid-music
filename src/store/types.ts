@@ -226,13 +226,12 @@ export interface Post {
 /*  un indicateur local. Une facturation réelle exigerait un back-end.         */
 /* -------------------------------------------------------------------------- */
 
+/*  Gardé : l'écran d'accueil propose encore les deux formules, et nomme ce
+ *  qu'il propose. Ce qui a disparu, c'est le `Subscription` rangé dans les
+ *  données de l'artiste — une démonstration qu'il pouvait s'accorder seul. Le
+ *  seul abonnement qui compte vit maintenant dans `abonnements/{uid}`, que le
+ *  navigateur ne peut pas écrire. */
 export type Plan = 'free' | 'pro'
-
-export interface Subscription {
-  plan: Plan
-  /** Date ISO d'activation, vide en offre gratuite. */
-  since: string
-}
 
 export interface AppData {
   /**
@@ -242,7 +241,6 @@ export interface AppData {
    */
   onboarded: boolean
   artist: ArtistProfile
-  subscription: Subscription
   label: LabelInfo
   contracts: Contract[]
   concerts: Concert[]

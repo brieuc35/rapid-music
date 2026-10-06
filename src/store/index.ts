@@ -123,7 +123,6 @@ export function withDefaults(saved: Partial<AppData>): AppData {
     onboarded: saved.onboarded ?? true,
     contracts,
     artist: { ...base.artist, ...addedFields, ...savedArtist, ...artistGenre },
-    subscription: saved.subscription ?? base.subscription,
     label: { ...base.label, ...(saved.label ?? {}) },
     // Les tâches sont arrivées après coup. Une liste vide, et non celle de la
     // démonstration : voir surgir sept tâches qu'on n'a pas écrites, au nom
@@ -374,17 +373,17 @@ export function addPost(content: string, category: PostCategory, tags: string[])
 /* -------------------------------------------------------------------------- */
 /*  Abonnement                                                                */
 /*                                                                            */
-/*  Deux choses différentes, à ne surtout pas confondre :                      */
+/*  Une seule source, et c'est désormais le sujet de cette section : ce qui    */
+/*  est lu dans abonnements/{uid}, document que l'application ne peut pas      */
+/*  écrire (voir store/subscription.ts et firestore.rules). Seul le serveur    */
+/*  l'écrit, après qu'Apple ou Google a confirmé l'achat.                      */
 /*                                                                            */
-/*  — l'abonnement payant, lu dans abonnements/{uid}, que l'application ne     */
-/*    peut pas écrire (voir store/subscription.ts et firestore.rules). C'est   */
-/*    la seule source qui pourra faire foi le jour où de l'argent circulera.   */
-/*                                                                            */
-/*  — la démonstration, gardée dans les données de l'artiste, donc modifiable  */
-/*    par lui. Elle n'est pas une faille mais une porte ouverte volontairement : */
-/*    tant qu'aucun paiement n'est encaissé, elle sert à juger l'offre. Elle    */
-/*    disparaîtra en supprimant `demoPro` ci-dessous, le jour de la mise en    */
-/*    service du paiement — et ce jour-là, rien d'autre ne bougera.            */
+/*  Il en existait une seconde : une démonstration rangée dans les données de  */
+/*  l'artiste, donc modifiable par lui. Porte ouverte volontairement, elle     */
+/*  servait à juger l'offre tant qu'aucun paiement n'était encaissé. Le jour   */
+/*  de la mise en vente, elle devenait une faille — n'importe qui pouvait      */
+/*  s'accorder Pro en écrivant dans ses propres données. Elle a donc été       */
+/*  retirée, comme son commentaire d'origine l'annonçait.                      */
 /* -------------------------------------------------------------------------- */
 
 /*  Les deux tarifs, **de secours seulement**.
@@ -404,9 +403,6 @@ export const PRO_MOIS_OFFERTS = Math.round(
   (PRO_PRICE * 12 - PRO_PRICE_ANNUEL) / PRO_PRICE,
 )
 
-/** Démonstration locale, décidée par le navigateur. Sans valeur probante. */
-const demoPro = computed(() => store.subscription.plan === 'pro')
-
 /**
  * Abonnement payant constaté sur le serveur.
  *
@@ -418,8 +414,16 @@ export const isPaidPro = abonnementPro
 /** Détail de l'abonnement payant, à afficher. Nul en démonstration. */
 export const paidSubscription = abonnementDetail
 
-/** Accès aux fonctions payantes, par l'une ou l'autre voie. */
-export const isPro = computed(() => abonnementPro.value || demoPro.value)
+/**
+ * Accès aux fonctions payantes.
+ *
+ * Confondu avec `isPaidPro` depuis le retrait de la démonstration, et gardé
+ * distinct malgré tout : les écrans demandent « ai-je accès ? », pas « ai-je
+ * payé ? », et les deux questions pourraient redevenir différentes — un essai
+ * gratuit, une offre de lancement. Les fusionner obligerait alors à reprendre
+ * chaque appel.
+ */
+export const isPro = abonnementPro
 
 /** Relit l'abonnement du compte connecté, après un achat par exemple. */
 export async function relireAbonnement(): Promise<void> {
@@ -480,23 +484,6 @@ export const FREE_CONTACTS = 3
 export const canAddContact = computed(
   () => isPro.value || store.contacts.length < FREE_CONTACTS,
 )
-
-/**
- * Ouvre la démonstration. Sans effet sur l'abonnement payant, qui ne se décide
- * pas ici : c'est justement ce qui change par rapport à la version précédente.
- */
-export function activatePro(): void {
-  store.subscription = { plan: 'pro', since: new Date().toISOString().slice(0, 10) }
-}
-
-/**
- * Ferme la démonstration. Ne résilie rien chez un prestataire de paiement — un
- * abonnement réellement payé ne s'arrête pas depuis le navigateur, et l'écran
- * d'abonnement le dit plutôt que de faire semblant.
- */
-export function cancelPro(): void {
-  store.subscription = { plan: 'free', since: '' }
-}
 
 /* -------------------------------------------------------------------------- */
 /*  Compte et session                                                         */
@@ -567,18 +554,17 @@ export const isLoggedIn = computed(() => currentUser.value !== null)
 export const needsOnboarding = computed(() => isLoggedIn.value && !store.onboarded)
 
 /**
- * Enregistre le profil saisi à l'accueil, retient la formule choisie et ouvre
- * l'application.
+ * Enregistre le profil saisi à l'accueil et ouvre l'application.
  *
- * Choisir Pro ici active la même bascule que la page Abonnement : aucun
- * paiement n'est encaissé, l'écran le dit explicitement.
+ * La formule n'est plus un paramètre : elle ne s'accorde pas ici. Choisir Pro
+ * à l'accueil était autrefois une bascule locale ; c'est maintenant un achat,
+ * qui se fait auprès du magasin. L'écran d'accueil se contente donc de
+ * conduire à la page d'abonnement, et cette décision lui appartient.
  */
 export function completeOnboarding(
   profile: Pick<ArtistProfile, 'stageName' | 'email' | 'genre' | 'city' | 'photo' | 'bio'>,
-  plan: Plan,
 ): void {
   Object.assign(store.artist, profile)
-  if (plan === 'pro') activatePro()
   store.onboarded = true
 }
 

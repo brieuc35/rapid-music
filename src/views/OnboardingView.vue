@@ -122,9 +122,9 @@
           </label>
           <p v-if="plan === 'pro'" class="onb__notice">
             <Icon name="bell" />
-            Aucun paiement n'est encaissé et aucune coordonnée bancaire n'est demandée :
-            l'accès Pro est activé en démonstration, et résiliable à tout moment depuis
-            l'onglet Abonnement.
+            Rien n'est prélevé ici : vous entrez d'abord dans l'application, et
+            l'écran d'abonnement s'ouvrira ensuite pour finaliser la souscription
+            auprès de votre magasin d'applications.
           </p>
         </fieldset>
 
@@ -145,6 +145,7 @@ import Avatar from '@/components/Avatar.vue'
 import BrandMark from '@/components/BrandMark.vue'
 import Icon from '@/components/Icon.vue'
 import { completeOnboarding, currentUser, PRO_PRICE, FREE_CONTACTS } from '@/store'
+import { useRouter } from 'vue-router'
 import type { Plan } from '@/store/types'
 import { money } from '@/utils/format'
 import { fileToAvatarDataUrl, ImageError } from '@/utils/image'
@@ -161,6 +162,7 @@ const genreAutre = ref('')
 const city = ref('')
 const bio = ref('')
 const photo = ref('')
+const router = useRouter()
 const photoError = ref('')
 /*  Volontairement sans choix par défaut : la formule doit résulter d'un clic.
  *  Présélectionner le gratuit ferait passer pour un choix ce qui n'en est pas
@@ -238,17 +240,23 @@ async function pickPhoto(e: Event) {
 
 function submit() {
   if (!complet.value || plan.value === '') return
-  completeOnboarding(
-    {
-      stageName: stageName.value.trim(),
-      email: email.value.trim(),
-      genre: style.value,
-      city: city.value.trim(),
-      bio: bio.value.trim(),
-      photo: photo.value,
-    },
-    plan.value,
-  )
+  completeOnboarding({
+    stageName: stageName.value.trim(),
+    email: email.value.trim(),
+    genre: style.value,
+    city: city.value.trim(),
+    bio: bio.value.trim(),
+    photo: photo.value,
+  })
+
+  /*  La formule ne s'accorde plus ici : elle s'achète. Choisir Pro à l'accueil
+   *  n'ouvre donc rien, mais ce n'est pas un choix perdu — c'est une intention,
+   *  et la respecter veut dire conduire à l'écran où l'on souscrit plutôt que
+   *  de laisser l'artiste le chercher.
+   *
+   *  Le gratuit, lui, entre directement : c'est le tableau de bord qu'il veut
+   *  voir, pas une offre. */
+  if (plan.value === 'pro') void router.push('/abonnement')
 }
 </script>
 
