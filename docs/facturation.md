@@ -354,6 +354,27 @@ seul. La différence compte : `cap sync` ne déclare pas le greffon d'achat, et
 l'application se fabrique alors sans lui, sans la moindre alerte. Voir
 `scripts/greffons-ios.mjs`.
 
+## Lire les journaux du serveur sans rien installer
+
+Onglet **Actions** → **Journaux des fonctions (lecture)** → **Run workflow**,
+en laissant `verifierAchat`. Les lignes s'affichent dans le journal
+d'exécution, où elles se copient d'un bloc.
+
+C'est une lecture : rien n'est déployé, rien n'est modifié.
+
+Deux lignes résument chaque tentative d'achat, et elles suffisent presque
+toujours :
+
+| Ligne journalisée | Ce qu'elle dit |
+| --- | --- |
+| `Abonnement ouvert` | le serveur a dit oui, avec l'échéance retenue |
+| `Abonnement refermé` | le serveur a dit non, et le champ `etat` porte le code d'Apple |
+
+Les consoles de Google montrent les mêmes journaux, mais il faut y choisir la
+bonne — Firebase ou Cloud —, la bonne fenêtre de temps et le bon filtre. Une
+fenêtre réglée par défaut sur cinq minutes a déjà fait conclure à tort qu'il
+n'y avait aucun journal.
+
 ## Quand l'achat échoue, dans quel ordre chercher
 
 Les symptômes se ressemblent tous — un message rouge — mais chaque cause a son
