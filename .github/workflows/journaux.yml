@@ -85,12 +85,19 @@ jobs:
             FILTRE="$FILTRE AND resource.labels.function_name=\"$FONCTION\""
           fi
 
+          # `--order=desc`, et c'est le cœur du sujet : avec un tri croissant,
+          # `--limit` rend les entrées les plus **anciennes** de la fenêtre, pas
+          # les dernières. Le journal semblait alors s'arrêter toujours au même
+          # endroit, quelle que soit la fenêtre demandée — on a cru deux fois
+          # qu'aucun essai récent n'avait eu lieu alors qu'il venait d'avoir
+          # lieu. Les plus récentes sont donc en tête.
           echo "Journaux de ${FONCTION:-toutes les fonctions} — $LIGNES lignes, $HEURES dernières heures."
+          echo "LES PLUS RÉCENTES EN PREMIER."
           echo "============================================================"
           gcloud logging read "$FILTRE" \
             --freshness="${HEURES}h" \
             --limit="$LIGNES" \
-            --order=asc \
+            --order=desc \
             --format='value(timestamp.date("%Y-%m-%d %H:%M:%S"), severity, jsonPayload.message, textPayload)' \
             || {
               echo "::error::Lecture refusée. Le compte de service a-t-il le rôle « Lecteur de journaux » (roles/logging.viewer) ?"
