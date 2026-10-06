@@ -370,6 +370,27 @@ toujours :
 | `Abonnement ouvert` | le serveur a dit oui, avec l'échéance retenue |
 | `Abonnement refermé` | le serveur a dit non, et le champ `etat` porte le code d'Apple |
 
+Une troisième ligne apparaît quand Apple refuse la clef :
+
+```
+Abonnement Apple illisible : Apple a répondu 401     statut: 401
+```
+
+**401, c'est la clef, pas le reçu.** Trois causes, par ordre de fréquence :
+
+1. une **clef d'équipe** déposée à la place d'une clef **In-App Purchase** —
+   les deux existent, se ressemblent, et seule la seconde ouvre l'API des
+   abonnements ;
+2. l'**identifiant d'éditeur** recopié depuis la page des clefs d'équipe : il
+   diffère d'une sorte de clef à l'autre, ce qu'on ne devine pas ;
+3. un **espace ou un retour à la ligne** resté collé à l'une des trois valeurs
+   — le champ de saisie de Secret Manager en ajoute volontiers.
+
+⚠️ **Un secret corrigé ne suffit pas : il faut redéployer.** La fonction est
+liée à la *version* du secret connue au moment du déploiement — on le lit dans
+le journal de création, `"secret":"APPLE_CLE","version":"1"`. Ajouter une
+version 2 ne change rien tant que la fonction n'est pas redéployée.
+
 Les consoles de Google montrent les mêmes journaux, mais il faut y choisir la
 bonne — Firebase ou Cloud —, la bonne fenêtre de temps et le bon filtre. Une
 fenêtre réglée par défaut sur cinq minutes a déjà fait conclure à tort qu'il
