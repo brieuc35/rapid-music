@@ -196,21 +196,41 @@ async function interroger(id: string, environnement: Environment): Promise<Statu
  * comprenne pourquoi — en production tout marcherait.
  */
 export async function lireAbonnement(id: string): Promise<StatutApple> {
+  /*  Le bac à sable est tenté quoi qu'ait répondu la production, et c'est une
+   *  leçon payée cher.
+   *
+   *  La version précédente n'y passait que sur 404 et 400 — « transaction
+   *  inconnue ici ». Tout autre code arrêtait net. Or **tant que
+   *  l'application n'est pas publiée, l'environnement de production ne la
+   *  connaît pas et répond 401**. Le bac à sable, lui, aurait répondu : c'est
+   *  précisément là que vivent les achats d'avant la publication.
+   *
+   *  Autrement dit, la seule période où ce code doit absolument fonctionner —
+   *  les essais et l'examen par Apple — était aussi la seule où il ne pouvait
+   *  pas. Le 401 ressemblait à s'y méprendre à une clef refusée, et c'est ce
+   *  qu'on a cherché pendant des heures.
+   *
+   *  Le coût d'un second appel inutile est d'une fraction de seconde. Celui
+   *  d'un abonnement refusé à quelqu'un qui a payé n'a pas de commune mesure. */
+  let echecProduction: unknown
   try {
     return await interroger(id, Environment.PRODUCTION)
   } catch (e) {
-    const introuvable =
-      e instanceof APIException && (e.httpStatusCode === 404 || e.httpStatusCode === 400)
-    if (!introuvable) {
-      const statut = e instanceof APIException ? e.httpStatusCode : 0
-      throw new ErreurApple(`Apple a répondu ${statut} : ${String(e)}`, statut)
-    }
+    echecProduction = e
   }
 
   try {
     return await interroger(id, Environment.SANDBOX)
   } catch (e) {
     const statut = e instanceof APIException ? e.httpStatusCode : 0
-    throw new ErreurApple(`Apple a répondu ${statut} : ${String(e)}`, statut)
+    const statutProduction = echecProduction instanceof APIException ? echecProduction.httpStatusCode : 0
+    /*  Les deux codes, parce qu'ils ne disent pas la même chose. 404 en
+     *  production et 404 en bac à sable, c'est une transaction qui n'existe
+     *  nulle part ; 401 des deux côtés, c'est la clef. Ne rapporter que le
+     *  second ferait perdre cette distinction. */
+    throw new ErreurApple(
+      `Apple a répondu ${statut} en bac à sable, ${statutProduction} en production : ${String(e)}`,
+      statut,
+    )
   }
 }

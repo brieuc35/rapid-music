@@ -376,7 +376,20 @@ Une troisième ligne apparaît quand Apple refuse la clef :
 Abonnement Apple illisible : Apple a répondu 401     statut: 401
 ```
 
-**401, c'est la clef, pas le reçu.** Trois causes, par ordre de fréquence :
+**401 avant la publication, c'est normal.** Tant que l'application n'est pas
+sortie sur l'App Store, l'environnement de **production** de l'API ne la connaît
+pas et répond 401 — alors que le bac à sable, lui, répond très bien. Le serveur
+essaie donc les deux quoi qu'il arrive, et le message dit maintenant les deux
+codes :
+
+```
+Apple a répondu 404 en bac à sable, 401 en production
+```
+
+C'est le second chiffre qu'il faut lire tant que l'application n'est pas
+publiée : le premier seul mènerait à soupçonner la clef pour rien.
+
+**401 des deux côtés, c'est la clef.** Trois causes, par ordre de fréquence :
 
 1. une **clef d'équipe** déposée à la place d'une clef **In-App Purchase** —
    les deux existent, se ressemblent, et seule la seconde ouvre l'API des
