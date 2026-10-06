@@ -45,6 +45,53 @@ export class ErreurApple extends Error {
   }
 }
 
+/**
+ * Débarrasse une valeur de ce qui s'y colle au copier-coller.
+ *
+ * Les trois secrets se déposent à la main, dans un champ de formulaire. Un
+ * retour à la ligne final, une espace prise en trop à la sélection, des fins de
+ * ligne de Windows dans un fichier ouvert au Bloc-notes : rien de tout cela ne
+ * se voit, et tout cela se retrouve tel quel dans le jeton signé envoyé à
+ * Apple, qui répond alors 401 sans dire pourquoi.
+ *
+ * Aucune valeur légitime ne commence ni ne finit par une espace. Les nettoyer
+ * ne peut donc rien casser, et supprime une classe entière de pannes
+ * invisibles.
+ */
+function nettoyer(valeur: string | undefined): string {
+  return (valeur ?? '').replace(/\r\n/g, '\n').trim()
+}
+
+/**
+ * Décrit la forme des trois secrets, sans en révéler le contenu.
+ *
+ * Sert au diagnostic d'un 401 : Apple ne dit jamais *laquelle* des trois
+ * valeurs il refuse, et on ne peut pas les afficher pour comparer — ce sont des
+ * secrets. Leur forme, elle, se dit sans risque, et elle suffit presque
+ * toujours : un identifiant de clef fait dix caractères, un identifiant
+ * d'éditeur est un UUID, une clef privée commence par « BEGIN PRIVATE KEY ».
+ * Une seule de ces trois règles enfreinte désigne le coupable.
+ */
+export function formeDesSecrets(): string {
+  const cle = nettoyer(process.env[APPLE_CLE])
+  const idCle = nettoyer(process.env[APPLE_ID_CLE])
+  const idEditeur = nettoyer(process.env[APPLE_ID_EDITEUR])
+
+  const brut = (nom: string) => (process.env[nom] ?? '').length
+
+  return [
+    `APPLE_ID_CLE : ${idCle.length} car.` +
+      ` (attendu 10, forme ${/^[A-Z0-9]{10}$/.test(idCle) ? 'ok' : 'INATTENDUE'})` +
+      (brut(APPLE_ID_CLE) !== idCle.length ? ' — contenait des blancs' : ''),
+    `APPLE_ID_EDITEUR : ${idEditeur.length} car.` +
+      ` (attendu 36, forme ${/^[0-9a-f-]{36}$/i.test(idEditeur) ? 'ok' : 'INATTENDUE'})` +
+      (brut(APPLE_ID_EDITEUR) !== idEditeur.length ? ' — contenait des blancs' : ''),
+    `APPLE_CLE : ${cle.length} car.` +
+      `, début ${cle.startsWith('-----BEGIN PRIVATE KEY-----') ? 'ok' : 'INATTENDU'}` +
+      `, fin ${cle.endsWith('-----END PRIVATE KEY-----') ? 'ok' : 'INATTENDUE'}`,
+  ].join(' · ')
+}
+
 /*  Un client par environnement, gardé d'une invocation à l'autre : il met en
  *  cache le jeton signé qui authentifie les appels, valable une heure. En
  *  recréer un à chaque achat referait cette signature à chaque fois. */
@@ -54,9 +101,9 @@ function client(environnement: Environment): AppStoreServerAPIClient {
   const deja = clients.get(environnement)
   if (deja) return deja
 
-  const cle = process.env[APPLE_CLE] ?? ''
-  const idCle = process.env[APPLE_ID_CLE] ?? ''
-  const idEditeur = process.env[APPLE_ID_EDITEUR] ?? ''
+  const cle = nettoyer(process.env[APPLE_CLE])
+  const idCle = nettoyer(process.env[APPLE_ID_CLE])
+  const idEditeur = nettoyer(process.env[APPLE_ID_EDITEUR])
   if (!cle || !idCle || !idEditeur) {
     throw new ErreurApple(
       `Secrets Apple absents ou incomplets (${APPLE_CLE}, ${APPLE_ID_CLE}, ` +

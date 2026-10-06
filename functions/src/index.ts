@@ -29,6 +29,7 @@ import {
 } from './facturation.js'
 import { abonnementDepuisApple, identifiantAbonnement, reçuAttendu } from './facturation-apple.js'
 import {
+  formeDesSecrets,
   APPLE_CLE,
   APPLE_ID_CLE,
   APPLE_ID_EDITEUR,
@@ -363,6 +364,7 @@ async function verdictApple(jeton: string, uid: string): Promise<Verdict> {
      *  Le message distingue donc les deux publics : l'artiste apprend que
      *  l'achat n'est pas perdu, le journal nomme la cause pour qui répare. */
     if (statut === 401) {
+      functions.logger.error(`Forme des secrets Apple — ${formeDesSecrets()}`, { uid })
       functions.logger.error(
         "Apple refuse la clef d'API (401). Vérifier qu'il s'agit bien d'une clef « In-App Purchase » " +
           "et non d'une clef d'équipe, que l'identifiant d'éditeur vient de la même page, et qu'aucune " +
