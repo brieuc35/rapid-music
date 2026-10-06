@@ -31,6 +31,11 @@ on:
         required: false
         default: "50"
         type: string
+      heures:
+        description: "Remonter jusqu'à combien d'heures en arrière."
+        required: false
+        default: "6"
+        type: string
 
 permissions:
   contents: read
@@ -47,6 +52,7 @@ jobs:
           CLE: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           FONCTION: ${{ inputs.fonction }}
           LIGNES: ${{ inputs.lignes }}
+          HEURES: ${{ inputs.heures }}
         run: |
           set -euo pipefail
 
@@ -62,13 +68,33 @@ jobs:
           printf '%s' "$CLE" > "$CHEMIN"
           export GOOGLE_APPLICATION_CREDENTIALS="$CHEMIN"
 
-          # `--only` n'accepte pas une valeur vide : on ne l'ajoute que si une
-          # fonction est demandée.
-          FILTRE=""
-          if [ -n "$FONCTION" ]; then FILTRE="--only $FONCTION"; fi
+          # `gcloud` plutôt que `firebase functions:log`, et c'est une leçon
+          # payée : ce dernier rendait obstinément les mêmes entrées vieilles
+          # d'un jour, noyées dans les journaux d'audit des déploiements, et
+          # ignorait l'essai fait trois minutes plus tôt. On a cru deux fois
+          # qu'une fonction n'avait pas tourné alors qu'elle venait de le faire.
+          #
+          # Ici, la fenêtre de temps est explicite et les journaux d'audit sont
+          # écartés par le `logName` : il ne reste que ce que la fonction a
+          # elle-même écrit.
+          gcloud auth activate-service-account --key-file="$CHEMIN" --quiet
+          gcloud config set project "$PROJET" --quiet
 
-          echo "Journaux de ${FONCTION:-toutes les fonctions}, $LIGNES dernières lignes."
-          echo "---"
-          npx --yes firebase-tools@latest functions:log \
-            --project "$PROJET" \
-            -n "$LIGNES" $FILTRE
+          FILTRE='resource.type="cloud_function" AND logName:"cloud-functions"'
+          if [ -n "$FONCTION" ]; then
+            FILTRE="$FILTRE AND resource.labels.function_name=\"$FONCTION\""
+          fi
+
+          echo "Journaux de ${FONCTION:-toutes les fonctions} — $LIGNES lignes, $HEURES dernières heures."
+          echo "============================================================"
+          gcloud logging read "$FILTRE" \
+            --freshness="${HEURES}h" \
+            --limit="$LIGNES" \
+            --order=asc \
+            --format='value(timestamp.date("%Y-%m-%d %H:%M:%S"), severity, jsonPayload.message, textPayload)' \
+            || {
+              echo "::error::Lecture refusée. Le compte de service a-t-il le rôle « Lecteur de journaux » (roles/logging.viewer) ?"
+              exit 1
+            }
+          echo "============================================================"
+          echo "Fin. Aucune ligne au-dessus = la fonction n'a pas tourné sur la période."
