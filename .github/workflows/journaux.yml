@@ -1,0 +1,74 @@
+name: Journaux des fonctions (lecture)
+
+# Affiche les journaux des fonctions serveur dans l'onglet Actions.
+#
+# Pourquoi un workflow pour lire des journaux : ils existent déjà dans la
+# console de Google, mais les y trouver demande de choisir la bonne console
+# — Firebase ou Cloud —, la bonne fenêtre de temps, le bon filtre, puis de
+# recopier ce qu'on y voit. Trois tentatives ont échoué sur une fenêtre réglée
+# à cinq minutes alors que l'essai datait d'un quart d'heure, et sur une requête
+# qui ne montrait rien.
+#
+# Ici, un bouton. Les lignes s'affichent dans le journal d'exécution, qui se
+# copie d'un bloc.
+#
+# Rien n'est déployé, rien n'est modifié : c'est une lecture.
+#
+# Secret attendu, le même que pour le déploiement :
+#
+#   FIREBASE_SERVICE_ACCOUNT   la clé d'un compte de service du projet, en JSON
+
+on:
+  workflow_dispatch:
+    inputs:
+      fonction:
+        description: "Fonction à lire. Vide = toutes."
+        required: false
+        default: verifierAchat
+        type: string
+      lignes:
+        description: "Nombre de lignes à remonter."
+        required: false
+        default: "50"
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  PROJET: rapidmusic-db075
+
+jobs:
+  journaux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Lire les journaux
+        env:
+          CLE: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          FONCTION: ${{ inputs.fonction }}
+          LIGNES: ${{ inputs.lignes }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "$CLE" ]; then
+            echo "::error::Le secret FIREBASE_SERVICE_ACCOUNT est absent. Voir docs/courriels.md."
+            exit 1
+          fi
+
+          # Hors du dépôt, et désignée par la variable que firebase-tools
+          # attend : la passer en ligne de commande l'exposerait dans la liste
+          # des processus.
+          CHEMIN="$RUNNER_TEMP/cle-service.json"
+          printf '%s' "$CLE" > "$CHEMIN"
+          export GOOGLE_APPLICATION_CREDENTIALS="$CHEMIN"
+
+          # `--only` n'accepte pas une valeur vide : on ne l'ajoute que si une
+          # fonction est demandée.
+          FILTRE=""
+          if [ -n "$FONCTION" ]; then FILTRE="--only $FONCTION"; fi
+
+          echo "Journaux de ${FONCTION:-toutes les fonctions}, $LIGNES dernières lignes."
+          echo "---"
+          npx --yes firebase-tools@latest functions:log \
+            --project "$PROJET" \
+            -n "$LIGNES" $FILTRE
