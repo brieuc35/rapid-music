@@ -430,8 +430,24 @@ async function souscrire() {
   detailErreur.value = ''
   try {
     const { jeton, magasin } = await acheterPro(formule.value)
-    await verifierAupresDuServeur(jeton, magasin)
+    const ouvert = await verifierAupresDuServeur(jeton, magasin)
     await relireAbonnement()
+
+    /*  Le verdict du serveur était jeté, et ce silence coûtait cher : quand il
+     *  répond « pas d'abonnement » — sans erreur, car ce n'en est pas une —
+     *  l'écran ne montrait rien du tout. Ni message, ni déblocage. Quelqu'un
+     *  qui vient de payer restait devant un écran inchangé, sans savoir si son
+     *  achat avait eu lieu.
+     *
+     *  Le cas le plus courant n'est pas une panne : en bac à sable, un
+     *  abonnement mensuel dure cinq minutes. Acheté puis vérifié trop tard, il
+     *  est déjà expiré du point de vue d'Apple, et le serveur a raison de le
+     *  refuser. */
+    if (!ouvert) {
+      erreurAchat.value =
+        "L'achat est bien enregistré chez Apple, mais l'abonnement n'y est pas actif. " +
+        "S'il vient d'être pris, relancez l'application dans un instant."
+    }
   } catch (e) {
     /*  Un abandon n'est pas une erreur : refermer la fenêtre de paiement est
      *  un choix, et afficher un message rouge à quelqu'un qui a simplement
