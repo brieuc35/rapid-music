@@ -346,6 +346,35 @@ async function verdictApple(jeton: string, uid: string): Promise<Verdict> {
     if (statut === 404 || statut === 400) {
       throw new functions.https.HttpsError('not-found', "Cet achat est introuvable chez Apple.")
     }
+    /*  401 : Apple refuse la clef, pas le reçu. Rien à voir avec l'achat ni
+     *  avec l'artiste, et surtout : cela ne se répare pas en réessayant. Lui
+     *  dire « réessayez » le ferait tourner en rond devant une panne de
+     *  configuration dont il n'est pas responsable et qu'il ne peut pas lever.
+     *
+     *  Les trois causes, par ordre de fréquence :
+     *
+     *    — une clef d'équipe déposée à la place d'une clef « In-App
+     *      Purchase » : les deux existent, se ressemblent, et seule la seconde
+     *      ouvre l'API des abonnements ;
+     *    — l'identifiant d'éditeur recopié depuis la page des clefs d'équipe :
+     *      il diffère d'une sorte de clef à l'autre, ce qu'on ne devine pas ;
+     *    — un espace ou un retour à la ligne resté collé à l'une des valeurs.
+     *
+     *  Le message distingue donc les deux publics : l'artiste apprend que
+     *  l'achat n'est pas perdu, le journal nomme la cause pour qui répare. */
+    if (statut === 401) {
+      functions.logger.error(
+        "Apple refuse la clef d'API (401). Vérifier qu'il s'agit bien d'une clef « In-App Purchase » " +
+          "et non d'une clef d'équipe, que l'identifiant d'éditeur vient de la même page, et qu'aucune " +
+          'valeur ne porte d\'espace ni de retour à la ligne. Un nouveau secret exige un redéploiement : ' +
+          'la fonction est liée à la version du secret connue au moment du déploiement.',
+        { uid },
+      )
+      throw new functions.https.HttpsError(
+        'failed-precondition',
+        "La vérification des abonnements n'est pas correctement configurée. Votre achat n'est pas perdu : il sera reconnu dès que ce sera réparé.",
+      )
+    }
     throw new functions.https.HttpsError('unavailable', "La vérification a échoué, réessayez.")
   }
 
