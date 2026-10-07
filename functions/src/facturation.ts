@@ -125,14 +125,34 @@ export function clefDuJeton(jeton: string): string {
 }
 
 /**
- * Ce compte a-t-il le droit de se servir de ce jeton ?
+ * Quel compte perd l'accès quand celui-ci présente l'abonnement ?
  *
- * Oui si personne ne l'a revendiqué, oui si c'est lui qui l'a revendiqué — et
- * dans ce second cas c'est le fonctionnement normal, puisque l'application
- * revérifie son abonnement à chaque lancement. Non dans tous les autres cas.
+ * Un abonnement n'ouvre qu'un seul compte à la fois — c'est ce qui empêche
+ * qu'on se le partage. Reste à décider lequel, quand deux comptes le
+ * présentent.
+ *
+ * La règle retenue est **le dernier arrivé**, et elle a remplacé « le premier
+ * arrivé, propriétaire à vie ». Celle-ci paraissait plus protectrice ; elle
+ * enfermait surtout des gens qui avaient payé. Supprimer son compte et en
+ * recréer un, changer d'adresse en repartant d'un compte neuf, reprendre un
+ * abonnement laissé en sommeil : dans les trois cas l'abonnement restait
+ * attaché à un compte hors d'atteinte, définitivement.
+ *
+ * Le partage n'y gagne rien. Deux personnes sur un même compte Apple se
+ * voleraient l'accès à chaque lancement de l'une et de l'autre, et aucune ne
+ * garderait l'application ouverte. L'abus se punit tout seul ; la bonne foi,
+ * elle, cesse d'être punie.
+ *
+ * Rend le compte à fermer, ou `undefined` s'il n'y a rien à fermer — personne
+ * n'avait revendiqué l'abonnement, ou c'est déjà celui qui le présente, ce qui
+ * est le cas ordinaire puisque l'application revérifie à chaque lancement.
  */
-export function jetonUtilisable(proprietaire: string | undefined, demandeur: string): boolean {
-  return proprietaire === undefined || proprietaire === demandeur
+export function comptePerdantLAcces(
+  proprietaire: string | undefined,
+  demandeur: string,
+): string | undefined {
+  if (proprietaire === undefined || proprietaire === '') return undefined
+  return proprietaire === demandeur ? undefined : proprietaire
 }
 
 /**

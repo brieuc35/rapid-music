@@ -56,15 +56,29 @@ jamais à quel artiste l'achat appartient.
 Sans rien de plus, un même jeton ouvrirait autant de comptes qu'on voudrait : il
 suffirait de le faire circuler pour partager un abonnement à plusieurs.
 
-D'où la collection `jetons` : **le premier compte qui présente un jeton se
-l'approprie**, et lui seul pourra s'en servir ensuite. Le propriétaire légitime
-revendique le sien à la seconde de l'achat ; personne n'a le temps de le
-devancer. La revendication est prise dans une transaction, sans quoi deux appels
-simultanés passeraient tous les deux.
+D'où la collection `jetons` : un abonnement n'ouvre **qu'un seul compte à la
+fois**, et c'est elle qui retient lequel. La revendication est prise dans une
+transaction, sans quoi deux appels simultanés passeraient tous les deux.
 
-Elle est relâchée à la suppression du compte. Sans cela, quelqu'un qui supprime
-son compte puis en recrée un se verrait refuser **son propre abonnement**,
-revendiqué pour toujours par un compte disparu.
+Reste à décider lequel des deux comptes, quand deux le présentent. La règle est
+**le dernier arrivé** : le compte qui présente l'abonnement le reçoit, et le
+précédent le perd — son document `abonnements/{uid}` est effacé dans la même
+transaction, de sorte qu'à aucun instant l'abonnement n'ouvre deux comptes.
+
+La règle d'avant était « le premier arrivé, propriétaire à vie ». Elle paraissait
+plus protectrice ; elle enfermait surtout des gens qui avaient payé. Supprimer
+son compte et en recréer un, changer d'adresse en repartant d'un compte neuf,
+reprendre un abonnement laissé en sommeil : dans les trois cas l'abonnement
+restait attaché à un compte hors d'atteinte, définitivement, et le message
+« Cet abonnement est déjà rattaché à un autre compte » ne laissait aucune issue.
+
+Le partage n'y gagne rien. Deux personnes sur un même compte Apple se voleraient
+l'accès à chaque lancement de l'une et de l'autre, et aucune ne garderait
+l'application ouverte. L'abus se punit tout seul ; la bonne foi, elle, cesse
+d'être punie.
+
+La revendication est en outre relâchée quand l'abonnement se referme — expiré,
+remboursé, résilié — et à la suppression du compte.
 
 ### Le renouvellement
 

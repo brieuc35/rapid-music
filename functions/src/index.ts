@@ -22,9 +22,9 @@ import { mailBienvenue, mailPro, passeAPro, type Abonnement } from './courriels.
 import {
   abonnementDepuisAchat,
   clefDuJeton,
+  comptePerdantLAcces,
   doitAccuserReception,
   JETONS,
-  jetonUtilisable,
   produitDeLAchat,
 } from './facturation.js'
 import { abonnementDepuisApple, identifiantAbonnement, reçuAttendu } from './facturation-apple.js'
@@ -417,14 +417,16 @@ async function verdictApple(jeton: string, uid: string): Promise<Verdict> {
  * la question posée au magasin diffère ; le rattachement à un compte et
  * l'écriture du droit sont communs.
  *
- * Trois refus, dans cet ordre :
+ * Deux refus, dans cet ordre :
  *
  *   1. sans compte connecté, rien. Un achat s'attache à quelqu'un ;
- *   2. sans jeton, rien ;
- *   3. si l'achat a déjà été revendiqué par un autre compte, rien — voir
- *      `facturation.ts` : aucun des deux magasins ne dit à qui appartient un
- *      achat, et sans cette revendication un même jeton ouvrirait autant de
- *      comptes qu'on voudrait.
+ *   2. sans jeton, rien.
+ *
+ * Et un transfert : si l'abonnement ouvrait déjà un autre compte, il passe à
+ * celui qui le présente et l'autre se referme — voir `comptePerdantLAcces` dans
+ * `facturation.ts`. Aucun des deux magasins ne dit à qui appartient un achat ;
+ * sans ce rattachement, un même jeton ouvrirait autant de comptes qu'on
+ * voudrait.
  *
  * Elle sert aussi bien au premier achat qu'aux relectures : l'application la
  * rappelle à chaque lancement avec le jeton qu'elle retrouve auprès du magasin.
@@ -465,33 +467,32 @@ export const verifierAchat = functions
 
     /*  La revendication, dans une transaction : deux appels simultanés avec le
      *  même jeton doivent aboutir à un seul propriétaire. Une lecture suivie
-     *  d'une écriture les laisserait tous les deux passer. */
+     *  d'une écriture les laisserait tous les deux passer.
+     *
+     *  Le compte qui présente l'abonnement le reçoit, et le précédent le perd
+     *  dans la même transaction — voir `comptePerdantLAcces`. Les deux écritures
+     *  tiennent ensemble ou pas du tout : un abonnement ouvert sur deux comptes,
+     *  même une seconde, est exactement ce qu'on cherche à éviter. */
     const revendication = db.doc(`${JETONS}/${clefDuJeton(verdict.revendication)}`)
+    let perdant: string | undefined
     try {
       await db.runTransaction(async (t) => {
         const vu = await t.get(revendication)
         const proprietaire = vu.exists ? (vu.data()?.[CHAMP_COMPTE] as string | undefined) : undefined
-        if (!jetonUtilisable(proprietaire, uid)) {
-          throw new functions.https.HttpsError(
-            'permission-denied',
-            "Cet abonnement est déjà rattaché à un autre compte.",
-          )
-        }
-        if (!vu.exists) {
-          t.set(revendication, { [CHAMP_COMPTE]: uid, le: new Date().toISOString() })
-        }
+        perdant = comptePerdantLAcces(proprietaire, uid)
+        if (perdant !== undefined) t.delete(db.doc(`abonnements/${perdant}`))
+        t.set(revendication, { [CHAMP_COMPTE]: uid, le: new Date().toISOString() })
       })
     } catch (e) {
-      if (e instanceof functions.https.HttpsError) {
-        /*  Journalisé en avertissement : ce n'est pas une panne, mais ce n'est
-         *  pas anodin non plus — c'est soit deux comptes sur un même téléphone,
-         *  soit un jeton qu'on a fait circuler. Dans les deux cas on veut
-         *  pouvoir le constater. */
-        functions.logger.warn('Jeton déjà revendiqué par un autre compte', { uid })
-        throw e
-      }
       functions.logger.error(`Revendication impossible : ${String(e)}`, { uid })
       throw new functions.https.HttpsError('unavailable', "La vérification a échoué, réessayez.")
+    }
+
+    /*  Journalisé : ce n'est pas une panne, mais ce n'est pas anodin non plus —
+     *  c'est soit quelqu'un qui a changé de compte, soit un abonnement qu'on
+     *  fait circuler. Dans les deux cas on veut pouvoir le constater. */
+    if (perdant !== undefined) {
+      functions.logger.info('Abonnement transféré à un autre compte', { uid, ancien: perdant })
     }
 
     if (!verdict.abonnement) {
