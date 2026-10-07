@@ -1,0 +1,76 @@
+RapidMusic is a career management app for independent musicians and small
+labels: concerts, contracts, releases, royalties, studio sessions, tasks
+and contacts. It keeps in one place what is otherwise scattered across
+spreadsheets, notes and email threads. It is a private productivity tool —
+no social feed, no user-to-user interaction, no publicly visible content.
+The interface is in French only.
+
+DEMO ACCOUNT
+Sign in on the first screen with the credentials provided above. The
+account is pre-filled with sample data, so every tab has content. No other
+setup, file or hardware is required.
+
+MAIN FEATURES
+From the sidebar on iPad; from the bottom tab bar and the menu on iPhone.
+  Tableau de bord  dashboard — upcoming events, income, pending contracts
+  Concerts         tour dates, venues, ticketing, fees
+  Sorties          release catalogue — singles, EPs, albums, streams
+  Royalties        income per streaming platform, statement import (Pro)
+  Contrats         contract tracking — status, advances, rates (Pro)
+  Agenda           studio sessions, interviews, meetings, calendar
+  Taches           to-do list with due dates
+  Contacts         professional address book
+  Mon profil       artist profile, data export and import, account deletion
+
+ACCOUNT DELETION
+In-app, at Profil > "Supprimer mon compte". It asks for the password, then
+permanently erases the account and all its data.
+
+SUBSCRIPTION — HOW TO TEST
+The app is free to use. The only restriction on the free plan is the number
+of saved contacts, limited to 3. "RapidMusic Pro" removes that limit and
+unlocks three areas: Royalties & Revenus, Contrats, and the fee amounts on
+the Concerts tab.
+
+To reach the purchase screen: sign in, open the menu (top left on iPhone),
+then tap "Abonnement". On iPad it is in the sidebar, or via the "Passer a
+Pro" button at the bottom of the sidebar.
+
+Two auto-renewable subscriptions, both in the group "RapidMusic Pro":
+  pro_mensuel  RapidMusic Pro, 1 month, EUR 9.99
+  pro_annuel   RapidMusic Pro, 1 year,  EUR 99.00
+
+For the selected option the purchase screen shows the title, the duration,
+the price per month and, for the yearly option, the amount charged once a
+year. Below the purchase button it states that the subscription renews
+automatically unless cancelled at least 24 hours before the end of the
+period, and it carries links to the Terms of Use and the Privacy Policy.
+
+Once subscribed, the subscription screen offers a "Gerer sur l'App Store"
+button that opens the account subscription settings, where cancellation and
+plan changes are made.
+
+Purchases use StoreKit 2. Sandbox Apple IDs work as expected: the signed
+transaction is verified server-side with the App Store Server API, trying
+the production environment first and falling back to sandbox.
+
+EXTERNAL SERVICES
+  Firebase Authentication (Google)  email and password sign-in
+  Cloud Firestore (Google)          storage of the user's own data
+  Cloud Functions (Google)          server-side logic, region europe-west1
+  App Store Server API (Apple)      subscription status verification
+  An SMTP email provider            transactional email
+On iOS every purchase goes through Apple's in-app purchase system. The app
+uses no AI service, no advertising network, no analytics SDK and no
+third-party data provider.
+
+REGIONS AND CONTENT
+The app behaves identically in every region. It is available in French
+only. Subscription prices are set in euros and converted by Apple for other
+storefronts. RapidMusic does not operate in a regulated industry and does
+not play, stream, host or distribute any music or other copyrighted
+material — it records metadata such as titles, dates and figures. The
+sample data in the demo account is fictional.
+
+CONTACT
+<votre adresse e-mail>
