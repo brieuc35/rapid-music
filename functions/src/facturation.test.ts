@@ -17,8 +17,8 @@ import { estPro } from './courriels.js'
 import {
   abonnementDepuisAchat,
   clefDuJeton,
+  comptePerdantLAcces,
   doitAccuserReception,
-  jetonUtilisable,
   estNotreProduit,
   ouvreLAcces,
   PRODUIT_ANNUEL,
@@ -82,21 +82,27 @@ test('un état absent ou inconnu ferme', () => {
 /*  La revendication du jeton — ce qui empêche de partager un abonnement        */
 /* -------------------------------------------------------------------------- */
 
-test('un jeton que personne n’a revendiqué est utilisable', () => {
-  assert.equal(jetonUtilisable(undefined, 'artiste-42'), true)
+test('un abonnement que personne n’avait ne ferme aucun compte', () => {
+  assert.equal(comptePerdantLAcces(undefined, 'artiste-42'), undefined)
+  assert.equal(comptePerdantLAcces('', 'artiste-42'), undefined)
 })
 
-test('son propriétaire peut s’en resservir', () => {
-  //  C'est le cas courant : l'application revérifie son abonnement à chaque
-  //  lancement, avec le même jeton.
-  assert.equal(jetonUtilisable('artiste-42', 'artiste-42'), true)
+test('son propriétaire peut s’en resservir sans rien perdre', () => {
+  //  C'est le cas courant, et de loin : l'application revérifie son abonnement
+  //  à chaque lancement, avec le même jeton. Si ce cas fermait quoi que ce soit,
+  //  l'abonné se couperait l'accès tout seul en ouvrant l'application.
+  assert.equal(comptePerdantLAcces('artiste-42', 'artiste-42'), undefined)
 })
 
-test('un autre compte ne peut pas s’en servir', () => {
-  //  Sans cette règle, faire circuler un jeton d'achat ouvrirait autant de
-  //  comptes qu'on voudrait — un abonnement payé, dix comptes servis.
-  assert.equal(jetonUtilisable('artiste-42', 'artiste-7'), false)
-  assert.equal(jetonUtilisable('', 'artiste-7'), false)
+test('un autre compte le reçoit, et le précédent le perd', () => {
+  //  La règle est « le dernier arrivé ». Elle a remplacé « premier arrivé,
+  //  propriétaire à vie », qui enfermait surtout des gens ayant payé : compte
+  //  supprimé puis recréé, changement d'adresse, abonnement repris après une
+  //  pause — l'abonnement restait attaché à un compte hors d'atteinte.
+  //
+  //  Le partage n'y gagne rien : deux personnes sur un même compte Apple se
+  //  voleraient l'accès à chaque lancement de l'une et de l'autre.
+  assert.equal(comptePerdantLAcces('artiste-42', 'artiste-7'), 'artiste-42')
 })
 
 test('l’empreinte du jeton est stable et discriminante', () => {
