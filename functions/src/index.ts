@@ -498,6 +498,26 @@ export const verifierAchat = functions
       /*  Expiré, suspendu, remboursé, mis en pause : le document disparaît et
        *  l'accès se referme. Effacer un document absent ne coûte rien. */
       await doc.delete()
+
+      /*  Et la revendication est relâchée, ce qui manquait.
+       *
+       *  Elle empêche qu'un même abonnement ouvre plusieurs comptes à la fois,
+       *  et c'est sa raison d'être. Mais elle était **définitive** : une fois
+       *  posée, aucun autre compte ne pouvait plus se servir de cet abonnement,
+       *  même des mois après son expiration, même si le premier compte avait
+       *  été supprimé entre-temps.
+       *
+       *  Trois situations ordinaires s'y heurtaient, et toutes concernent
+       *  quelqu'un qui a payé : supprimer son compte puis en créer un autre,
+       *  changer d'adresse de courriel en repartant d'un compte neuf, ou
+       *  reprendre un abonnement laissé en sommeil. Dans les trois cas,
+       *  l'abonnement restait attaché à un compte hors d'atteinte.
+       *
+       *  Relâcher à la fermeture ne rouvre aucune porte au partage : tant que
+       *  l'abonnement est actif, la revendication tient. Il n'y a rien à
+       *  partager d'un abonnement qui ne donne plus accès à rien. */
+      await revendication.delete()
+
       functions.logger.info('Abonnement refermé', { uid, magasin, etat: verdict.etat })
       return { pro: false }
     }
