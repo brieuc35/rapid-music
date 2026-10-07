@@ -7,10 +7,22 @@ messages vers la langue du compte — d'où le français reçu — mais l'examen
 fait en anglais, et un texte déjà dans cette langue évite un aller-retour de
 traduction approximative.
 
-## 1. Les notes courtes
+## 1. Les notes du formulaire
 
 Elles vont dans **App Store Connect → la version → Informations pour la
 vérification → Notes**, et elles y restent d'une version à l'autre.
+
+**Le texte prêt à coller est dans [`notes-verification.txt`](notes-verification.txt)**,
+à côté de ce fichier. Il remplace tout le contenu du champ — on ne l'ajoute
+pas à ce qui s'y trouve déjà.
+
+3 757 caractères pour une limite de 4 000 : la marge est mince, et c'est voulu.
+Le champ porte à la fois la présentation de l'application et les sept points
+qu'Apple réclame au titre de la directive 2.1, qui demande de les y reporter
+pour les soumissions suivantes. Les deux textes bout à bout en faisaient 5 850,
+d'où cette version fondue.
+
+Ce qui suit est la version courte d'origine, gardée pour mémoire.
 
 ```
 RapidMusic is a career management app for independent musicians:
