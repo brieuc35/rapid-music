@@ -44,6 +44,10 @@ interface GreffonAchat {
     enAttente?: boolean
   }>
   abonnementEnCours(): Promise<{ jeton?: string }>
+  /*  Facultative : une application déjà installée porte un greffon qui ne la
+   *  connaît pas, et l'appeler s'y solderait par un rejet. Le secours — la page
+   *  d'Apple dans le navigateur — vaut mieux qu'un bouton mort. */
+  gererAbonnement?(): Promise<void>
 }
 
 type FenetreAvecGreffons = Window & {
@@ -116,6 +120,50 @@ export async function jetonAppleDejaAchete(): Promise<string | null> {
     return (await natif.abonnementEnCours()).jeton ?? null
   } catch {
     return null
+  }
+}
+
+/**
+ * Ce que l'App Store répond, sans confondre « rien » et « je n'ai pas pu lire ».
+ *
+ * `jetonAppleDejaAchete` rend `null` dans les deux cas, et c'est suffisant pour
+ * ce qu'elle sert : sans jeton, il n'y a rien à faire vérifier. Mais refermer un
+ * accès sur cette réponse-là serait couper l'abonnement de quelqu'un parce que
+ * l'App Store n'a pas répondu — à l'embarquement d'un avion, par exemple.
+ *
+ * `aucun` est une affirmation d'Apple : `currentEntitlements` ne rend que ce qui
+ * est en cours, et son silence veut dire qu'il n'y a plus d'abonnement — expiré,
+ * remboursé, ou acheté par un autre compte Apple que celui du téléphone.
+ */
+export async function etatAbonnementApple(): Promise<
+  { jeton: string } | 'aucun' | 'inconnu'
+> {
+  const natif = greffon()
+  if (!natif) return 'inconnu'
+  try {
+    const jeton = (await natif.abonnementEnCours()).jeton
+    return jeton ? { jeton } : 'aucun'
+  } catch {
+    return 'inconnu'
+  }
+}
+
+/**
+ * Ouvre la fiche des abonnements d'Apple, par-dessus l'application.
+ *
+ * Rend `false` si elle n'a pas pu s'ouvrir — greffon d'une version antérieure,
+ * appel rejeté — pour que l'appelant retombe sur la page d'Apple dans le
+ * navigateur. Celle-ci ne montre pas les abonnements de bac à sable, mais c'est
+ * un secours, pas le chemin principal.
+ */
+export async function ouvrirGestionApple(): Promise<boolean> {
+  const natif = greffon()
+  if (!natif?.gererAbonnement) return false
+  try {
+    await natif.gererAbonnement()
+    return true
+  } catch {
+    return false
   }
 }
 

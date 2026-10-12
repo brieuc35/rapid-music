@@ -628,3 +628,39 @@ export const resilierAbonnement = functions
     functions.logger.info('Abonnement résilié', { uid, produit })
     return { resilie: true, magasin: 'play' }
   })
+
+/* -------------------------------------------------------------------------- */
+/*  6. La fermeture de son propre accès                                        */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Referme l'accès payant du compte qui le demande.
+ *
+ * Appelée au lancement quand le magasin affirme n'avoir **aucun** abonnement en
+ * cours alors que le compte est encore marqué Pro. Sans elle, le document
+ * resterait tel quel : l'application ne revérifie qu'avec un jeton, et un
+ * abonnement disparu n'en fournit plus aucun. L'accès survivait donc à ce qui le
+ * justifiait, jusqu'à l'échéance enregistrée — c'est-à-dire, pour un
+ * remboursement d'abonnement annuel, pendant un an.
+ *
+ * Aucune preuve n'est demandée, et il n'en faut pas : cette fonction ne peut
+ * fermer que l'accès de celui qui appelle. Quelqu'un qui mentirait pour se
+ * fermer son propre abonnement ne nuirait qu'à lui-même, et le rouvrirait au
+ * lancement suivant en présentant son jeton.
+ *
+ * La revendication n'est pas touchée. Elle dit à quel compte l'abonnement est
+ * rattaché, ce qui reste vrai : l'abonnement a seulement cessé d'ouvrir l'accès.
+ */
+export const fermerAbonnement = functions
+  .region(REGION)
+  .runWith({ serviceAccount: COMPTE })
+  .https.onCall(async (_data, context) => {
+    const uid = context.auth?.uid
+    if (!uid) {
+      throw new functions.https.HttpsError('unauthenticated', 'Connectez-vous.')
+    }
+
+    await getFirestore().doc(`abonnements/${uid}`).delete()
+    functions.logger.info('Abonnement refermé faute d’abonnement chez le magasin', { uid })
+    return { pro: false }
+  })

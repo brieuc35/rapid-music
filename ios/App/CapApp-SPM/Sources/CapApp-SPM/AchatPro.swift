@@ -1,9 +1,9 @@
 /* -------------------------------------------------------------------------- */
 /*  L'achat de l'abonnement Pro sur iPhone                                     */
 /*                                                                            */
-/*  Le pendant de src/utils/facturation-play.ts, côté Apple. Trois choses      */
+/*  Le pendant de src/utils/facturation-play.ts, côté Apple. Quatre choses     */
 /*  seulement : lire les tarifs, déclencher l'achat, retrouver un abonnement   */
-/*  déjà pris.                                                                 */
+/*  déjà pris, et ouvrir la fiche de gestion d'Apple.                          */
 /*                                                                            */
 /*  Rien de ce qui est décidé ici ne fait foi. Ce greffon rend un jeton signé  */
 /*  par Apple, que la fonction serveur `verifierAchat` fait valider par Apple  */
@@ -24,6 +24,7 @@
 import Capacitor
 import Foundation
 import StoreKit
+import UIKit
 
 @objc(AchatProPlugin)
 public class AchatProPlugin: CAPPlugin, CAPBridgedPlugin {
@@ -33,6 +34,7 @@ public class AchatProPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "tarifs", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "acheter", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "abonnementEnCours", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "gererAbonnement", returnType: CAPPluginReturnPromise),
     ]
 
     /*  Les deux abonnements, tels qu'ils sont créés dans App Store Connect.
@@ -187,6 +189,43 @@ public class AchatProPlugin: CAPPlugin, CAPBridgedPlugin {
                 return
             }
             call.resolve([:])
+        }
+    }
+
+    /**
+     Ouvre la fiche des abonnements d'Apple, par-dessus l'application.
+
+     C'est là que l'abonné change de formule et résilie. Aucune application n'a
+     le droit de résilier ce qu'Apple encaisse — cette fiche est le plus court
+     chemin qui existe, et Apple la recommande.
+
+     **Elle n'a pas d'équivalent dans le navigateur.** L'adresse
+     `apps.apple.com/account/subscriptions`, ouverte dans Safari, ne montre que
+     les abonnements réels : un abonnement de bac à sable ou acheté depuis
+     TestFlight n'y figure pas, et ne s'y résilie donc pas. Cette fiche-ci, elle,
+     les expose — c'est, d'après Apple, le seul moyen d'annuler un abonnement
+     pris dans une version TestFlight. Le lien Safari reste en secours pour le
+     jour où cet appel échouerait.
+
+     La scène est demandée au pont Capacitor plutôt qu'à `UIApplication` : c'est
+     la fenêtre où l'application est réellement affichée. La seconde n'est qu'un
+     filet, pour un état où le pont ne serait pas encore posé.
+     */
+    @objc func gererAbonnement(_ call: CAPPluginCall) {
+        Task { @MainActor in
+            let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+            guard let scene = self.bridge?.viewController?.view.window?.windowScene ?? scenes.first
+            else {
+                call.reject("Aucune fenêtre où présenter la fiche des abonnements.")
+                return
+            }
+
+            do {
+                try await AppStore.showManageSubscriptions(in: scene)
+                call.resolve()
+            } catch {
+                call.reject("La fiche des abonnements n'a pas pu s'ouvrir.", nil, error)
+            }
         }
     }
 }

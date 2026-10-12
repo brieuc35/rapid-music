@@ -20,12 +20,15 @@ import { httpsCallable } from 'firebase/functions'
 import { functions } from '@/firebase'
 import {
   acheterProApple,
+  etatAbonnementApple,
   facturationApplePossible,
   jetonAppleDejaAchete,
   lireTarifsApple,
+  ouvrirGestionApple,
 } from './facturation-apple'
 import {
   acheterPro as acheterProPlay,
+  etatAbonnementPlay,
   facturationPossible as facturationPlayPossible,
   jetonDejaAchete as jetonPlayDejaAchete,
   lireTarifs as lireTarifsPlay,
@@ -74,6 +77,32 @@ export function facturationPossible(): boolean {
  * et deviner enverrait un abonné Apple sur une page Google où il ne trouverait
  * rien. L'écran dit alors où chercher, en toutes lettres.
  */
+/**
+ * Ouvre là où l'on résilie, par le chemin le plus court disponible.
+ *
+ * Sur iPhone, la fiche native d'Apple, présentée par-dessus l'application. Elle
+ * vaut mieux que l'adresse ouverte dans le navigateur pour une raison qui ne se
+ * devine pas : **la page web ne montre que les abonnements réels**. Un
+ * abonnement de bac à sable, ou pris dans une version TestFlight, n'y figure
+ * pas — et ne s'y résilie donc pas. D'après Apple, cette fiche est le seul
+ * moyen d'annuler un abonnement acheté en TestFlight.
+ *
+ * Ailleurs, et en secours si la fiche refuse de s'ouvrir, l'adresse du magasin
+ * dans le navigateur.
+ *
+ * Rend `false` quand il n'y a nulle part où aller : c'est le cas du site, où
+ * l'on ignore chez quel magasin l'abonnement a été pris. L'écran dit alors où
+ * chercher, en toutes lettres.
+ */
+export async function ouvrirGestionAbonnement(): Promise<boolean> {
+  if (magasin() === 'apple' && (await ouvrirGestionApple())) return true
+
+  const lien = lienGestionAbonnement()
+  if (!lien) return false
+  window.open(lien.url, '_blank', 'noopener')
+  return true
+}
+
 export function lienGestionAbonnement(): { url: string; magasin: 'apple' | 'play' } | null {
   const ou = magasin()
   if (ou === 'apple') {
@@ -105,6 +134,30 @@ export async function acheterPro(
   if (ou === 'apple') return { jeton: await acheterProApple(produit), magasin: 'apple' }
   if (ou === 'play') return { jeton: await acheterProPlay(produit), magasin: 'play' }
   throw new Error("L'abonnement s'achète depuis l'application.")
+}
+
+/**
+ * Ce que le magasin répond, en distinguant trois cas et non deux.
+ *
+ * `jetonDejaAchete` répond par oui ou par rien, ce qui suffit pour faire
+ * vérifier un achat. Ici il faut la nuance : `aucun` est une affirmation du
+ * magasin — il n'y a plus d'abonnement en cours —, `inconnu` veut dire qu'on
+ * n'en sait rien, parce qu'on n'est pas dans une application ou parce que le
+ * magasin n'a pas répondu.
+ *
+ * La différence décide d'un accès. Refermer sur `inconnu` couperait l'abonnement
+ * de quelqu'un pour une panne de réseau ; ne jamais refermer laisserait Pro
+ * ouvert à qui s'est fait rembourser.
+ */
+export async function etatChezLeMagasin(): Promise<
+  { jeton: string; magasin: 'apple' | 'play' } | 'aucun' | 'inconnu'
+> {
+  const ou = magasin()
+  if (ou === null) return 'inconnu'
+
+  const etat = ou === 'apple' ? await etatAbonnementApple() : await etatAbonnementPlay()
+  if (etat === 'aucun' || etat === 'inconnu') return etat
+  return { jeton: etat.jeton, magasin: ou }
 }
 
 /** Le reçu d'un abonnement déjà pris sur ce magasin, s'il y en a un. */
@@ -182,6 +235,23 @@ export async function resilierAbonnement(): Promise<'resilie' | 'a-faire-soi-mem
  * qui sait ouvrir une console, celui-ci parle à Apple ou à Google avec des
  * droits que le navigateur n'a pas.
  */
+/**
+ * Demande au serveur de refermer l'accès payant de ce compte.
+ *
+ * Appelée quand le magasin affirme n'avoir aucun abonnement en cours alors que
+ * le compte est encore marqué Pro — un abonnement expiré, remboursé, ou acheté
+ * par un autre compte Apple que celui du téléphone. Sans cet appel, l'accès
+ * survivrait à ce qui le justifiait : l'application ne revérifie qu'avec un
+ * jeton, et un abonnement disparu n'en fournit plus aucun.
+ */
+export async function fermerAupresDuServeur(): Promise<void> {
+  const appel = httpsCallable<Record<string, never>, { pro: boolean }>(
+    functions,
+    'fermerAbonnement',
+  )
+  await appel({})
+}
+
 export async function verifierAupresDuServeur(
   jeton: string,
   ou: 'apple' | 'play',
