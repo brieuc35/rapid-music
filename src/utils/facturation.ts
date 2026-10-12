@@ -133,6 +133,49 @@ export async function lireTarifs(): Promise<Map<string, import('./facturation-pl
 }
 
 /**
+ * Arrête la reconduction de l'abonnement, là où le magasin l'autorise.
+ *
+ * Rend ce qui s'est réellement passé, et non un simple `true` : il y a trois
+ * issues et les confondre reviendrait à annoncer une résiliation qui n'a pas eu
+ * lieu, sur un sujet où un malentendu se paie tous les mois.
+ *
+ *   `resilie`           — c'est fait, le prélèvement s'arrête ;
+ *   `a-faire-soi-meme`  — il reste à le faire dans le magasin. C'est le cas
+ *                         d'Apple, toujours : aucun appel ne permet de résilier
+ *                         un abonnement App Store, seul son titulaire peut le
+ *                         faire depuis les réglages de son identifiant ;
+ *   `rien`              — il n'y a pas d'abonnement à résilier ici.
+ *
+ * Aucune erreur ne sort d'ici. Cette fonction est appelée avant la suppression
+ * d'un compte, et une résiliation en échec ne doit pas empêcher quelqu'un de
+ * supprimer le sien : il resterait prisonnier d'un compte qu'il veut quitter.
+ * L'échec se dit en `a-faire-soi-meme`, qui est la vérité.
+ */
+export async function resilierAbonnement(): Promise<'resilie' | 'a-faire-soi-meme' | 'rien'> {
+  let achete: { jeton: string; magasin: 'apple' | 'play' } | null = null
+  try {
+    achete = await jetonDejaAchete()
+  } catch {
+    /*  Le magasin ne répond pas : on ne sait pas s'il y a un abonnement. Le
+     *  dire à faire soi-même est le seul choix qui ne trompe personne. */
+    return 'a-faire-soi-meme'
+  }
+  if (!achete) return 'rien'
+  if (achete.magasin === 'apple') return 'a-faire-soi-meme'
+
+  try {
+    const appel = httpsCallable<{ jeton: string; magasin: string }, { resilie: boolean }>(
+      functions,
+      'resilierAbonnement',
+    )
+    const { data } = await appel({ jeton: achete.jeton, magasin: achete.magasin })
+    return data.resilie === true ? 'resilie' : 'a-faire-soi-meme'
+  } catch {
+    return 'a-faire-soi-meme'
+  }
+}
+
+/**
  * Fait vérifier un reçu par le serveur, qui ouvre ou referme l'accès.
  *
  * C'est le seul appel qui compte : tout ce qui précède peut être contourné par

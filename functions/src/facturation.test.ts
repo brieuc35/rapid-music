@@ -21,6 +21,7 @@ import {
   doitAccuserReception,
   estNotreProduit,
   ouvreLAcces,
+  peutResilier,
   PRODUIT_ANNUEL,
   PRODUIT_MENSUEL,
   produitDeLAchat,
@@ -103,6 +104,28 @@ test('un autre compte le reçoit, et le précédent le perd', () => {
   //  Le partage n'y gagne rien : deux personnes sur un même compte Apple se
   //  voleraient l'accès à chaque lancement de l'une et de l'autre.
   assert.equal(comptePerdantLAcces('artiste-42', 'artiste-7'), 'artiste-42')
+})
+
+/* -------------------------------------------------------------------------- */
+/*  Qui peut résilier                                                          */
+/* -------------------------------------------------------------------------- */
+
+test('le compte auquel l’abonnement est rattaché peut le résilier', () => {
+  assert.equal(peutResilier('artiste-42', 'artiste-42'), true)
+})
+
+test('un autre compte ne peut pas résilier l’abonnement', () => {
+  //  Ce n'est pas l'accès qu'on volerait, c'est le paiement qu'on arrêterait à
+  //  la place de quelqu'un d'autre. Pire qu'un accès indu.
+  assert.equal(peutResilier('artiste-42', 'artiste-7'), false)
+})
+
+test('un abonnement que personne n’a revendiqué n’est pas résiliable', () => {
+  //  Le doute profite ici au refus, à l'inverse de la revendication : résilier
+  //  est irréversible, et personne ne peut prouver que cet abonnement est le
+  //  sien.
+  assert.equal(peutResilier(undefined, 'artiste-42'), false)
+  assert.equal(peutResilier('', 'artiste-42'), false)
 })
 
 test('l’empreinte du jeton est stable et discriminante', () => {

@@ -24,7 +24,9 @@ From the sidebar on iPad; from the bottom tab bar and the menu on iPhone.
 
 ACCOUNT DELETION
 In-app, at Profil > "Supprimer mon compte". It asks for the password, then
-permanently erases the account and all its data.
+permanently erases the account and all its data. If the account has an
+active subscription, the deletion dialog states that deleting the account
+does not cancel it, and links to the Apple ID subscription settings.
 
 SUBSCRIPTION — HOW TO TEST
 The app is free to use. The only restriction on the free plan is the number

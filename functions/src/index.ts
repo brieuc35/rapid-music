@@ -25,6 +25,7 @@ import {
   comptePerdantLAcces,
   doitAccuserReception,
   JETONS,
+  peutResilier,
   produitDeLAchat,
 } from './facturation.js'
 import { abonnementDepuisApple, identifiantAbonnement, reçuAttendu } from './facturation-apple.js'
@@ -38,7 +39,7 @@ import {
   lireAbonnement,
   PAQUET as PAQUET_IOS,
 } from './apple.js'
-import { accuserReception, ErreurPlay, lireAchat } from './play.js'
+import { accuserReception, ErreurPlay, lireAchat, resilier } from './play.js'
 import {
   CHAMP_COMPTE,
   envoyer,
@@ -535,4 +536,95 @@ export const verifierAchat = functions
       jusqua: verdict.abonnement.jusqua ?? '(sans échéance)',
     })
     return { pro: true, jusqua: verdict.abonnement.jusqua ?? null }
+  })
+
+/* -------------------------------------------------------------------------- */
+/*  5. La résiliation de l'abonnement                                          */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Arrête la reconduction de l'abonnement, là où le magasin l'autorise.
+ *
+ * **Un seul des deux magasins l'autorise.** Google a un appel pour cela ; Apple
+ * n'en a aucun, et ce n'est pas un oubli de leur part : chez Apple, seul le
+ * titulaire du compte peut mettre fin à ce qu'il paie, depuis les réglages de
+ * son identifiant. Aucune ligne de code ne contournera cela, et c'est tant
+ * mieux — personne ne veut qu'une application puisse décider seule de l'argent
+ * qu'elle prélève. La réponse le dit franchement plutôt que de laisser croire à
+ * une résiliation qui n'a pas eu lieu.
+ *
+ * Appelée avant la suppression d'un compte, pour que supprimer son compte
+ * n'équivaille pas à continuer de payer une application qu'on n'a plus. Elle
+ * sert aussi, et c'est le même besoin, à qui veut simplement arrêter.
+ *
+ * Trois refus : sans compte connecté, sans jeton, et si l'abonnement n'est pas
+ * rattaché au compte qui demande — voir `peutResilier`, qui dit pourquoi ce
+ * dernier contrôle vaut plus que les deux autres.
+ *
+ * L'accès n'est pas refermé ici. Les jours déjà réglés sont dus : Google laisse
+ * l'abonnement en `CANCELED` jusqu'à son terme, et `ouvreLAcces` le reconnaît.
+ * Dans le cas de la suppression de compte, la question ne se pose pas — le
+ * compte, lui, disparaît.
+ */
+export const resilierAbonnement = functions
+  .region(REGION)
+  .runWith({ serviceAccount: COMPTE })
+  .https.onCall(async (data, context) => {
+    const uid = context.auth?.uid
+    if (!uid) {
+      throw new functions.https.HttpsError('unauthenticated', 'Connectez-vous pour résilier.')
+    }
+
+    const jeton = typeof data?.jeton === 'string' ? data.jeton.trim() : ''
+    if (!jeton) {
+      throw new functions.https.HttpsError('invalid-argument', "Le jeton d'achat manque.")
+    }
+
+    /*  Apple avant tout contrôle : il n'y a rien à vérifier pour une
+     *  résiliation qu'on ne peut pas faire, et la réponse est la même quel que
+     *  soit le jeton présenté. */
+    if (data?.magasin === 'apple') {
+      return { resilie: false, magasin: 'apple' }
+    }
+
+    const db = getFirestore()
+
+    /*  La revendication fait preuve de propriété. Pour un achat Play, elle porte
+     *  sur le jeton lui-même — voir `verdictPlay`. */
+    const vu = await db.doc(`${JETONS}/${clefDuJeton(jeton)}`).get()
+    const proprietaire = vu.exists ? (vu.data()?.[CHAMP_COMPTE] as string | undefined) : undefined
+    if (!peutResilier(proprietaire, uid)) {
+      functions.logger.warn('Résiliation demandée pour un abonnement rattaché ailleurs', { uid })
+      throw new functions.https.HttpsError(
+        'permission-denied',
+        "Cet abonnement n'est pas rattaché à ce compte.",
+      )
+    }
+
+    /*  L'identifiant du produit, que l'ancienne route de la résiliation réclame
+     *  et que seul Google peut dire. */
+    let produit: string | null
+    try {
+      produit = produitDeLAchat(await lireAchat(jeton))
+    } catch (e) {
+      functions.logger.error(`Achat illisible avant résiliation : ${String(e)}`, { uid })
+      throw new functions.https.HttpsError('unavailable', "La résiliation a échoué, réessayez.")
+    }
+    if (!produit) {
+      functions.logger.error('Achat sans identifiant de produit : résiliation impossible', { uid })
+      throw new functions.https.HttpsError(
+        'failed-precondition',
+        'Résiliez depuis Google Play : nous ne pouvons pas le faire pour cet achat.',
+      )
+    }
+
+    try {
+      await resilier(jeton, produit)
+    } catch (e) {
+      functions.logger.error(`Résiliation refusée par Google : ${String(e)}`, { uid })
+      throw new functions.https.HttpsError('unavailable', "La résiliation a échoué, réessayez.")
+    }
+
+    functions.logger.info('Abonnement résilié', { uid, produit })
+    return { resilie: true, magasin: 'play' }
   })

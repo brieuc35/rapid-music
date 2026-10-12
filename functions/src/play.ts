@@ -1,9 +1,9 @@
 /* -------------------------------------------------------------------------- */
 /*  Parler à Google Play                                                       */
 /*                                                                            */
-/*  Deux appels, et rien d'autre : lire un achat, en accuser réception. Ce qu'on */
-/*  fait de la réponse est décidé dans facturation.ts, qui ne touche pas au      */
-/*  réseau et se vérifie donc par des tests.                                    */
+/*  Trois appels, et rien d'autre : lire un achat, en accuser réception, le     */
+/*  résilier. Ce qu'on fait de la réponse est décidé dans facturation.ts, qui   */
+/*  ne touche pas au réseau et se vérifie donc par des tests.                  */
 /*                                                                            */
 /*  L'identité est celle du compte de service de la fonction. Pour que Google   */
 /*  lui réponde, ce compte doit être invité dans la Play Console — la marche à  */
@@ -82,5 +82,30 @@ export async function accuserReception(jeton: string, produit: string): Promise<
   const chemin =
     `/applications/${PAQUET}/purchases/subscriptions/${produit}` +
     `/tokens/${encodeURIComponent(jeton)}:acknowledge`
+  await appeler(chemin, 'POST')
+}
+
+/**
+ * Résilie l'abonnement : la reconduction s'arrête.
+ *
+ * Google est le seul des deux magasins à l'autoriser — Apple ne propose aucun
+ * appel équivalent, et c'est délibéré : chez lui, seul le titulaire du compte
+ * peut mettre fin à ce qu'il paie. D'où une application qui résilie pour de bon
+ * sur Android et qui, sur iPhone, ne peut qu'envoyer vers les réglages.
+ *
+ * Ce que l'appel fait, et ne fait pas : il coupe la reconduction, il ne
+ * rembourse rien et ne ferme pas l'accès. La période déjà réglée court
+ * jusqu'à son terme — `SUBSCRIPTION_STATE_CANCELED` ouvre encore l'accès, voir
+ * `ouvreLAcces`. C'est le comportement juste : les jours payés sont dus.
+ *
+ * Comme l'accusé de réception, cet appel passe par l'ancienne route, qui réclame
+ * l'identifiant du produit ; la version 2 de l'API n'offre que `revoke`, qui
+ * coupe l'accès sur le champ et peut rembourser — bien plus brutal que ce qu'on
+ * veut ici.
+ */
+export async function resilier(jeton: string, produit: string): Promise<void> {
+  const chemin =
+    `/applications/${PAQUET}/purchases/subscriptions/${produit}` +
+    `/tokens/${encodeURIComponent(jeton)}:cancel`
   await appeler(chemin, 'POST')
 }
