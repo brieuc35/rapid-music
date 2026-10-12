@@ -143,6 +143,26 @@ export async function jetonDejaAchete(): Promise<string | null> {
 }
 
 /**
+ * Ce que le Play Store répond, sans confondre « rien » et « je n'ai pas pu lire ».
+ *
+ * Même raison que du côté d'Apple : refermer un accès sur un `null` qui vaut
+ * aussi bien « aucun abonnement » que « le Play Store n'a pas répondu »
+ * couperait l'abonnement de quelqu'un pour une panne de réseau.
+ */
+export async function etatAbonnementPlay(): Promise<{ jeton: string } | 'aucun' | 'inconnu'> {
+  const service = await serviceFacturation()
+  if (!service) return 'inconnu'
+  try {
+    const achats = await service.listPurchases()
+    const notre = new Set([PRODUIT_MENSUEL, PRODUIT_ANNUEL])
+    const jeton = achats.find((a) => notre.has(a.itemId))?.purchaseToken
+    return jeton ? { jeton } : 'aucun'
+  } catch {
+    return 'inconnu'
+  }
+}
+
+/**
  * Les prix réels, tels que la Play Console les affiche, dans la devise du
  * téléphone.
  *

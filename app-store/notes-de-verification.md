@@ -207,5 +207,18 @@ Ce que la vidéo doit montrer, dans cet ordre :
 de démonstration.** Supprimer celui-ci couperait l'accès au vérificateur, et le
 refus suivant serait, lui, mérité.
 
+### Avant de filmer : repartir d'un compte non abonné
+
+L'étape 5 ne se filme que si le compte Apple du téléphone **n'a pas déjà** un
+abonnement en cours. S'il en a un, l'application le reconnaît au lancement et
+ouvre Pro toute seule : il n'y a plus d'achat à montrer.
+
+Un abonnement d'essai ne se résilie pas depuis la page web d'Apple, qui ne
+montre que les abonnements réels. Il se résilie **depuis l'application** :
+Profil → vignette Pro → « Gérer sur l'App Store », qui ouvre la fiche d'Apple
+par-dessus l'application. Voir `docs/facturation.md`. Une fois résilié, il faut
+attendre son expiration — les durées sont raccourcies en essai — et l'accès Pro
+se referme alors de lui-même au lancement suivant.
+
 Deux à quatre minutes suffisent. La vidéo se joint directement à la réponse dans
 le Resolution Center.

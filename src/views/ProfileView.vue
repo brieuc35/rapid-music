@@ -366,20 +366,17 @@
           se résilie : « Abonnements » dans les réglages de votre compte Apple, ou dans
           Google Play. Supprimer votre compte RapidMusic ne l'arrête pas.
         </p>
-        <a
-          v-if="gestionAbo"
-          class="btn btn--primary"
-          :href="gestionAbo.url"
-          target="_blank"
-          rel="noopener"
-        >
+        <!--  Un bouton et non un lien : sur iPhone, la fiche des abonnements
+              d'Apple s'ouvre par-dessus l'application, et elle seule montre les
+              abonnements de bac à sable et ceux pris en TestFlight. -->
+        <button v-if="gestionAbo" class="btn btn--primary" @click="ouvrirGestionAbonnement()">
           <Icon name="external" />
           {{
             gestionAbo.magasin === 'apple'
               ? 'Résilier sur l’App Store'
               : 'Vérifier sur Google Play'
           }}
-        </a>
+        </button>
       </div>
       <div class="field" style="margin-bottom: 0">
         <label for="del-pwd">Saisissez votre mot de passe pour confirmer</label>
@@ -420,7 +417,7 @@ import type { AppData, ArtistProfile } from '@/store/types'
 import { fileToAvatarDataUrl, ImageError } from '@/utils/image'
 import { GENRES } from '@/utils/genres'
 import { BackupError, describeBackup, downloadBackup, parseBackup } from '@/utils/backup'
-import { lienGestionAbonnement, magasin } from '@/utils/facturation'
+import { lienGestionAbonnement, magasin, ouvrirGestionAbonnement } from '@/utils/facturation'
 import { PAGES_LEGALES } from '@/router/legal'
 
 /*  Le magasin qui encaisse, et sa page de gestion. Relevés une fois : ils ne

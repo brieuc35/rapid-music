@@ -108,12 +108,58 @@ Les deux magasins ne laissent pas la même marge :
 | App Store | **aucun appel ne l'autorise** | on prévient, et on conduit à la page d'Apple d'un geste |
 
 L'asymétrie n'est pas un oubli d'Apple : chez lui, seul le titulaire du compte
-peut mettre fin à ce qu'il paie, depuis « Abonnements » dans les réglages de son
-identifiant. Aucune ligne de code ne contournera cela — et c'est défendable :
-personne ne veut qu'une application décide seule de l'argent qu'elle prélève.
-Apple demande en revanche que l'application le **dise**, au lieu de laisser
-découvrir le prélèvement suivant ; c'est ce que fait l'encadré de la fenêtre de
-suppression, placé avant le champ de mot de passe.
+peut mettre fin à ce qu'il paie. Aucune ligne de code ne contournera cela — et
+c'est défendable : personne ne veut qu'une application décide seule de l'argent
+qu'elle prélève. Apple demande en revanche que l'application le **dise**, au lieu
+de laisser découvrir le prélèvement suivant ; c'est ce que fait l'encadré de la
+fenêtre de suppression, placé avant le champ de mot de passe.
+
+#### La fiche native, et pourquoi le lien web ne suffit pas
+
+Les deux boutons « Gérer » et « Résilier » ouvrent, sur iPhone, la **fiche des
+abonnements présentée par Apple par-dessus l'application**
+(`AppStore.showManageSubscriptions`, greffée dans `AchatPro.swift`). Ce n'est pas
+un raffinement d'apparence :
+
+> **La page `apps.apple.com/account/subscriptions`, ouverte dans le navigateur,
+> ne montre que les abonnements réels.** Un abonnement de bac à sable, ou pris
+> depuis une version TestFlight, n'y figure pas — et ne s'y résilie donc pas.
+
+C'est le piège qui a coûté une soirée : deux comptes d'essai restés Pro, un
+abonnement annuel toujours actif bien au-delà des six renouvellements prévus, et
+une page Apple qui n'affichait rien à résilier. D'après Apple, la fiche native
+**est le seul moyen** d'annuler un abonnement acheté dans une version TestFlight
+avec un compte Apple ordinaire ; l'autre voie, un vrai compte de bac à sable
+créé dans App Store Connect, se vide par
+« Utilisateurs et accès → Bac à sable → le testeur → Effacer l'historique
+d'achat ».
+
+Le lien web reste en secours, pour le jour où l'appel natif échouerait — et
+parce qu'un greffon de version antérieure ne connaît pas la méthode.
+
+#### L'accès se referme aussi quand il n'y a plus rien à vérifier
+
+L'application revérifie son abonnement à chaque lancement **avec un jeton**. Or
+un abonnement disparu — expiré, remboursé — n'en fournit plus aucun :
+`currentEntitlements` ne rend que ce qui est en cours. Sans précaution, la
+revérification ne se faisait donc pas du tout, et l'accès survivait à ce qui le
+justifiait jusqu'à l'échéance enregistrée. Pour un remboursement d'abonnement
+annuel : pendant un an.
+
+D'où `etatChezLeMagasin`, qui distingue trois réponses là où il n'y en avait que
+deux :
+
+| réponse | ce que ça veut dire | ce qu'on fait |
+|---|---|---|
+| un jeton | il y a un abonnement | on le fait vérifier |
+| `aucun` | le magasin affirme qu'il n'y en a plus | on referme (`fermerAbonnement`) |
+| `inconnu` | pas d'application, ou le magasin n'a pas répondu | on ne touche à rien |
+
+La troisième ligne est la plus importante : refermer sur un silence couperait
+l'abonnement de quelqu'un pour une panne de réseau. `fermerAbonnement` ne
+demande aucune preuve et n'en a pas besoin — elle ne peut fermer que l'accès de
+celui qui appelle, et mentir pour se fermer son propre abonnement ne nuit qu'à
+soi.
 
 Ce que la résiliation ne fait pas, des deux côtés : elle ne rembourse rien et ne
 ferme pas l'accès sur-le-champ. La reconduction s'arrête, la période déjà réglée

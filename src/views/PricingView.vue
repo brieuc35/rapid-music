@@ -71,15 +71,21 @@
             qu'ils encaissent. Ce bouton ouvre donc la page du magasin — c'est
             le geste le plus court qui existe.
 
+            Un bouton et non un lien : sur iPhone, c'est la fiche native d'Apple
+            qui s'ouvre par-dessus l'application, et elle seule montre les
+            abonnements de bac à sable et ceux pris en TestFlight. La page
+            équivalente dans Safari ne montre que les abonnements réels — elle
+            reste en secours.
+
             Il remplace une invitation à écrire. Demander un courriel pour une
             résiliation que l'abonné peut faire en deux touches était la plus
             mauvaise réponse possible à quelqu'un qui veut arrêter de payer, et
             Apple le refuse. -->
       <div v-if="gestion" class="current__actions">
-        <a class="btn btn--ghost" :href="gestion.url" target="_blank" rel="noopener">
+        <button class="btn btn--ghost" @click="ouvrirGestionAbonnement()">
           <Icon name="external" />
           {{ gestion.magasin === 'apple' ? 'Gérer sur l’App Store' : 'Gérer sur Google Play' }}
-        </a>
+        </button>
         <span class="current__aide">
           Changement de formule, moyen de paiement et résiliation s'y font tous.
         </span>
@@ -257,6 +263,7 @@ import {
   facturationPossible,
   lienGestionAbonnement,
   lireTarifs,
+  ouvrirGestionAbonnement,
   PRODUIT_ANNUEL,
   PRODUIT_MENSUEL,
   verifierAupresDuServeur,

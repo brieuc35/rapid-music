@@ -23,7 +23,12 @@ import {
   clearSubscription,
   readSubscription,
 } from './subscription'
-import { jetonDejaAchete, resilierAbonnement, verifierAupresDuServeur } from '@/utils/facturation'
+import {
+  etatChezLeMagasin,
+  fermerAupresDuServeur,
+  resilierAbonnement,
+  verifierAupresDuServeur,
+} from '@/utils/facturation'
 import { auth } from '@/firebase'
 import {
   createUserWithEmailAndPassword,
@@ -444,15 +449,35 @@ export async function relireAbonnement(): Promise<void> {
  * l'accès après un remboursement ou une résiliation, et ce qui rend son
  * abonnement à quelqu'un qui change de téléphone.
  *
+ * Trois réponses possibles du magasin, et trois conduites. Un jeton se fait
+ * vérifier. `inconnu` ne change rien — on n'est pas dans une application, ou le
+ * magasin n'a pas répondu, et refermer sur ce silence couperait l'abonnement de
+ * quelqu'un pour une panne de réseau. `aucun`, lui, est une affirmation : il n'y
+ * a plus d'abonnement en cours, et l'accès doit se refermer.
+ *
+ * Ce dernier cas manquait, et il laissait un trou : l'application ne revérifiait
+ * qu'avec un jeton, or un abonnement disparu n'en fournit plus aucun. L'accès
+ * survivait donc à ce qui le justifiait, jusqu'à l'échéance enregistrée — pour
+ * un remboursement d'abonnement annuel, pendant un an.
+ *
  * Silencieux de bout en bout : hors des applications il n'y a rien à demander,
  * et un échec de réseau ne doit pas retarder l'ouverture ni afficher quoi que
  * ce soit. L'abonnement déjà lu dans Firestore reste valable en attendant.
  */
 async function reverifierAchat(uid: string): Promise<void> {
   try {
-    const achat = await jetonDejaAchete()
-    if (!achat) return
-    await verifierAupresDuServeur(achat.jeton, achat.magasin)
+    const etat = await etatChezLeMagasin()
+    if (etat === 'inconnu') return
+
+    if (etat === 'aucun') {
+      /*  Rien à refermer si rien n'est ouvert — et surtout, pas d'appel inutile
+       *  à chaque lancement pour l'immense majorité, qui n'est pas abonnée. */
+      if (!abonnementPro.value) return
+      await fermerAupresDuServeur()
+    } else {
+      await verifierAupresDuServeur(etat.jeton, etat.magasin)
+    }
+
     await readSubscription(uid)
   } catch {
     /* rien à faire ici : l'état connu reste en place jusqu'au prochain essai */
