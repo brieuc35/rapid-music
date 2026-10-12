@@ -16,7 +16,7 @@ vérification → Notes**, et elles y restent d'une version à l'autre.
 à côté de ce fichier. Il remplace tout le contenu du champ — on ne l'ajoute
 pas à ce qui s'y trouve déjà.
 
-3 757 caractères pour une limite de 4 000 : la marge est mince, et c'est voulu.
+3 934 caractères pour une limite de 4 000 : la marge est mince, et c'est voulu.
 Le champ porte à la fois la présentation de l'application et les sept points
 qu'Apple réclame au titre de la directive 2.1, qui demande de les y reporter
 pour les soumissions suivantes. Les deux textes bout à bout en faisaient 5 850,
@@ -115,7 +115,10 @@ bottom tab bar and the menu on iPhone:
 
 Account creation, sign-in and account deletion all happen in the app.
 Account deletion is at Profil → "Supprimer mon compte"; it asks for the
-password, then permanently erases the account and all its data.
+password, then permanently erases the account and all its data. When the
+account has an active subscription, the deletion dialog states that
+deleting the account does not cancel it and links to the Apple ID
+subscription settings.
 
 The app has no user-generated content shared between users, so no
 reporting or blocking mechanism applies.

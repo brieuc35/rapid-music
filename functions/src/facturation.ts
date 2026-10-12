@@ -156,6 +156,25 @@ export function comptePerdantLAcces(
 }
 
 /**
+ * Ce compte a-t-il le droit de résilier cet abonnement ?
+ *
+ * La question se pose parce que la résiliation part du navigateur, avec le jeton
+ * d'achat pour seule pièce. Sans ce contrôle, quelqu'un qui aurait mis la main
+ * sur le jeton d'un autre pourrait **couper l'abonnement de cette personne** —
+ * on ne lui volerait pas son accès, on lui arrêterait ce qu'elle paie, ce qui
+ * est pire.
+ *
+ * La revendication sert de preuve : c'est le compte auquel l'abonnement est
+ * rattaché, celui-là même qui en reçoit l'accès. Rien d'autre n'est accepté, et
+ * surtout pas l'absence de revendication — un abonnement que personne n'a
+ * présenté n'a pas à être résiliable par le premier venu.
+ */
+export function peutResilier(proprietaire: string | undefined, demandeur: string): boolean {
+  if (proprietaire === undefined || proprietaire === '') return false
+  return proprietaire === demandeur
+}
+
+/**
  * Faut-il accuser réception de cet achat auprès de Google ?
  *
  * Ce n'est pas une formalité : **un achat non confirmé sous trois jours est

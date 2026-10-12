@@ -93,6 +93,37 @@ l'abonnement compte est celui où l'artiste ouvre l'application, c'est-à-dire
 exactement celui où on le rafraîchit. Un abonné qui n'ouvre pas l'application ne
 subit rien.
 
+### La résiliation, et pourquoi elle n'est possible qu'à moitié
+
+Un abonnement est encaissé par le magasin, pas par nous. Supprimer un compte
+RapidMusic n'y change donc rien par lui-même : **le compte part, le prélèvement
+continue**. C'est le piège classique de ce genre d'application, et il se referme
+sur quelqu'un qui croyait justement en avoir fini.
+
+Les deux magasins ne laissent pas la même marge :
+
+| | Résiliation depuis le serveur | Ce qu'on fait |
+|---|---|---|
+| Google Play | oui, `purchases.subscriptions:cancel` | la résiliation est demandée à la suppression du compte |
+| App Store | **aucun appel ne l'autorise** | on prévient, et on conduit à la page d'Apple d'un geste |
+
+L'asymétrie n'est pas un oubli d'Apple : chez lui, seul le titulaire du compte
+peut mettre fin à ce qu'il paie, depuis « Abonnements » dans les réglages de son
+identifiant. Aucune ligne de code ne contournera cela — et c'est défendable :
+personne ne veut qu'une application décide seule de l'argent qu'elle prélève.
+Apple demande en revanche que l'application le **dise**, au lieu de laisser
+découvrir le prélèvement suivant ; c'est ce que fait l'encadré de la fenêtre de
+suppression, placé avant le champ de mot de passe.
+
+Ce que la résiliation ne fait pas, des deux côtés : elle ne rembourse rien et ne
+ferme pas l'accès sur-le-champ. La reconduction s'arrête, la période déjà réglée
+court jusqu'à son terme — `SUBSCRIPTION_STATE_CANCELED` ouvre encore l'accès,
+voir `ouvreLAcces`. Les jours payés sont dus.
+
+Enfin, la suppression n'est jamais bloquée faute de résiliation. Exiger une
+démarche hors de l'application avant de pouvoir partir reviendrait à retenir
+quelqu'un qui veut s'en aller, et aucun des deux magasins ne l'accepterait.
+
 ## Ce qu'il faut régler côté Google, une fois
 
 Rien de ce qui précède ne fonctionne sans ces quatre étapes. Elles se font dans

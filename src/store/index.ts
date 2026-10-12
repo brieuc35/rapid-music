@@ -23,7 +23,7 @@ import {
   clearSubscription,
   readSubscription,
 } from './subscription'
-import { jetonDejaAchete, verifierAupresDuServeur } from '@/utils/facturation'
+import { jetonDejaAchete, resilierAbonnement, verifierAupresDuServeur } from '@/utils/facturation'
 import { auth } from '@/firebase'
 import {
   createUserWithEmailAndPassword,
@@ -777,6 +777,11 @@ export async function logout(): Promise<void> {
  * supprimé, plus aucun droit d'écriture ne permettrait de les effacer et elles
  * resteraient orphelines sur le serveur — le pire résultat possible pour une
  * demande de suppression.
+ *
+ * L'abonnement part avant tout le reste, pour la même raison poussée plus loin :
+ * la résiliation réclame le compte connecté et la revendication de l'achat, et
+ * tous les deux disparaissent avec le compte. Après, il serait trop tard ; le
+ * prélèvement, lui, continuerait.
  */
 export async function deleteAccount(password: string): Promise<void> {
   const user = auth.currentUser
@@ -790,6 +795,16 @@ export async function deleteAccount(password: string): Promise<void> {
   } catch (e) {
     throw new Error(toMessage(e))
   }
+
+  /*  Supprimer son compte ne doit pas revenir à continuer de payer une
+   *  application qu'on n'a plus. Là où le magasin l'autorise — Google, et non
+   *  Apple — la reconduction est coupée ici.
+   *
+   *  Sans condition d'issue : `resilierAbonnement` ne lève rien et rend ce
+   *  qu'elle a pu faire. Une résiliation en échec ne doit pas retenir quelqu'un
+   *  dans un compte qu'il veut quitter, et l'écran de suppression a prévenu
+   *  avant d'en arriver là, là où il reste quelque chose à faire soi-même. */
+  await resilierAbonnement()
 
   // Plus rien ne doit être réenregistré pendant la suppression.
   syncer?.stop()

@@ -329,6 +329,58 @@
         <b style="color: var(--red)">Rien ne pourra être récupéré</b>, ni par vous ni par
         personne.
       </p>
+
+      <!--  L'abonnement, avant le mot de passe.
+
+            Supprimer son compte n'arrête pas, à soi seul, ce que le magasin
+            prélève : le compte est chez nous, l'abonnement est chez lui. Chez
+            Google on peut le résilier pour de bon, et c'est fait au moment de la
+            suppression. Chez Apple, aucun appel ne le permet — seul le titulaire
+            du compte peut mettre fin à ce qu'il paie, et Apple demande qu'on le
+            dise au lieu de laisser quelqu'un découvrir le prélèvement suivant.
+
+            Placé avant le champ de mot de passe, et non après : après, c'est
+            fini. Mais la suppression n'est pas bloquée pour autant — exiger une
+            démarche hors de l'application avant de pouvoir partir serait
+            retenir quelqu'un qui veut s'en aller. -->
+      <div v-if="isPro" class="abo-alerte" :class="{ 'abo-alerte--ok': magasinAbo === 'play' }">
+        <b>
+          <Icon :name="magasinAbo === 'play' ? 'check' : 'bell'" />
+          {{
+            magasinAbo === 'play'
+              ? 'Votre abonnement Pro sera résilié'
+              : 'Votre abonnement Pro continuera d’être prélevé'
+          }}
+        </b>
+        <p v-if="magasinAbo === 'play'">
+          La reconduction sera coupée auprès de Google Play en même temps que le compte.
+          Vérifiez-le dans Google Play si un prélèvement vous parvenait encore.
+        </p>
+        <p v-else-if="magasinAbo === 'apple'">
+          L'abonnement est encaissé par l'App Store, et seul votre compte Apple peut y
+          mettre fin : supprimer votre compte RapidMusic ne l'arrête pas.
+          <b>Résiliez-le d'abord</b>, puis revenez ici.
+        </p>
+        <p v-else>
+          L'abonnement est encaissé par le magasin où vous l'avez pris, et c'est là qu'il
+          se résilie : « Abonnements » dans les réglages de votre compte Apple, ou dans
+          Google Play. Supprimer votre compte RapidMusic ne l'arrête pas.
+        </p>
+        <a
+          v-if="gestionAbo"
+          class="btn btn--primary"
+          :href="gestionAbo.url"
+          target="_blank"
+          rel="noopener"
+        >
+          <Icon name="external" />
+          {{
+            gestionAbo.magasin === 'apple'
+              ? 'Résilier sur l’App Store'
+              : 'Vérifier sur Google Play'
+          }}
+        </a>
+      </div>
       <div class="field" style="margin-bottom: 0">
         <label for="del-pwd">Saisissez votre mot de passe pour confirmer</label>
         <input
@@ -368,7 +420,14 @@ import type { AppData, ArtistProfile } from '@/store/types'
 import { fileToAvatarDataUrl, ImageError } from '@/utils/image'
 import { GENRES } from '@/utils/genres'
 import { BackupError, describeBackup, downloadBackup, parseBackup } from '@/utils/backup'
+import { lienGestionAbonnement, magasin } from '@/utils/facturation'
 import { PAGES_LEGALES } from '@/router/legal'
+
+/*  Le magasin qui encaisse, et sa page de gestion. Relevés une fois : ils ne
+ *  changent pas en cours de session, et l'un comme l'autre valent `null` sur le
+ *  site, où l'abonnement n'a pas été pris. */
+const magasinAbo = magasin()
+const gestionAbo = lienGestionAbonnement()
 
 const editMode = ref(false)
 const draft = ref<ArtistProfile>({ ...store.artist })
@@ -796,5 +855,56 @@ async function doDelete() {
 .alert-ok {
   background: var(--green-bg);
   color: var(--green);
+}
+
+/* L'avertissement sur l'abonnement, dans la fenêtre de suppression. Le cadre
+   plutôt que le fond seul : il porte un bouton, et un bouton posé sur un fond
+   coloré se lit mal. Le liseré rouge le distingue du reste du texte, qui est
+   déjà un avertissement — sans quoi il s'y fondrait et ne serait pas lu. */
+.abo-alerte {
+  border: 1px solid var(--red);
+  background: var(--red-bg);
+  border-radius: var(--radius-sm);
+  padding: 13px 14px;
+  margin: 0 0 16px;
+}
+.abo-alerte b {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--red);
+  font-size: 14px;
+}
+/* Sans taille, l'icône occupe toute la hauteur que le titre lui laisse — une
+   cloche de deux centimètres à côté de son texte. Elle ne rétrécit pas non
+   plus : un titre sur trois lignes la réduirait à un trait. */
+.abo-alerte b svg {
+  width: 17px;
+  height: 17px;
+  flex: none;
+}
+/* Sur Google Play, la résiliation est faite : le rouge annoncerait un ennui
+   qui n'existe pas. Même cadre, autre couleur. */
+.abo-alerte--ok {
+  border-color: var(--green);
+  background: var(--green-bg);
+}
+.abo-alerte--ok b {
+  color: var(--green);
+}
+.abo-alerte p {
+  margin: 7px 0 0;
+  color: var(--text-soft);
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+.abo-alerte p b {
+  display: inline;
+  font-size: inherit;
+}
+.abo-alerte .btn {
+  margin-top: 12px;
+  width: 100%;
+  justify-content: center;
 }
 </style>
