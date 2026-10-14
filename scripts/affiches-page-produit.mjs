@@ -1,17 +1,23 @@
 /* -------------------------------------------------------------------------- */
-/*  L'affiche d'en-tête de la page produit App Store                           */
+/*  Les affiches de la page produit App Store                                  */
 /*                                                                            */
-/*    node scripts/affiche-en-tete.mjs                                        */
+/*    node scripts/affiches-page-produit.mjs                                   */
 /*                                                                            */
-/*  Deux fichiers, dans app-store/ :                                          */
+/*  Deux emplacements, deux onglets d'App Store Connect sous « Informations de */
+/*  la page produit », et des tailles qui ne se recoupent qu'à moitié :        */
 /*                                                                            */
-/*    en-tete-5244x2950.png   le format 16:9                                  */
-/*    en-tete-3840x1646.png   le format 21:9                                  */
+/*    En-tête              5244 × 2950 (16:9)   3840 × 1646 (21:9)            */
+/*    Résultats de recherche  5244 × 2950       3840 × 2560, 1920 × 1280 (3:2) */
 /*                                                                            */
-/*  Ce sont les deux seules tailles qu'App Store Connect accepte dans          */
-/*  « Informations de la page produit → En-tête et résultats de recherche ».   */
-/*  Il en faut une, pas les deux ; les deux sont fabriquées pour qu'on ait le  */
-/*  choix sans refaire un aller-retour, comme pour les captures d'examen.      */
+/*  Une seule taille suffit par emplacement ; toutes sont fabriquées pour      */
+/*  qu'on ait le choix sans refaire un aller-retour, comme pour les captures   */
+/*  d'examen de l'abonnement. Et un emplacement peut se passer de son affiche :*/
+/*  une case à cocher reprend celle de l'en-tête dans les résultats, et sans   */
+/*  rien du tout ce sont les captures d'écran qui servent.                     */
+/*                                                                            */
+/*  La marque est plus grande sur l'affiche des résultats de recherche : elle  */
+/*  s'y affiche en vignette, au milieu d'une liste, où une marque calibrée     */
+/*  pour un bandeau pleine largeur deviendrait un point.                       */
 /*                                                                            */
 /*  AUCUN TEXTE, et c'est délibéré. L'App Store pose lui-même le nom de        */
 /*  l'application, son sous-titre et le bouton d'installation par-dessus       */
@@ -38,10 +44,16 @@ const SORTIE = join(RACINE, 'app-store')
 
 /*  Rendues à la moitié puis doublées par l'échelle : un navigateur sait
  *  afficher une page de 2622 points de large, il peine au-delà de 4000 — et le
- *  résultat est identique au pixel près, puisque tout est vectoriel. */
+ *  résultat est identique au pixel près, puisque tout est vectoriel.
+ *
+ *  `part` est le côté de la marque, en part de la hauteur. Plus grande sur les
+ *  affiches de résultats de recherche, qui s'affichent en vignette. */
 const FORMATS = [
-  { nom: 'en-tete-5244x2950.png', l: 2622, h: 1475, echelle: 2 },
-  { nom: 'en-tete-3840x1646.png', l: 1920, h: 823, echelle: 2 },
+  { nom: 'en-tete-5244x2950.png', l: 2622, h: 1475, echelle: 2, part: 0.3 },
+  { nom: 'en-tete-3840x1646.png', l: 1920, h: 823, echelle: 2, part: 0.3 },
+  { nom: 'recherche-5244x2950.png', l: 2622, h: 1475, echelle: 2, part: 0.36 },
+  { nom: 'recherche-3840x2560.png', l: 1920, h: 1280, echelle: 2, part: 0.36 },
+  { nom: 'recherche-1920x1280.png', l: 1920, h: 1280, echelle: 1, part: 0.36 },
 ]
 
 /**
@@ -69,14 +81,14 @@ function spectre(nombre) {
   return [...demi, ...demi.slice().reverse()]
 }
 
-function affiche(l, h) {
+function affiche(l, h, part) {
   /*  Une barre tous les 48 points, comme sur l'illustration promotionnelle :
    *  c'est ce qui donne au spectre sa densité reconnaissable. Le premier jet en
    *  mettait quatre fois plus — réduites à des cheveux, elles ne formaient plus
    *  un spectre mais un grain. */
   const barres = spectre(Math.round(l / 96) * 2)
   const hautSpectre = h * 0.46
-  const cote = Math.round(h * 0.3) // le côté de la marque
+  const cote = Math.round(h * part) // le côté de la marque
   //  1,4 fois la hauteur : la proportion de l'illustration promotionnelle.
   const lueur = Math.round(h * 1.4)
 
@@ -145,7 +157,7 @@ try {
       viewport: { width: f.l, height: f.h },
       deviceScaleFactor: f.echelle,
     })
-    await page.setContent(affiche(f.l, f.h))
+    await page.setContent(affiche(f.l, f.h, f.part))
     const image = await page.screenshot({ type: 'png' })
     writeFileSync(join(SORTIE, f.nom), image)
     await page.close()
