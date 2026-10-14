@@ -12,6 +12,8 @@ bas.
 | `iphone-6.5-*.png` | 1284 × 2778 | les six mêmes, iPhone 6,5 pouces |
 | `ipad-13-*.png` | 2064 × 2752 | six captures d'iPad 13 pouces |
 | `ipad-13-alt-*.png` | 2048 × 2732 | les six mêmes, dans l'ancienne taille 12,9 pouces |
+| `iphone-duo-*.png` | 2007 × 2853 | six captures d'iPhone Duo, le pliant |
+| `iphone-duo-alt-*.png` | 1398 × 2034 | les six mêmes, dans la seconde définition |
 | `illustration-promo-4320x1080.png` | 4320 × 1080 | l'illustration promotionnelle — **pas encore téléversable** |
 | `verification-abonnement-640x920.png` | 640 × 920 | capture d'examen de l'abonnement — **va ailleurs**, voir ci-dessous |
 | `verification-abonnement-1284x2778.png` | 1284 × 2778 | la même, en plus net, si le formulaire l'accepte |
@@ -47,6 +49,31 @@ tiennent.
 `ipad-13-alt-*` est l'ancienne taille 12,9 pouces, encore acceptée dans le même
 créneau : elle ne sert que si le formulaire réclame celle-là, ce qu'il n'écrit
 qu'au moment du refus.
+
+## L'iPhone Duo, le pliant
+
+Son créneau accepte quatre tailles — deux définitions, chacune en portrait et en
+paysage. Seul le portrait est produit, comme pour le reste de la fiche.
+
+| Fichier | Dimensions |
+| --- | --- |
+| `iphone-duo-*` | 2007 × 2853, **celui à envoyer** |
+| `iphone-duo-alt-*` | 1398 × 2034, si le formulaire réclame l'autre |
+
+**C'est la mise en page téléphone qu'elles montrent**, et non celle de l'iPad —
+contrairement à ce que leur allure trapue laisse croire. La démonstration tient
+en une division : 2007 ÷ 3 = 669 et 2853 ÷ 3 = 951, deux entiers. L'appareil est
+donc en ×3 comme tous les iPhone, et fait 669 × 951 points. C'est sous le seuil
+de 900 px où bascule la feuille de style : barre d'onglets en bas, menu en
+tiroir.
+
+La division tombe juste dans un seul sens : 2007 ÷ 2 = 1003,5. Aucune toile
+entière ne donne cette largeur en doublant, ce qui exclut le ×2 — et c'est pour
+cela que ces deux formats-là se rendent à l'échelle 3, seuls de toute la série.
+
+**L'aperçu vidéo, lui, est déjà bon.** Ce créneau accepte 1920 × 886 et
+886 × 1920 : l'`apercu-iphone-886x1920.mp4` de la fiche iPhone s'y dépose tel
+quel, sans rien refabriquer.
 
 ## Attention : deux tailles pour le même écran
 
