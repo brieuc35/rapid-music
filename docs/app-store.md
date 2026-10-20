@@ -96,11 +96,57 @@ Créer la fiche, puis remplir :
 - **description**, **mots-clés**, **catégorie** ;
 - l'adresse des règles de confidentialité :
   <https://rapidmusic.fr/#/confidentialite> ;
+- **les conditions d'abonnement, dans la description** — voir juste en dessous,
+  c'est un motif de refus et il est tombé ;
 - la **classification d'âge** ;
 - le questionnaire **Confidentialité de l'app** — l'équivalent du « Sécurité des
   données » de Google. Les réponses sont écrites case par case dans
   [`securite-des-donnees.md`](securite-des-donnees.md), section « Le
   questionnaire d'Apple ».
+
+#### Le lien vers les conditions d'utilisation, dans la description
+
+Refus reçu le 20 octobre 2026, au titre de la directive 3.1.2 :
+
+> La soumission propose des abonnements à renouvellement automatique […] mais
+> n'inclut pas de lien fonctionnel vers les conditions d'utilisation (EULA) dans
+> les métadonnées de l'application qui apparaissent sur la page produit.
+
+Dès qu'une application vend un abonnement reconductible, **sa page App Store**
+— et pas seulement son écran d'abonnement — doit porter la durée, le prix, les
+conditions de reconduction et un lien vers les conditions d'utilisation. Tout
+cela existait dans l'application depuis le début ; c'est sur la fiche que ça
+manquait, et la fiche est hors du dépôt.
+
+Apple laisse deux portes :
+
+| | Ce qu'il faut faire | Pour qui |
+| --- | --- | --- |
+| Conditions standard d'Apple | coller leur adresse dans la **description**, pour chaque langue | le plus court, et ce qui a été fait |
+| Conditions propres | coller le **texte** dans App Store Connect → Informations sur l'app → Contrat de licence | si l'on veut ses propres conditions sur la page |
+
+La seconde n'est pas un lien vers ses propres conditions dans la description :
+Apple veut le texte chez lui. Un simple renvoi vers `rapidmusic.fr/#/conditions`
+ne satisfait ni l'une ni l'autre.
+
+Le bloc ajouté en fin de description — il répond aussi à l'obligation d'annoncer
+les conditions de l'abonnement :
+
+```
+ABONNEMENT
+
+RapidMusic Pro est un abonnement à renouvellement automatique, au mois ou à
+l'année. Le paiement est débité sur votre compte Apple à la confirmation de
+l'achat. L'abonnement se reconduit automatiquement, sauf résiliation au moins
+24 heures avant la fin de la période en cours. La gestion et la résiliation se
+font dans les réglages de votre compte Apple.
+
+Conditions d'utilisation :
+https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+
+Politique de confidentialité :
+https://rapidmusic.fr/#/confidentialite
+```
 
 ### 5. Les captures d'écran et l'aperçu
 
