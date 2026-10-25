@@ -50,6 +50,23 @@ indisponibilité passagère, sans indiquer d'ailleurs.
 > l'application**. La panne se produirait au premier appui sur « Ajouter une
 > photo », sur l'appareil de l'examinateur d'Apple comme sur ceux des artistes.
 
+## La version 1.0 est en ligne
+
+Acceptée le 25 octobre 2026, après deux refus. Ce qui suit décrit la première
+publication, gardée parce qu'elle resservira le jour où une seconde application
+partira d'ici. **Pour une mise à jour, tout est plus court** : voir
+[Publier une mise à jour](#publier-une-mise-à-jour) à la fin.
+
+Les deux refus, et ce qu'ils ont coûté :
+
+| Directive | Le motif | Ce qui manquait |
+| --- | --- | --- |
+| 2.1 Informations requises | compte développeur neuf, « historique d'évaluation limité » | une vidéo prise sur un vrai iPhone et sept points de description — rien à corriger dans l'application |
+| 3.1.2 Abonnements | la page produit ne portait pas de lien vers les conditions d'utilisation | un bloc de texte dans la description. L'application, elle, les affichait depuis le début |
+
+Aucun des deux ne portait sur le code. Les deux portaient sur la fiche, qui vit
+hors du dépôt — d'où les rappels ajoutés à l'étape 4.
+
 ## Ce qu'il reste à faire
 
 Xcode n'existe que sur macOS. Deux chemins, donc :
@@ -216,3 +233,33 @@ Deux points valent d'être connus avant l'examen :
 - **les examinateurs achètent en bac à sable.** Le serveur interroge donc la
   production puis le bac à sable ; sans ce second essai, l'abonnement échouerait
   pendant l'examen alors qu'en production tout marcherait.
+
+## Publier une mise à jour
+
+Rien de ce qui précède n'est à refaire. Le compte existe, la fiche est remplie,
+les secrets sont déposés, les abonnements sont acceptés.
+
+1. **Fabriquer le paquet** : onglet Actions → « Application iPhone (.ipa) » →
+   *Run workflow*. Le numéro de fabrication est celui de l'exécution, il monte
+   donc tout seul ; le champ `version` ne sert qu'à passer de 1.0 à 1.1.
+2. **Attendre TestFlight** — quelques minutes après la fin du workflow —, puis
+   essayer sur l'iPhone. Pas de règle des douze testeurs ici, contrairement à
+   Google.
+3. **Dans App Store Connect** : créer la nouvelle version, y attacher la
+   fabrication, écrire les nouveautés, puis « Ajouter pour vérification » et
+   « Envoyer pour vérification ».
+4. Compter **24 à 48 h**.
+
+Trois pièges déjà rencontrés, pour ne pas les redécouvrir :
+
+- **la description ne se recopie pas toute seule** d'une version à l'autre pour
+  ce qui touche aux abonnements. Vérifier que le bloc ABONNEMENT et le lien vers
+  les conditions y sont toujours ;
+- **une soumission ouverte bloque la suivante.** Si « Ajouter pour vérification »
+  rend une « erreur inattendue » sans rien nommer, aller voir *Vérification de
+  l'app* : une soumission antérieure y attend, à l'état « Problèmes non
+  résolus » ;
+- **changer la fabrication d'une version déjà soumise** demande d'abord de
+  retirer la version de sa soumission. Le « – » qui détache la fabrication
+  n'apparaît qu'au survol de la vignette de l'application, dans son coin
+  supérieur gauche.
