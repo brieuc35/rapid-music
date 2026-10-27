@@ -110,7 +110,12 @@ sans qu'aucune erreur ne le signale. À refaire à chaque changement du code.
 Créer la fiche, puis remplir :
 
 - **nom** (30 caractères) et **sous-titre** (30) ;
-- **description**, **mots-clés**, **catégorie** ;
+- **description** et **mots-clés** ;
+- la **catégorie** : principale **Productivité**, secondaire **Musique**. La
+  fiche est partie en « Musique » principale, ce qui était un contresens — c'est
+  la catégorie des applications d'écoute, Spotify et Deezer, où un outil de
+  gestion n'a aucune chance d'être cherché ni trouvé. Elle se change dans
+  *Informations sur l'app*, sans nouvelle soumission ;
 - l'adresse des règles de confidentialité :
   <https://rapidmusic.fr/#/confidentialite> ;
 - **les conditions d'abonnement, dans la description** — voir juste en dessous,
