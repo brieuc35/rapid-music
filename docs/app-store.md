@@ -52,7 +52,12 @@ indisponibilité passagère, sans indiquer d'ailleurs.
 
 ## La version 1.0 est en ligne
 
-Acceptée le 25 octobre 2026, après deux refus. Ce qui suit décrit la première
+Acceptée le 25 octobre 2026 après deux refus, et réellement disponible en France
+le 27 — trois jours d'écart, qui ne tiennent ni à Apple ni à un délai de
+publication : l'application était en ligne sur l'App Store américain et
+introuvable sur le français, faute de statut de commerçant vérifié. Le symptôme
+et sa cause sont décrits dans [`facturation.md`](facturation.md), au chapitre du
+contrat relatif aux applications payantes. Ce qui suit décrit la première
 publication, gardée parce qu'elle resservira le jour où une seconde application
 partira d'ici. **Pour une mise à jour, tout est plus court** : voir
 [Publier une mise à jour](#publier-une-mise-à-jour) à la fin.
