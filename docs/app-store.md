@@ -50,6 +50,28 @@ indisponibilité passagère, sans indiquer d'ailleurs.
 > l'application**. La panne se produirait au premier appui sur « Ajouter une
 > photo », sur l'appareil de l'examinateur d'Apple comme sur ceux des artistes.
 
+## La version 1.0 est en ligne
+
+Acceptée le 25 octobre 2026 après deux refus, et réellement disponible en France
+le 27 — trois jours d'écart, qui ne tiennent ni à Apple ni à un délai de
+publication : l'application était en ligne sur l'App Store américain et
+introuvable sur le français, faute de statut de commerçant vérifié. Le symptôme
+et sa cause sont décrits dans [`facturation.md`](facturation.md), au chapitre du
+contrat relatif aux applications payantes. Ce qui suit décrit la première
+publication, gardée parce qu'elle resservira le jour où une seconde application
+partira d'ici. **Pour une mise à jour, tout est plus court** : voir
+[Publier une mise à jour](#publier-une-mise-à-jour) à la fin.
+
+Les deux refus, et ce qu'ils ont coûté :
+
+| Directive | Le motif | Ce qui manquait |
+| --- | --- | --- |
+| 2.1 Informations requises | compte développeur neuf, « historique d'évaluation limité » | une vidéo prise sur un vrai iPhone et sept points de description — rien à corriger dans l'application |
+| 3.1.2 Abonnements | la page produit ne portait pas de lien vers les conditions d'utilisation | un bloc de texte dans la description. L'application, elle, les affichait depuis le début |
+
+Aucun des deux ne portait sur le code. Les deux portaient sur la fiche, qui vit
+hors du dépôt — d'où les rappels ajoutés à l'étape 4.
+
 ## Ce qu'il reste à faire
 
 Xcode n'existe que sur macOS. Deux chemins, donc :
@@ -93,14 +115,65 @@ sans qu'aucune erreur ne le signale. À refaire à chaque changement du code.
 Créer la fiche, puis remplir :
 
 - **nom** (30 caractères) et **sous-titre** (30) ;
-- **description**, **mots-clés**, **catégorie** ;
+- **description** et **mots-clés** ;
+- la **catégorie** : principale **Productivité**, secondaire **Musique**. La
+  fiche est partie en « Musique » principale, ce qui était un contresens — c'est
+  la catégorie des applications d'écoute, Spotify et Deezer, où un outil de
+  gestion n'a aucune chance d'être cherché ni trouvé. Elle se change dans
+  *Informations sur l'app*, sans nouvelle soumission ;
 - l'adresse des règles de confidentialité :
   <https://rapidmusic.fr/#/confidentialite> ;
+- **les conditions d'abonnement, dans la description** — voir juste en dessous,
+  c'est un motif de refus et il est tombé ;
 - la **classification d'âge** ;
 - le questionnaire **Confidentialité de l'app** — l'équivalent du « Sécurité des
   données » de Google. Les réponses sont écrites case par case dans
   [`securite-des-donnees.md`](securite-des-donnees.md), section « Le
   questionnaire d'Apple ».
+
+#### Le lien vers les conditions d'utilisation, dans la description
+
+Refus reçu le 20 octobre 2026, au titre de la directive 3.1.2 :
+
+> La soumission propose des abonnements à renouvellement automatique […] mais
+> n'inclut pas de lien fonctionnel vers les conditions d'utilisation (EULA) dans
+> les métadonnées de l'application qui apparaissent sur la page produit.
+
+Dès qu'une application vend un abonnement reconductible, **sa page App Store**
+— et pas seulement son écran d'abonnement — doit porter la durée, le prix, les
+conditions de reconduction et un lien vers les conditions d'utilisation. Tout
+cela existait dans l'application depuis le début ; c'est sur la fiche que ça
+manquait, et la fiche est hors du dépôt.
+
+Apple laisse deux portes :
+
+| | Ce qu'il faut faire | Pour qui |
+| --- | --- | --- |
+| Conditions standard d'Apple | coller leur adresse dans la **description**, pour chaque langue | le plus court, et ce qui a été fait |
+| Conditions propres | coller le **texte** dans App Store Connect → Informations sur l'app → Contrat de licence | si l'on veut ses propres conditions sur la page |
+
+La seconde n'est pas un lien vers ses propres conditions dans la description :
+Apple veut le texte chez lui. Un simple renvoi vers `rapidmusic.fr/#/conditions`
+ne satisfait ni l'une ni l'autre.
+
+Le bloc ajouté en fin de description — il répond aussi à l'obligation d'annoncer
+les conditions de l'abonnement :
+
+```
+ABONNEMENT
+
+RapidMusic Pro est un abonnement à renouvellement automatique, au mois ou à
+l'année. Le paiement est débité sur votre compte Apple à la confirmation de
+l'achat. L'abonnement se reconduit automatiquement, sauf résiliation au moins
+24 heures avant la fin de la période en cours. La gestion et la résiliation se
+font dans les réglages de votre compte Apple.
+
+Conditions d'utilisation :
+https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+
+Politique de confidentialité :
+https://rapidmusic.fr/#/confidentialite
+```
 
 ### 5. Les captures d'écran et l'aperçu
 
@@ -170,3 +243,33 @@ Deux points valent d'être connus avant l'examen :
 - **les examinateurs achètent en bac à sable.** Le serveur interroge donc la
   production puis le bac à sable ; sans ce second essai, l'abonnement échouerait
   pendant l'examen alors qu'en production tout marcherait.
+
+## Publier une mise à jour
+
+Rien de ce qui précède n'est à refaire. Le compte existe, la fiche est remplie,
+les secrets sont déposés, les abonnements sont acceptés.
+
+1. **Fabriquer le paquet** : onglet Actions → « Application iPhone (.ipa) » →
+   *Run workflow*. Le numéro de fabrication est celui de l'exécution, il monte
+   donc tout seul ; le champ `version` ne sert qu'à passer de 1.0 à 1.1.
+2. **Attendre TestFlight** — quelques minutes après la fin du workflow —, puis
+   essayer sur l'iPhone. Pas de règle des douze testeurs ici, contrairement à
+   Google.
+3. **Dans App Store Connect** : créer la nouvelle version, y attacher la
+   fabrication, écrire les nouveautés, puis « Ajouter pour vérification » et
+   « Envoyer pour vérification ».
+4. Compter **24 à 48 h**.
+
+Trois pièges déjà rencontrés, pour ne pas les redécouvrir :
+
+- **la description ne se recopie pas toute seule** d'une version à l'autre pour
+  ce qui touche aux abonnements. Vérifier que le bloc ABONNEMENT et le lien vers
+  les conditions y sont toujours ;
+- **une soumission ouverte bloque la suivante.** Si « Ajouter pour vérification »
+  rend une « erreur inattendue » sans rien nommer, aller voir *Vérification de
+  l'app* : une soumission antérieure y attend, à l'état « Problèmes non
+  résolus » ;
+- **changer la fabrication d'une version déjà soumise** demande d'abord de
+  retirer la version de sa soumission. Le « – » qui détache la fabrication
+  n'apparaît qu'au survol de la vignette de l'application, dans son coin
+  supérieur gauche.

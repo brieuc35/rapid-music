@@ -332,8 +332,15 @@ sont pas remplies — un bandeau le dit, mais la ligne, elle, ne réagit tout
 simplement pas au clic :
 
 1. **l'entité juridique** doit être complétée (*Modifier l'entité juridique*) ;
-2. **le statut de commerçant** au sens du DSA doit être déclaré, faute de quoi
-   rien ne se distribue dans l'Union européenne.
+2. **le statut de commerçant** au sens du DSA doit être déclaré **et vérifié par
+   Apple**, faute de quoi rien ne se distribue dans l'Union européenne.
+
+   Son symptôme ne ressemble pas à une panne, et c'est ce qui le rend long à
+   reconnaître : **l'application est bien en ligne sur l'App Store américain et
+   introuvable sur le français**. Rien n'est refusé, aucun message n'arrive, la
+   version reste « Prêt pour la distribution ». La déclaration ne suffit pas —
+   Apple la vérifie, et l'Europe n'ouvre qu'ensuite. Seuls le titulaire du compte
+   et les administrateurs peuvent la remplir.
 
 Suivent les formulaires fiscaux — celui des États-Unis est obligatoire où que
 l'on habite — et les coordonnées bancaires, dont le titulaire doit être celui

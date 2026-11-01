@@ -12,9 +12,16 @@ bas.
 | `iphone-6.5-*.png` | 1284 × 2778 | les six mêmes, iPhone 6,5 pouces |
 | `ipad-13-*.png` | 2064 × 2752 | six captures d'iPad 13 pouces |
 | `ipad-13-alt-*.png` | 2048 × 2732 | les six mêmes, dans l'ancienne taille 12,9 pouces |
+| `iphone-duo-*.png` | 2007 × 2853 | six captures d'iPhone Duo, le pliant |
+| `iphone-duo-alt-*.png` | 1398 × 2034 | les six mêmes, dans la seconde définition |
 | `illustration-promo-4320x1080.png` | 4320 × 1080 | l'illustration promotionnelle — **pas encore téléversable** |
 | `verification-abonnement-640x920.png` | 640 × 920 | capture d'examen de l'abonnement — **va ailleurs**, voir ci-dessous |
 | `verification-abonnement-1284x2778.png` | 1284 × 2778 | la même, en plus net, si le formulaire l'accepte |
+| `en-tete-5244x2950.png` | 5244 × 2950 | l'affiche d'en-tête — **va ailleurs**, voir ci-dessous |
+| `en-tete-3840x1646.png` | 3840 × 1646 | la même, en 21:9 |
+| `recherche-5244x2950.png` | 5244 × 2950 | l'affiche des résultats de recherche — **va ailleurs** |
+| `recherche-3840x2560.png` | 3840 × 2560 | la même, en 3:2 |
+| `recherche-1920x1280.png` | 1920 × 1280 | la même, en 3:2, plus légère |
 
 ## Les captures d'iPad sont obligatoires
 
@@ -42,6 +49,31 @@ tiennent.
 `ipad-13-alt-*` est l'ancienne taille 12,9 pouces, encore acceptée dans le même
 créneau : elle ne sert que si le formulaire réclame celle-là, ce qu'il n'écrit
 qu'au moment du refus.
+
+## L'iPhone Duo, le pliant
+
+Son créneau accepte quatre tailles — deux définitions, chacune en portrait et en
+paysage. Seul le portrait est produit, comme pour le reste de la fiche.
+
+| Fichier | Dimensions |
+| --- | --- |
+| `iphone-duo-*` | 2007 × 2853, **celui à envoyer** |
+| `iphone-duo-alt-*` | 1398 × 2034, si le formulaire réclame l'autre |
+
+**C'est la mise en page téléphone qu'elles montrent**, et non celle de l'iPad —
+contrairement à ce que leur allure trapue laisse croire. La démonstration tient
+en une division : 2007 ÷ 3 = 669 et 2853 ÷ 3 = 951, deux entiers. L'appareil est
+donc en ×3 comme tous les iPhone, et fait 669 × 951 points. C'est sous le seuil
+de 900 px où bascule la feuille de style : barre d'onglets en bas, menu en
+tiroir.
+
+La division tombe juste dans un seul sens : 2007 ÷ 2 = 1003,5. Aucune toile
+entière ne donne cette largeur en doublant, ce qui exclut le ×2 — et c'est pour
+cela que ces deux formats-là se rendent à l'échelle 3, seuls de toute la série.
+
+**L'aperçu vidéo, lui, est déjà bon.** Ce créneau accepte 1920 × 886 et
+886 × 1920 : l'`apercu-iphone-886x1920.mp4` de la fiche iPhone s'y dépose tel
+quel, sans rien refabriquer.
 
 ## Attention : deux tailles pour le même écran
 
@@ -97,6 +129,36 @@ hauteur, lisible et complète, a été rejetée pour cette seule raison.
 
 Le cadrage tombe sur la formule payante : c'est le bouton d'achat et son prix
 que le vérificateur doit voir, pas le tableau comparatif.
+
+## Les affiches de la page produit
+
+Elles ne vont pas sur la fiche non plus, mais dans **App Store Connect → votre
+app → la version iOS → Informations de la page produit**, qui a deux onglets
+pour deux emplacements distincts :
+
+| Onglet | Où ça s'affiche | Tailles acceptées |
+| --- | --- | --- |
+| En-tête | en haut de la page produit, sous le nom de l'application | 5244 × 2950, 3840 × 1646 |
+| Résultats de recherche | la vignette dans les résultats de recherche | 5244 × 2950, 3840 × 2560, 1920 × 1280 |
+
+**Une seule taille par emplacement**, celle qu'on veut. La plus grande est la
+plus nette ; les autres sont là si le formulaire renâcle sur le poids — 5,5 Mo
+pour la plus lourde.
+
+**Les deux sont facultatives**, et chacune a son recours. Une case à cocher,
+sous le second onglet, reprend l'affiche d'en-tête dans les résultats de
+recherche ; et sans affiche du tout, ce sont les captures d'écran qui servent.
+Les fabriquer reste préférable : une vignette dessinée tient mieux sa place
+qu'une capture d'interface réduite à la taille d'un timbre.
+
+**Aucun texte**, pour la même raison que l'illustration promotionnelle, en pire :
+l'App Store pose par-dessus le nom de l'application, son sous-titre **et** le
+bouton d'installation, et recadre selon l'appareil. Un titre dessiné ici se
+retrouverait sous un autre.
+
+La marque est plus grande sur l'affiche des résultats de recherche : elle s'y
+affiche en vignette, au milieu d'une liste, où une marque calibrée pour un
+bandeau pleine largeur deviendrait un point.
 
 ## L'illustration promotionnelle
 
@@ -160,8 +222,9 @@ L'interface change ; une fiche qui montre une version d'il y a trois mois se
 remarque.
 
 ```sh
-node scripts/fiche-play-store.mjs    # les images — Play Store et App Store
-node scripts/apercu-app-store.mjs    # l'aperçu vidéo
+node scripts/fiche-play-store.mjs      # les images — Play Store et App Store
+node scripts/apercu-app-store.mjs      # l'aperçu vidéo
+node scripts/affiches-page-produit.mjs # les affiches d'en-tête et de recherche
 ```
 
 La première commande refait **toutes** les images, celles du Play Store comme

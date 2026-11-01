@@ -242,6 +242,17 @@ const CAPTURE_TEL = { l: LARGEUR, h: HAUTEUR, echelle: ECHELLE, attendre: '.tabb
  *  est de 4:3 au point près. */
 const CAPTURE_IPAD = { l: 1032, h: 1376, echelle: 2, attendre: '.sidebar' }
 
+/*  L'iPhone pliant, déplié : 669 × 951 points. Une capture à cette taille exacte
+ *  donnerait un rapport qui ne se réduit qu'à 223:317 — un pas de 223 pixels
+ *  pour ajuster la largeur de l'écran dans son cadre, c'est-à-dire aucun
+ *  ajustement possible. 450 × 640 a le même rapport à un millième près et se
+ *  réduit à 45:64, qui laisse régler le cadre au pixel près.
+ *
+ *  450, c'est surtout moins que les 900 px où bascule la feuille de style : la
+ *  capture montre donc la barre d'onglets et le menu en tiroir, ce que l'appareil
+ *  montre réellement à 669 points. */
+const CAPTURE_DUO = { l: 450, h: 640, echelle: 3, attendre: '.tabbar' }
+
 /*  La mise en scène vient de la sonde : l'aperçu vidéo montre les mêmes écrans
  *  et doit les montrer pareil. Seul le filtre des concerts est propre à cet
  *  écran-là. */
@@ -313,6 +324,20 @@ const FORMATS = [
    *  appareils : à choisir, la première. */
   cadreIPad('ipad-13', 1032, 1376),
   cadreIPad('ipad-13-alt', 1024, 1366),
+  /*  L'iPhone Duo, le pliant. Son créneau accepte quatre tailles — deux
+   *  définitions, chacune en portrait et en paysage ; seul le portrait est
+   *  produit, comme pour tout le reste de la fiche.
+   *
+   *    2007 × 2853   la taille de référence, celle à envoyer ;
+   *    1398 × 2034   la seconde définition, si le formulaire réclame celle-là.
+   *
+   *  **Ces deux-là se rendent à l'échelle 3**, et non 2 comme les autres : 2007
+   *  est impair, aucune toile entière ne le donne en doublant. C'est d'ailleurs
+   *  ce qui prouve que l'appareil est en ×3 comme tous les iPhone, et qu'il fait
+   *  donc 669 × 951 points — sous le seuil de 900 px de la feuille de style.
+   *  C'est la mise en page téléphone qu'il montre, pas celle de l'iPad. */
+  cadreLarge('iphone-duo', 669, 951, CAPTURE_DUO, 3),
+  cadreLarge('iphone-duo-alt', 466, 678, CAPTURE_DUO, 3),
 ]
 
 /**
@@ -371,8 +396,21 @@ function cadreApple(prefixe, l, h) {
  * rayon de 3,2 fois la bordure, transposé tel quel, donnerait un galet.
  */
 function cadreIPad(prefixe, l, h) {
-  const capture = CAPTURE_IPAD
+  return cadreLarge(prefixe, l, h, CAPTURE_IPAD, 2)
+}
 
+/**
+ * Le gabarit des toiles presque carrées : l'iPad, et l'iPhone pliant.
+ *
+ * Les deux posent le même problème, qui n'est pas celui d'un iPhone ordinaire :
+ * la toile est trapue, et le téléphone y occuperait toute la hauteur si on lui
+ * donnait la même part de largeur qu'ailleurs.
+ *
+ * `echelle` est le facteur de rendu. Il vaut 2 presque partout ; l'iPhone pliant
+ * exige 3, parce que sa taille de référence est impaire en largeur et qu'aucune
+ * toile entière ne la donnerait en doublant.
+ */
+function cadreLarge(prefixe, l, h, capture, echelle) {
   /*  Le pas : la plus petite largeur d'écran qui tombe sur une hauteur entière.
    *  Pour 1032 × 1376, le rapport se réduit à 3:4 et le pas vaut 3. */
   const d = pgcd(capture.l, capture.h)
@@ -396,6 +434,7 @@ function cadreIPad(prefixe, l, h) {
     prefixe,
     l,
     h,
+    echelle,
     capture,
     tel: {
       largeur: ecranL + 2 * cadre,
@@ -656,21 +695,29 @@ async function principal() {
      *  remplir les cadres d'iPad quelques lignes plus bas. Six fichiers de
      *  2064 × 2752 versés au dépôt pour être aussitôt recopiés dans d'autres
      *  images seraient du poids sans emploi. */
-    const capturesIPad = new Map()
-    for (const ecran of ECRANS) {
-      const page = await navigateur.newPage({
-        viewport: { width: CAPTURE_IPAD.l, height: CAPTURE_IPAD.h },
-        deviceScaleFactor: CAPTURE_IPAD.echelle,
-      })
-      page.on('pageerror', (e) => console.error(`  ipad ${ecran.nom} :`, e.message))
-      await page.goto(`${PAGE}#${ecran.route}`)
-      await page.waitForSelector(CAPTURE_IPAD.attendre, { timeout: 20000 })
-      await attendre(1000)
-      await poserLaScene(page)
-      if (ecran.apres) await ecran.apres(page)
-      await attendre(600)
-      capturesIPad.set(ecran.nom, (await page.screenshot()).toString('base64'))
-      await page.close()
+    const enMemoire = new Map()
+    for (const [quoi, config] of [
+      ['ipad', CAPTURE_IPAD],
+      ['duo', CAPTURE_DUO],
+    ]) {
+      for (const ecran of ECRANS) {
+        const page = await navigateur.newPage({
+          viewport: { width: config.l, height: config.h },
+          deviceScaleFactor: config.echelle,
+        })
+        page.on('pageerror', (e) => console.error(`  ${quoi} ${ecran.nom} :`, e.message))
+        await page.goto(`${PAGE}#${ecran.route}`)
+        await page.waitForSelector(config.attendre, { timeout: 20000 })
+        await attendre(1000)
+        await poserLaScene(page)
+        if (ecran.apres) await ecran.apres(page)
+        await attendre(600)
+        enMemoire.set(config, (enMemoire.get(config) ?? new Map()).set(
+          ecran.nom,
+          (await page.screenshot()).toString('base64'),
+        ))
+        await page.close()
+      }
     }
 
     // ---- les visuels : les captures qu'on vient de produire, mises en scène.
@@ -681,12 +728,12 @@ async function principal() {
 
       for (const [i, [nom, titre]] of VISUELS.entries()) {
         const capture =
-          f.capture === CAPTURE_IPAD
-            ? capturesIPad.get(nom)
-            : readFileSync(join(SORTIE, `capture-${nom}.png`)).toString('base64')
+          enMemoire.get(f.capture)?.get(nom) ??
+          readFileSync(join(SORTIE, `capture-${nom}.png`)).toString('base64')
+        const echelle = f.echelle ?? 2
         const page = await navigateur.newPage({
           viewport: { width: f.l, height: f.h },
-          deviceScaleFactor: 2,
+          deviceScaleFactor: echelle,
         })
         await page.setContent(pageVisuel(f, titre, capture, FONDS[i % FONDS.length]))
         await page.waitForFunction(() => document.fonts.ready.then(() => true))
@@ -694,7 +741,12 @@ async function principal() {
         const bref = `${f.prefixe}-${nom}.png`
         const fichier = join(dossier, bref)
         await page.screenshot({ path: fichier })
-        console.log(bref.padEnd(34), `${f.l * 2}×${f.h * 2}`.padEnd(11), statSync(fichier).size, 'octets')
+        console.log(
+          bref.padEnd(34),
+          `${f.l * echelle}×${f.h * echelle}`.padEnd(11),
+          statSync(fichier).size,
+          'octets',
+        )
         await page.close()
       }
     }

@@ -15,10 +15,25 @@
 /* -------------------------------------------------------------------------- */
 
 import * as functions from 'firebase-functions/v1'
+import Anthropic from '@anthropic-ai/sdk'
 import { initializeApp } from 'firebase-admin/app'
 import { getAuth } from 'firebase-admin/auth'
 import { getFirestore } from 'firebase-admin/firestore'
-import { mailBienvenue, mailPro, passeAPro, type Abonnement } from './courriels.js'
+import { estPro, mailBienvenue, mailPro, passeAPro, type Abonnement } from './courriels.js'
+import {
+  ANTHROPIC_CLE,
+  ASSISTANT,
+  conversationPropre,
+  dossier,
+  EFFORT,
+  INSTRUCTIONS,
+  LIMITE_MENSUELLE,
+  MAX_JETONS_REPONSE,
+  MODELE,
+  moisDe,
+  questionsRestantes,
+  type DonneesArtiste,
+} from './assistant.js'
 import {
   abonnementDepuisAchat,
   clefDuJeton,
@@ -663,4 +678,143 @@ export const fermerAbonnement = functions
     await getFirestore().doc(`abonnements/${uid}`).delete()
     functions.logger.info('Abonnement refermé faute d’abonnement chez le magasin', { uid })
     return { pro: false }
+  })
+
+/* -------------------------------------------------------------------------- */
+/*  7. L'assistant                                                             */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Répond à une question sur le métier de la musique, dossier de l'artiste en main.
+ *
+ * Trois raisons font que cet appel vit ici et non dans le navigateur, et la
+ * première suffirait :
+ *
+ * 1. **la clef.** Une clef d'API posée dans une application web est publique :
+ *    il suffit d'ouvrir les outils de développement pour la lire, et elle se
+ *    facture à l'usage. Elle ne peut exister que du côté serveur ;
+ * 2. **l'abonnement.** C'est le serveur qui sait qui a payé — `abonnements/{uid}`
+ *    est fermé à l'écriture, le navigateur ne peut pas s'en attribuer un ;
+ * 3. **le quota.** Un compteur tenu dans le navigateur se remet à zéro en
+ *    rechargeant la page.
+ *
+ * Ce qui part chez Anthropic : les instructions, le dossier de l'artiste et la
+ * conversation. Ce qui n'en part pas : les coordonnées des contacts, qui sont
+ * les données de tiers n'ayant consenti à rien — `dossier` les compte sans les
+ * nommer.
+ */
+export const assistant = functions
+  .region(REGION)
+  .runWith({
+    serviceAccount: COMPTE,
+    secrets: [ANTHROPIC_CLE],
+    /*  Une réponse réfléchie prend plus que les soixante secondes par défaut,
+     *  et un appel coupé est facturé sans rien rendre. */
+    timeoutSeconds: 120,
+  })
+  .https.onCall(async (data, context) => {
+    const uid = context.auth?.uid
+    if (!uid) {
+      throw new functions.https.HttpsError('unauthenticated', 'Connectez-vous.')
+    }
+
+    const conversation = conversationPropre(data?.conversation)
+    if (!conversation.length) {
+      throw new functions.https.HttpsError('invalid-argument', 'Posez une question.')
+    }
+
+    const db = getFirestore()
+    const compteur = db.doc(`${ASSISTANT}/${uid}`)
+
+    const [vuAbonnement, vuCompteur, vuDonnees] = await Promise.all([
+      db.doc(`abonnements/${uid}`).get(),
+      compteur.get(),
+      db.doc(`artistes/${uid}`).get(),
+    ])
+
+    /*  L'abonnement d'abord : inutile de compter les questions de quelqu'un qui
+     *  n'a pas le droit d'en poser. */
+    if (!estPro((vuAbonnement.exists ? vuAbonnement.data() : null) as Abonnement | null)) {
+      throw new functions.https.HttpsError(
+        'permission-denied',
+        "L'assistant est réservé aux abonnés RapidMusic Pro.",
+      )
+    }
+
+    const mois = moisDe(new Date().toISOString())
+    const restantes = questionsRestantes(vuCompteur.data(), mois)
+    if (restantes <= 0) {
+      throw new functions.https.HttpsError(
+        'resource-exhausted',
+        `Vous avez posé vos ${LIMITE_MENSUELLE} questions du mois. Le compteur repart le 1er.`,
+      )
+    }
+
+    /*  Le dossier est reconstruit à chaque question plutôt que gardé : les
+     *  données changent entre deux questions — c'est même souvent la raison
+     *  d'en poser une seconde. */
+    const brut = vuDonnees.exists ? (vuDonnees.data()?.data as DonneesArtiste) : {}
+    const aujourdhui = new Date().toISOString().slice(0, 10)
+
+    let reponse: string
+    try {
+      const client = new Anthropic({ apiKey: process.env[ANTHROPIC_CLE] })
+      const message = await client.messages.create({
+        model: MODELE,
+        max_tokens: MAX_JETONS_REPONSE,
+        output_config: { effort: EFFORT },
+        system: [
+          { type: 'text', text: INSTRUCTIONS },
+          /*  Le dossier dans un second bloc : les instructions ne bougent
+           *  jamais, le dossier change à chaque question. Les séparer garde la
+           *  partie stable réutilisable le jour où la mise en cache sera
+           *  activée. */
+          { type: 'text', text: dossier(brut ?? {}, aujourdhui) },
+        ],
+        messages: conversation,
+      })
+
+      /*  Un refus du modèle n'est pas une panne : il répond 200 et s'arrête. Le
+       *  dire franchement vaut mieux qu'afficher une réponse vide. */
+      if (message.stop_reason === 'refusal') {
+        functions.logger.warn('Assistant : question déclinée', {
+          uid,
+          categorie: message.stop_details?.category ?? '(sans catégorie)',
+        })
+        throw new functions.https.HttpsError(
+          'invalid-argument',
+          "L'assistant n'a pas pu répondre à cette question. Reformulez-la.",
+        )
+      }
+
+      reponse = message.content
+        .filter((b): b is Anthropic.TextBlock => b.type === 'text')
+        .map((b) => b.text)
+        .join('\n')
+        .trim()
+
+      functions.logger.info('Assistant : réponse rendue', {
+        uid,
+        entree: message.usage.input_tokens,
+        sortie: message.usage.output_tokens,
+      })
+    } catch (e) {
+      if (e instanceof functions.https.HttpsError) throw e
+      functions.logger.error(`Assistant injoignable : ${String(e)}`, { uid })
+      throw new functions.https.HttpsError(
+        'unavailable',
+        "L'assistant n'a pas répondu. Réessayez dans un instant.",
+      )
+    }
+
+    if (!reponse) {
+      throw new functions.https.HttpsError('unavailable', "L'assistant n'a rien répondu.")
+    }
+
+    /*  Décompté après coup, et seulement si quelque chose a été rendu : une
+     *  panne de réseau ne doit pas consommer une question à qui n'a rien reçu.
+     *  Le sens du compte est « questions répondues », pas « tentatives ». */
+    await compteur.set({ mois, nombre: LIMITE_MENSUELLE - restantes + 1 })
+
+    return { reponse, restantes: restantes - 1 }
   })

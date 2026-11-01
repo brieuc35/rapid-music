@@ -187,38 +187,37 @@ vidéo prise **sur un appareil physique**, pas sur un simulateur.
 Le paquet arrive sur l'iPhone par **TestFlight** — il y est déjà, chaque envoi
 du workflow y atterrit. Inutile de refabriquer quoi que ce soit.
 
-L'enregistrement se fait avec la fonction d'iOS : *Réglages → Centre de
-contrôle → Enregistrement de l'écran*, puis le bouton rond depuis le centre de
-contrôle.
+### Avant de lancer l'enregistrement
 
-Ce que la vidéo doit montrer, dans cet ordre :
+| À faire | Pourquoi |
+| --- | --- |
+| Être sur le **dernier build** dans TestFlight | Un build antérieur n'a ni l'encadré d'abonnement de la fenêtre de suppression, ni la fiche de résiliation d'Apple |
+| **Refermer l'accès Pro** sur le compte Apple du téléphone | Sinon l'application reconnaît l'abonnement au lancement et ouvre Pro toute seule : il n'y a plus d'achat à filmer |
+| Avoir une **adresse e-mail jetable** sous la main | Le compte créé à l'étape 2 sera supprimé à l'étape 6 |
+| Activer l'**enregistrement d'écran** | *Réglages → Centre de contrôle → Enregistrement de l'écran*, puis le bouton rond depuis le centre de contrôle |
 
-1. **le lancement depuis l'écran d'accueil** — Apple l'exige explicitement ;
-2. **la création d'un compte**, avec une adresse jetable ;
-3. le tableau de bord, puis Concerts, Agenda, Tâches, Sorties, Contacts ;
-4. **l'écran d'abonnement**, en s'y arrêtant cinq bonnes secondes : le titre, la
-   durée, le prix et les deux liens doivent être lisibles à l'image. Ouvrir
-   chacun des deux liens et revenir ;
-5. **l'achat**, avec un compte de bac à sable, puis les onglets Revenus et
-   Contrats qui s'ouvrent ;
-6. **la suppression du compte** — Profil → Supprimer mon compte.
+Refermer l'accès Pro demande un détour, parce qu'un abonnement d'essai ne se
+résilie pas depuis la page web d'Apple — elle ne montre que les abonnements
+réels. Il se résilie **depuis l'application** : Profil → vignette Pro →
+« Gérer sur l'App Store », qui ouvre la fiche d'Apple par-dessus l'application
+(voir `docs/facturation.md`). Une fois résilié, attendre son expiration — les
+durées sont raccourcies en essai — et l'accès se referme de lui-même au
+lancement suivant.
+
+### Le déroulé
+
+| # | À l'image | Le détail qui compte |
+| --- | --- | --- |
+| 1 | Le **lancement depuis l'écran d'accueil** | Apple l'exige explicitement : on doit voir l'icône être touchée, pas une application déjà ouverte |
+| 2 | La **création d'un compte** | Avec l'adresse jetable. Jamais le compte de démonstration |
+| 3 | Le tour de l'application : tableau de bord, Concerts, Agenda, Tâches, Sorties, Contacts | S'arrêter assez longtemps sur chaque écran pour qu'il se lise |
+| 4 | L'**écran d'abonnement** | Cinq bonnes secondes : titre, durée, prix et les deux liens légaux lisibles à l'image. Ouvrir chacun des deux liens et revenir |
+| 5 | L'**achat** | Laisser voir la fenêtre de paiement d'Apple, confirmer, puis montrer Revenus et Contrats qui s'ouvrent |
+| 6 | La **suppression du compte** — Profil → Supprimer mon compte | Laisser l'encadré rouge sur l'abonnement visible une seconde ou deux : c'est ce qu'Apple vérifie au titre de la directive 5.1.1(v). Puis mot de passe, puis supprimer |
 
 ⚠️ **La suppression se fait sur le compte créé à l'étape 2, jamais sur le compte
 de démonstration.** Supprimer celui-ci couperait l'accès au vérificateur, et le
 refus suivant serait, lui, mérité.
 
-### Avant de filmer : repartir d'un compte non abonné
-
-L'étape 5 ne se filme que si le compte Apple du téléphone **n'a pas déjà** un
-abonnement en cours. S'il en a un, l'application le reconnaît au lancement et
-ouvre Pro toute seule : il n'y a plus d'achat à montrer.
-
-Un abonnement d'essai ne se résilie pas depuis la page web d'Apple, qui ne
-montre que les abonnements réels. Il se résilie **depuis l'application** :
-Profil → vignette Pro → « Gérer sur l'App Store », qui ouvre la fiche d'Apple
-par-dessus l'application. Voir `docs/facturation.md`. Une fois résilié, il faut
-attendre son expiration — les durées sont raccourcies en essai — et l'accès Pro
-se referme alors de lui-même au lancement suivant.
-
 Deux à quatre minutes suffisent. La vidéo se joint directement à la réponse dans
-le Resolution Center.
+le Resolution Center, avec le texte long de la partie 2.
