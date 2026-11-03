@@ -1031,11 +1031,99 @@ textarea {
   color: var(--text);
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
+  /*  Sans cela, un champ placé dans une colonne refuse de descendre sous sa
+      largeur « intrinsèque » — celle que le navigateur calcule à partir de son
+      contenu. `width: 100%` ne s'impose pas à ce plancher-là. */
+  min-width: 0;
+  /*  Une interligne commune à tous les champs, et c'est elle qui leur donne
+      leur hauteur : taille du texte × 1,25, plus les marges et les bordures.
+      Posée ici, elle vaut pour le champ de texte comme pour celui de date, qui
+      se retrouvent donc exactement de la même hauteur — sur un iPhone, où le
+      texte passe à 16 px, comme ailleurs.
+
+      Elle règle aussi ce que `appearance: none` casse plus bas : un champ de
+      date vide n'a pas de contenu, et sans interligne déclarée il s'affaisse à
+      quelques pixels pendant que ses voisins gardent leur hauteur. */
+  line-height: 1.25;
 }
 .field textarea {
   resize: vertical;
   min-height: 80px;
 }
+
+/* Les champs natifs d'iOS, qui débordaient de leur colonne.
+   -------------------------------------------------------------------------
+   Safari donne aux listes déroulantes et aux champs de date et d'heure une
+   largeur minimale calculée sur leur habillage natif : le plus long libellé
+   d'une liste, « 31/12/2026 » et son icône pour une date. Ni `width: 100%` ni
+   `min-width: 0` ne la réduisent tant que cet habillage est en place — c'est
+   lui qui la porte.
+
+   D'où ce que l'on voyait sur l'iPhone, et nulle part ailleurs : dans
+   « Nouvelle tâche » et « Ajouter un évènement », les champs sortaient du
+   cadre. Chromium calcule ces largeurs autrement et ne reproduit rien, ce qui
+   fait de ce bug l'un des pires qui soient — invisible partout sauf chez ceux
+   qui s'en servent.
+
+   `appearance: none` retire l'habillage, et avec lui le plancher. Le champ se
+   comporte alors comme une boîte ordinaire, et continue d'ouvrir le sélecteur
+   natif au toucher : c'est le `type` qui le commande, pas l'apparence. */
+.field select,
+.field input[type='date'],
+.field input[type='time'] {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/*  La flèche, rendue à la liste déroulante. `appearance: none` lui enlève la
+    sienne, et sans elle plus rien ne dit qu'elle s'ouvre. Dessinée en SVG dans
+    le fond plutôt qu'ajoutée en balise : le HTML n'a pas à porter la
+    conséquence d'un contournement de Safari. */
+.field select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23918da6' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 13px;
+  /*  La place de la flèche, pour qu'un libellé long ne passe pas dessous. */
+  padding-right: 34px;
+}
+
+/*  Sans habillage natif, iOS laisse la valeur d'une date ou d'une heure
+    centrée, et la laisse sortir du cadre quand la place manque. Les autres
+    champs alignent leur texte à gauche ; ceux-ci doivent faire de même. */
+.field input[type='date']::-webkit-date-and-time-value,
+.field input[type='time']::-webkit-date-and-time-value {
+  text-align: left;
+}
+
+/*  La hauteur, imposée — et c'est le seul endroit du fichier où une hauteur est
+    écrite plutôt que laissée au contenu.
+
+    La raison est mesurée, pas supposée : à réglages strictement identiques —
+    même police, même interligne, mêmes marges, mêmes bordures —, un champ de
+    date fait 41,5 px là où un champ de texte en fait 39,5, et un champ d'heure
+    42,7. Les pixels manquants viennent de l'élément que le navigateur fabrique
+    lui-même pour porter la valeur, et qu'il habille à sa façon. Deux essais
+    pour le remettre à zéro de l'extérieur n'ont rien changé — et son dessin
+    n'est de toute façon pas le même sous Safari, qu'on ne peut pas éprouver
+    ici.
+
+    D'où une hauteur qui ne dépend plus de lui. Elle est écrite en `em`, et non
+    en pixels : elle suit donc la taille du texte, qui passe à 16 px sur
+    appareil tactile. Même calcul que pour les autres champs — interligne, plus
+    les marges, plus les bordures — et donc, à l'arrivée, même hauteur, sur un
+    iPhone comme sur un écran d'ordinateur. */
+.field input[type='date'],
+.field input[type='time'] {
+  height: calc(1.25em + 22px);
+}
+
+/*  La hauteur de ces champs-là vient de l'interligne commune déclarée plus
+    haut, et non d'un `min-height` écrit ici. Le premier jet en posait un, en
+    pixels : il rendait les champs de date trois pixels plus hauts que leurs
+    voisins — « Date » dépassait de « Coût » dans la même rangée — parce qu'un
+    nombre fixe ne peut pas suivre la taille du texte, qui change d'un iPhone à
+    un écran d'ordinateur. L'interligne, elle, suit. */
 .field input:focus,
 .field select:focus,
 .field textarea:focus {
