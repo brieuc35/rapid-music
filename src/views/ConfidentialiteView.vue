@@ -87,7 +87,7 @@
 
     <h2>Où sont vos données, et qui y touche</h2>
     <p>
-      Trois prestataires techniques seulement, tous sous-traitants au sens du RGPD :
+      Deux prestataires techniques seulement, tous deux sous-traitants au sens du RGPD :
     </p>
     <ul>
       <li>
@@ -96,40 +96,9 @@
       </li>
       <li>
         <b>{{ HEBERGEUR_SITE.nom }}</b> — fichiers du site, qui ne contiennent aucune de vos
-        données ({{ HEBERGEUR_SITE.adresse }}) ;
-      </li>
-      <li>
-        <b>Anthropic</b> — l'assistant de l'offre Pro, et lui seul (États-Unis). Voir la
-        section suivante : il ne reçoit rien tant que vous ne lui posez pas de question.
+        données ({{ HEBERGEUR_SITE.adresse }}).
       </li>
     </ul>
-
-    <h2>L'assistant, et ce qu'il voit</h2>
-    <p>
-      L'assistant est une fonction de l'offre Pro. <b>Tant que vous ne lui posez aucune
-      question, rien ne quitte votre compte à ce titre</b> — il n'y a ni analyse de fond, ni
-      traitement en arrière-plan.
-    </p>
-    <p>Quand vous posez une question, partent chez Anthropic :</p>
-    <ul>
-      <li>votre question et les échanges précédents de la conversation en cours ;</li>
-      <li>
-        un résumé de votre dossier : profil d'artiste, label, concerts à venir, contrats en
-        cours, sorties, revenus déclarés, agenda et tâches ouvertes.
-      </li>
-    </ul>
-    <p>
-      <b>Les coordonnées de vos contacts n'en font pas partie</b>, et c'est délibéré : ce sont
-      les données de tiers, qui n'ont consenti à rien. Seul leur nombre par catégorie est
-      transmis — « trois contacts presse », jamais leurs noms ni leurs adresses.
-    </p>
-    <p>
-      Anthropic traite ces données pour produire la réponse. Son offre commerciale prévoit
-      qu'elles ne servent pas à entraîner ses modèles. Le transfert hors de l'Union européenne
-      est encadré par les clauses contractuelles types de la Commission européenne. Vos
-      conversations ne sont pas conservées par {{ SERVICE }} : elles disparaissent quand vous
-      fermez l'écran.
-    </p>
     <p>
       Votre base est enregistrée dans une région européenne. Certaines opérations techniques de
       Google — supervision, assistance — peuvent néanmoins impliquer un accès depuis un pays

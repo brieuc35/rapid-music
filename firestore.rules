@@ -93,19 +93,6 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
-    // Le compteur de questions posées à l'assistant. Fermé des deux côtés.
-    //
-    // Le fourre-tout en fin de fichier le refuserait déjà. La règle est écrite
-    // quand même, parce que ce compteur protège une dépense : chaque question
-    // est facturée à l'éditeur par le service qui y répond. Un compteur
-    // qu'on pourrait remettre à zéro depuis le navigateur ne compterait rien.
-    //
-    // La fonction `assistant` y écrit avec les droits d'administration, qui
-    // passent au-dessus de ces règles.
-    match /assistant/{uid} {
-      allow read, write: if false;
-    }
-
     function valide() {
       return request.resource.data.keys().hasOnly(['rev', 'data', 'updatedAt'])
              && request.resource.data.rev is int
