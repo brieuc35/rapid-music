@@ -61,7 +61,15 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version affichée (ex. 1.0). Vide = celle du projet Xcode."
+        # Une version publiée ferme son « train » : Apple refuse tout nouveau
+        # paquet qui la réaffiche, même pour TestFlight, avec l'erreur 90186
+        # « the train version is closed for new build submissions ». Le numéro
+        # de fabrication, lui, ne suffit pas à l'ouvrir : c'est la version
+        # affichée qu'il faut élever.
+        #
+        # Elle vit dans le projet Xcode et y est élevée après chaque
+        # publication, de sorte que ce champ reste vide dans le cas ordinaire.
+        description: "Version affichée (ex. 1.2). Vide = celle du projet. À élever après chaque publication."
         required: false
         type: string
       televerser:
