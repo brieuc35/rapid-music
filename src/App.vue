@@ -300,10 +300,6 @@ const topNav = computed(() => [
 ])
 
 const bottomNav = computed(() => [
-  /*  En tête du second groupe, et non à la suite des onglets de données :
-   *  l'assistant ne range rien, il répond. Le mettre entre « Sorties » et
-   *  « Agenda » laisserait croire à une rubrique de plus à tenir à jour. */
-  { path: '/assistant', title: 'Assistant', icon: 'spark', badge: 0, pro: true },
   { path: '/studio', title: 'Agenda', icon: 'calendar', badge: upcomingSessions.value },
   /*  Juste après l'Agenda : les deux répondent à la même question, ce que j'ai à
    *  faire. Le compteur montre les tâches ouvertes, comme les autres entrées

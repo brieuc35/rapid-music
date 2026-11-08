@@ -34,12 +34,6 @@ const routes: RouteRecordRaw[] = [
     meta: { title: 'Royalties & Revenus', icon: 'money' },
   },
   {
-    path: '/assistant',
-    name: 'assistant',
-    component: () => import('@/views/AssistantView.vue'),
-    meta: { title: 'Assistant', icon: 'spark' },
-  },
-  {
     path: '/studio',
     name: 'studio',
     component: () => import('@/views/StudioView.vue'),
