@@ -249,16 +249,43 @@ Deux points valent d'être connus avant l'examen :
 Rien de ce qui précède n'est à refaire. Le compte existe, la fiche est remplie,
 les secrets sont déposés, les abonnements sont acceptés.
 
-1. **Fabriquer le paquet** : onglet Actions → « Application iPhone (.ipa) » →
+1. **Élever la version affichée**, si ce n'est pas déjà fait :
+   `MARKETING_VERSION` dans `ios/App/App.xcodeproj/project.pbxproj`, aux deux
+   endroits. **Ce n'est pas facultatif** — voir juste en dessous.
+2. **Fabriquer le paquet** : onglet Actions → « Application iPhone (.ipa) » →
    *Run workflow*. Le numéro de fabrication est celui de l'exécution, il monte
-   donc tout seul ; le champ `version` ne sert qu'à passer de 1.0 à 1.1.
-2. **Attendre TestFlight** — quelques minutes après la fin du workflow —, puis
+   donc tout seul, et le champ `version` peut rester vide : c'est celle du
+   projet qui sert.
+3. **Attendre TestFlight** — quelques minutes après la fin du workflow —, puis
    essayer sur l'iPhone. Pas de règle des douze testeurs ici, contrairement à
    Google.
-3. **Dans App Store Connect** : créer la nouvelle version, y attacher la
+4. **Dans App Store Connect** : créer la nouvelle version, y attacher la
    fabrication, écrire les nouveautés, puis « Ajouter pour vérification » et
    « Envoyer pour vérification ».
-4. Compter **24 à 48 h**.
+5. Compter **24 à 48 h**.
+
+### Une version publiée est close, définitivement
+
+C'est la première étape, et elle a coûté un envoi raté. Dès qu'une version est
+approuvée et mise en vente, Apple **ferme son train** : plus aucun paquet ne
+peut y être déposé, pas même pour TestFlight, et pas même avec un numéro de
+fabrication plus élevé.
+
+```
+90186  Invalid Pre-Release Train. The train version '1.0' is closed
+       for new build submissions
+90062  CFBundleShortVersionString [1.0] must contain a higher version
+       than that of the previously approved version [1.0]
+```
+
+Le paquet se fabrique et se signe sans rien dire ; c'est l'envoi qui échoue, à
+la dernière étape, après les trois minutes de compilation. Le remède tient en
+un nombre : élever `MARKETING_VERSION` avant de lancer la fabrication.
+
+Il est élevé dans le projet lui-même plutôt que saisi dans le champ `version`
+du workflow, pour que l'oubli ne soit plus possible : la valeur par défaut est
+alors toujours la bonne. **Après chaque publication, élevez-la à nouveau** — la
+version qui vient d'être approuvée est close à son tour.
 
 Trois pièges déjà rencontrés, pour ne pas les redécouvrir :
 
